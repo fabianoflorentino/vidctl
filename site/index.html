@@ -47,22 +47,93 @@
           <a class="btn btn-ghost" href="https://github.com/fabianoflorentino/vidctl" target="_blank" rel="noopener">código no github ↗</a>
         </div>
 
-        <div class="term" role="img" aria-label="Exemplo de saída do vidctl">
-          <div class="term-bar">
-            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-            <span class="term-title">vidctl — status</span>
+        <div
+          class="demo"
+          id="demo"
+          role="img"
+          aria-label="Demonstração animada do vidctl: escolher o vídeo, definir o destino WhatsApp Status e comprimir de 22,1 MB para 9,7 MB."
+        >
+          <div class="demo-bar">
+            <span class="demo-dot"></span><span class="demo-dot"></span><span class="demo-dot"></span>
+            <span class="demo-title">vidctl · desktop</span>
+            <span class="demo-live"><i></i>demonstração</span>
           </div>
-          <pre><code><span class="c">$</span> vidctl comunismo.mp4 --whatsapp
 
-<span class="dim">▸ probe   </span> 93.5s · 1080×1920 · 22.1 MB · h264/aac
-<span class="dim">▸ budget  </span> 10 MB &rarr; 922 kbps video + 96k audio (5% headroom)
-<span class="dim">▸ pass 1/2</span> <span class="acid">done</span>
-<span class="dim">▸ pass 2/2</span> <span class="acid">done</span>
+          <div class="demo-stage">
+            <div class="demo-brand">
+              <span class="demo-brand-title">VIDCTL</span>
+              <span class="demo-brand-sub">compressor de vídeo · h264 + aac</span>
+              <span class="demo-ffmpeg"><i></i>ffmpeg OK</span>
+            </div>
 
-<span class="ok">✔</span> <span class="ok">9.67 MB</span> <span class="dim">— pronto pra status, sem corte de cena</span></code></pre>
+            <div class="demo-step">
+              <div class="demo-step-head"><span class="demo-step-num">01</span><span class="demo-step-label">entrada</span></div>
+              <div class="demo-picker">
+                <span class="demo-plus">+</span>
+                <span class="demo-picker-main">ESCOLHER VÍDEO</span>
+                <span class="demo-picker-sub">mp4 · mkv · mov · avi · webm</span>
+              </div>
+              <div class="demo-file">
+                <div class="demo-file-head">
+                  <span class="demo-file-name">comunismo.mp4</span>
+                  <span class="demo-chip">1080×1920</span>
+                  <span class="demo-chip vertical">9:16</span>
+                </div>
+                <div class="demo-meta">
+                  <span><b>duração</b>1m33s</span>
+                  <span><b>tamanho</b>22.1 MB</span>
+                  <span><b>vídeo</b>h264</span>
+                  <span><b>áudio</b>aac</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="demo-lower">
+              <div class="demo-step">
+                <div class="demo-step-head"><span class="demo-step-num">02</span><span class="demo-step-label">destino</span></div>
+                <div class="demo-presets">
+                  <div class="demo-preset picked"><span class="n">WhatsApp Status</span><span class="d">status e conversas</span><span class="t">2-pass · 10 MB</span></div>
+                  <div class="demo-preset"><span class="n">WhatsApp</span><span class="d">vídeos longos</span><span class="t">2-pass · 16 MB</span></div>
+                  <div class="demo-preset"><span class="n">Instagram</span><span class="d">reels &amp; stories</span><span class="t">2-pass · 16 MB</span></div>
+                  <div class="demo-preset"><span class="n">Shorts</span><span class="d">vertical 9:16</span><span class="t">2-pass · 30 MB</span></div>
+                </div>
+                <div class="demo-tune">
+                  <span class="demo-tune-k">tamanho alvo</span>
+                  <span class="demo-slider"><span class="demo-thumb"></span></span>
+                  <span class="demo-num">10</span>
+                  <span class="demo-unit">MB</span>
+                </div>
+              </div>
+
+              <div class="demo-step">
+                <div class="demo-step-head"><span class="demo-step-num">03</span><span class="demo-step-label">saída</span></div>
+                <div class="demo-out">
+                  <span class="demo-outpath">/Downloads/comunismo-compressed.mp4</span>
+                  <span class="demo-gbtn">salvar como…</span>
+                </div>
+              </div>
+
+              <div class="demo-step">
+                <div class="demo-step-head"><span class="demo-step-num">04</span><span class="demo-step-label">executar</span></div>
+                <div class="demo-exec">
+                  <div class="demo-cta"><span>COMPRIMIR → WHATSAPP STATUS</span></div>
+                  <div class="demo-progress">
+                    <div class="demo-ph"><span id="demo-stage-label">ANALISANDO (1/2)</span><span id="demo-pct">0%</span></div>
+                    <div class="demo-sr"><span class="demo-fill" id="demo-fill"></span></div>
+                  </div>
+                  <div class="demo-result">
+                    <span class="demo-big">−56%</span>
+                    <span class="demo-size">9.7 MB</span>
+                    <span class="demo-from">de 22.1 MB</span>
+                    <span class="demo-act">abrir pasta</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <p class="note">1m33s de vídeo &middot; 22,1 MB &rarr; 9,67 MB &middot; dentro do limite de 10 MB, sem cortar</p>
+        <p class="note">1m33s · 1080×1920 · 22,1 MB → 9,7 MB com o preset WhatsApp Status (10 MB) — sem cortar duração nem formato</p>
       </section>
 
       <section id="recursos" class="section">
@@ -158,5 +229,63 @@
         <a href="https://fabianoflorentino.github.io/vidctl/">pages</a>
       </p>
     </footer>
+
+    <script>
+      (function () {
+        var demo = document.getElementById("demo");
+        if (!demo) return;
+        var fill = document.getElementById("demo-fill");
+        var pct = document.getElementById("demo-pct");
+        var stgl = document.getElementById("demo-stage-label");
+        var schedule = [
+          { name: "st-pick", dur: 1800 },
+          { name: "st-file", dur: 1700 },
+          { name: "st-run", dur: 2100, from: 0, to: 46, label: "ANALISANDO (1/2)" },
+          { name: "st-run", dur: 1900, from: 47, to: 100, label: "COMPRIMINDO (2/2)" },
+          { name: "st-done", dur: 2600 },
+        ];
+
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          demo.className = "demo st-done";
+          if (stgl) stgl.textContent = "CONCLUÍDO (2/2)";
+          if (pct) pct.textContent = "100%";
+          if (fill) fill.style.width = "100%";
+          return;
+        }
+
+        var idx = 0;
+        var elapsed = 0;
+        var last = null;
+        var raf = 0;
+
+        function enter(i) {
+          idx = i;
+          elapsed = 0;
+          var s = schedule[idx];
+          demo.className = "demo " + s.name;
+          if (s.label !== undefined && stgl) stgl.textContent = s.label;
+          if (s.from !== undefined) {
+            if (fill) fill.style.width = s.from + "%";
+            if (pct) pct.textContent = s.from + "%";
+          }
+        }
+
+        function frame(now) {
+          if (last !== null) elapsed += now - last;
+          last = now;
+          var s = schedule[idx];
+          if (s.from !== undefined) {
+            var v = Math.round(s.from + (s.to - s.from) * Math.min(1, elapsed / s.dur));
+            if (fill) fill.style.width = v + "%";
+            if (pct) pct.textContent = v + "%";
+          }
+          if (elapsed >= s.dur) enter((idx + 1) % schedule.length);
+          raf = requestAnimationFrame(frame);
+        }
+
+        enter(0);
+        raf = requestAnimationFrame(frame);
+      })();
+    </script>
   </body>
 </html>
