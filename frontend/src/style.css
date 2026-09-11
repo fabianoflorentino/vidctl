@@ -1,0 +1,115 @@
+@font-face {
+  font-family: "Bricolage";
+  src: url("assets/fonts/bricolage_grotesque-400normal-latin.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("assets/fonts/ibm_plex_mono-400normal-latin.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("assets/fonts/ibm_plex_mono-600normal-latin.woff2") format("woff2");
+  font-weight: 600;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("assets/fonts/ibm_plex_mono-700normal-latin.woff2") format("woff2");
+  font-weight: 700;
+  font-display: swap;
+}
+
+:root {
+  --bg: #0d0c0a;
+  --bg-hi: #14130f;
+  --panel: #16150f;
+  --panel-2: #1c1a13;
+  --line: rgba(255, 255, 255, 0.09);
+  --line-strong: rgba(255, 255, 255, 0.2);
+  --ink: #f2efe4;
+  --ink-dim: #9b9789;
+  --ink-faint: #5c594f;
+  --acid: #d7f34d;
+  --acid-dim: rgba(215, 243, 77, 0.12);
+  --amber: #ffb000;
+  --danger: #ff5d4d;
+  --mono: "IBM Plex Mono", ui-monospace, monospace;
+  --disp: "Bricolage", system-ui, sans-serif;
+  --radius: 10px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--disp);
+}
+
+html {
+  background-color: var(--bg);
+}
+
+body {
+  font-family: var(--disp);
+  font-weight: 380;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* film grain overlay */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent 0px,
+    transparent 3px,
+    rgba(0, 0, 0, 0.6) 4px
+  );
+}
+
+::selection {
+  background: var(--acid);
+  color: #000;
+}
+
+button,
+input {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+/* perforation strip */
+.film {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 10px;
+  z-index: 1000;
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--bg) 0 14px,
+    var(--bg-hi) 14px 18px
+  );
+}
