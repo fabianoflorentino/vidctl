@@ -6,11 +6,10 @@ on:
     branches:
       - main
     paths-ignore:
-      - "README.md"
-      - "LICENSE"
-      - "docs/**"
+      - "tools/**"
       - "site/**"
       - ".github/**"
+      - "LICENSE"
 
 concurrency:
   group: release

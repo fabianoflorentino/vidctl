@@ -134,7 +134,11 @@ O binário sai em `build/bin/vidctl`.
 
 ```bash
 go test ./...
+make cover        # mede a cobertura (% por função e total)
 ```
+
+O CI roda os testes com race detector e exige cobertura de **>= 80%**
+(`go test -race -shuffle=on -count=1 ./...` + gate no GitHub Actions).
 
 Smoke test manual contra um arquivo real (gera um encode 2-pass e checa o tamanho):
 

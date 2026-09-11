@@ -60,6 +60,19 @@ jobs:
       - name: Tests
         run: go test -race -shuffle=on -count=1 ./...
 
+      - name: Coverage gate (>= 80%)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          go test -coverprofile=/tmp/coverage.out ./...
+          total="$(go tool cover -func=/tmp/coverage.out | awk '/^total:/ {print $NF}')"
+          cov="${total%\%}"
+          echo "coverage: ${total}"
+          awk -v cov="$cov" 'BEGIN { exit !(cov >= 80) }' || {
+            echo "cobertura (${total}) abaixo do gate de 80%"
+            exit 1
+          }
+
       - name: Build app
         shell: bash
         run: |

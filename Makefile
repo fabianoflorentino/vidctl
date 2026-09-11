@@ -25,6 +25,11 @@ run: build
 test:
 	go test ./...
 
+.PHONY: cover
+cover:
+	go test -coverprofile=coverage.out ./...
+	go tool cover -func=coverage.out | tail -1
+
 .PHONY: check
 check:
 	go vet ./...
