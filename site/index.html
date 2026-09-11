@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>vidctl — compresse vídeo pro tamanho certo</title>
+    <meta
+      name="description"
+      content="vidctl comprime vídeos para o tamanho exato de cada plataforma (WhatsApp, Instagram, Shorts, YouTube) — mantendo duração e formato. Desktop, offline, open-source."
+    />
+    <link rel="icon" type="image/svg+xml" href="img/favicon.svg" />
+    <link rel="stylesheet" href="css/main.css" />
+  </head>
+  <body>
+    <div class="strip" aria-hidden="true"></div>
+
+    <header class="nav">
+      <a class="brand" href="#">
+        <span class="brand-mark" aria-hidden="true"></span>
+        vid<span>ctl</span>
+      </a>
+      <nav class="nav-links">
+        <a href="#recursos">recursos</a>
+        <a href="#presets">presets</a>
+        <a href="#como-funciona">como funciona</a>
+        <a class="nav-gh" href="https://github.com/fabianoflorentino/vidctl" target="_blank" rel="noopener">github ↗</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <p class="kicker">ffmpeg 2-pass &middot; desktop &middot; open-source</p>
+        <h1>
+          Compresse vídeo<br />
+          <em>pro tamanho certo.</em>
+        </h1>
+        <p class="lede">
+          Escolha o destino — WhatsApp, Instagram, Shorts, YouTube. O vidctl calcula o bitrate pra caber
+          no tamanho alvo <strong>sem cortar a duração nem o formato</strong>. Tudo local, nada de nuvem.
+        </p>
+
+        <div class="cta-row">
+          <a class="btn btn-acid" href="https://github.com/fabianoflorentino/vidctl/releases/latest" target="_blank" rel="noopener">
+            baixar app
+            <span class="btn-sub">linux · windows · macos</span>
+          </a>
+          <a class="btn btn-ghost" href="https://github.com/fabianoflorentino/vidctl" target="_blank" rel="noopener">código no github ↗</a>
+        </div>
+
+        <div class="term" role="img" aria-label="Exemplo de saída do vidctl">
+          <div class="term-bar">
+            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            <span class="term-title">vidctl — status</span>
+          </div>
+          <pre><code><span class="c">$</span> vidctl comunismo.mp4 --whatsapp
+
+<span class="dim">▸ probe   </span> 93.5s · 1080×1920 · 22.1 MB · h264/aac
+<span class="dim">▸ budget  </span> 10 MB &rarr; 922 kbps video + 96k audio (5% headroom)
+<span class="dim">▸ pass 1/2</span> <span class="acid">done</span>
+<span class="dim">▸ pass 2/2</span> <span class="acid">done</span>
+
+<span class="ok">✔</span> <span class="ok">9.67 MB</span> <span class="dim">— pronto pra status, sem corte de cena</span></code></pre>
+        </div>
+
+        <p class="note">1m33s de vídeo &middot; 22,1 MB &rarr; 9,67 MB &middot; dentro do limite de 10 MB, sem cortar</p>
+      </section>
+
+      <section id="recursos" class="section">
+        <div class="section-head">
+          <span class="step-num">01</span>
+          <h2>Recursos</h2>
+        </div>
+        <div class="grid">
+          <article class="card">
+            <h3>2-pass para tamanho exato</h3>
+            <p>Primeiro passe analisa a cena, segundo aplica o bitrate. O arquivo sai no tamanho alvo — não em cima, não quase.</p>
+          </article>
+          <article class="card">
+            <h3>Presets por plataforma</h3>
+            <p>WhatsApp Status (10 MB), WhatsApp 16 MB, Instagram Reels, Shorts 30 MB, YouTube em CRF e tamanho personalizado.</p>
+          </article>
+          <article class="card">
+            <h3>Preserva duração e formato</h3>
+            <p>Sem cortar cena, sem mudar resolução obrigatória, sem reencodar mais do que precisa. O que muda é só o peso.</p>
+          </article>
+          <article class="card">
+            <h3>100% offline</h3>
+            <p>Encode local com ffmpeg nativo. Seu vídeo não sai da sua máquina — ideal pra material sensível ou em análise dimensional.</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="presets" class="section">
+        <div class="section-head">
+          <span class="step-num">02</span>
+          <h2>Destinos</h2>
+        </div>
+        <div class="presets">
+          <article class="preset">
+            <span class="preset-name">WhatsApp Status</span>
+            <span class="preset-desc">status e conversas</span>
+            <span class="preset-target">2-pass · 10 MB</span>
+          </article>
+          <article class="preset">
+            <span class="preset-name">WhatsApp</span>
+            <span class="preset-desc">vídeos mais longos</span>
+            <span class="preset-target">2-pass · 16 MB</span>
+          </article>
+          <article class="preset">
+            <span class="preset-name">Instagram</span>
+            <span class="preset-desc">reels &amp; stories</span>
+            <span class="preset-target">2-pass · 16 MB</span>
+          </article>
+          <article class="preset">
+            <span class="preset-name">YouTube Shorts</span>
+            <span class="preset-desc">vertical 9:16</span>
+            <span class="preset-target">2-pass · 30 MB</span>
+          </article>
+          <article class="preset">
+            <span class="preset-name">YouTube</span>
+            <span class="preset-desc">qualidade primeiro</span>
+            <span class="preset-target">CRF 23 · sem limite</span>
+          </article>
+          <article class="preset">
+            <span class="preset-name">Custom</span>
+            <span class="preset-desc">você define o MB</span>
+            <span class="preset-target">2-pass · variável</span>
+          </article>
+        </div>
+      </section>
+
+      <section id="como-funciona" class="section">
+        <div class="section-head">
+          <span class="step-num">03</span>
+          <h2>Como funciona</h2>
+        </div>
+        <ol class="steps">
+          <li><span class="step-num">01</span><h3>Escolher</h3><p>Selecione o vídeo. O app lê duração, resolução e codecs na hora.</p></li>
+          <li><span class="step-num">02</span><h3>Destino</h3><p>Defina a plataforma — ou um tamanho customizado em MB.</p></li>
+          <li><span class="step-num">03</span><h3>Executar</h3><p>Orçamento de bitrate calculado, 2-pass roda com barra de progresso.</p></li>
+          <li><span class="step-num">04</span><h3>Enviar</h3><p>Pronto. Toca em “abrir pasta” e manda pra plataforma.</p></li>
+        </ol>
+      </section>
+
+      <section class="section tech">
+        <p>construído com</p>
+        <div class="tech-list">
+          <span>Go</span><span>Wails</span><span>ffmpeg</span><span>Svelte</span>
+        </div>
+      </section>
+    </main>
+
+    <footer class="foot">
+      <p><span class="brand-mark" aria-hidden="true"></span> vid<span>ctl</span> — código aberto sob MIT</p>
+      <p class="dim">
+        <a href="https://github.com/fabianoflorentino/vidctl" target="_blank" rel="noopener">github</a> ·
+        <a href="https://github.com/fabianoflorentino" target="_blank" rel="noopener">@fabianoflorentino</a> ·
+        <a href="https://fabianoflorentino.github.io/vidctl/">pages</a>
+      </p>
+    </footer>
+  </body>
+</html>
