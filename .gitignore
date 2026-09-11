@@ -11,6 +11,11 @@ frontend/dist/*
 *.dylib
 *.syso
 
+# Pacotes gerados no CI (deb/rpm e árvore binária do deb)
+pkg/*.deb
+pkg/*.rpm
+pkg/deb/vidctl/usr/
+
 # Test / coverage
 coverage.out
 *.test

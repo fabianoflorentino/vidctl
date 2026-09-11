@@ -37,6 +37,7 @@ jobs:
             install -Dm644 pkg/icon/vidctl-256.png pkg/deb/vidctl/usr/share/icons/hicolor/256x256/apps/vidctl.png
             sed -i "s/^Version:.*/Version: ${VER}/" pkg/deb/vidctl/DEBIAN/control
             dpkg-deb --root-owner-group --build pkg/deb/vidctl pkg/vidctl_${VER}_${ARCH}.deb
+            mv pkg/vidctl_${VER}_${ARCH}.deb pkg/vidctl-linux-x64.deb
             ls -lh pkg/*.deb
           '
 
@@ -61,7 +62,7 @@ jobs:
         run: |
           docker run --rm -e VERSION="$VERSION" -v "$PWD":/src -w /src fedora:latest bash -euo pipefail -c '
             set -x
-            dnf install -y -q rpm-build gcc curl pkgconf-pkg-config \
+            dnf install -y -q rpm-build gcc curl git pkgconf-pkg-config \
               gtk3-devel webkit2gtk4.1-devel nodejs
             mkdir -p /root/rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
             curl -fsSL https://go.dev/dl/go1.27.1.linux-amd64.tar.gz -o /tmp/go.tgz
@@ -71,12 +72,16 @@ jobs:
             export PATH="$(go env GOPATH)/bin:$PATH"
             go install github.com/wailsapp/wails/v2/cmd/wails@v2.15.0
             VER=${VERSION#v}
+            mkdir -p /tmp/treesrc
+            git config --global --add safe.directory /src
+            git -C /src archive --format=tar HEAD | tar -x -C /tmp/treesrc
             tar -czf /root/rpmbuild/SOURCES/vidctl-${VER}.tar.gz \
-              --transform="s,^\.,vidctl-${VER}," -C /src .
+              --transform="s,^\.,vidctl-${VER}," -C /tmp/treesrc .
             sed -i "s/^Version:.*/Version: ${VER}/" /src/pkg/rpm/vidctl.spec
             cp /src/pkg/rpm/vidctl.spec /root/rpmbuild/SOURCES/vidctl.spec
             rpmbuild -bb /root/rpmbuild/SOURCES/vidctl.spec
             cp /root/rpmbuild/RPMS/x86_64/vidctl-*.rpm /src/pkg/
+            mv /src/pkg/vidctl-*.rpm /src/pkg/vidctl-linux-x64.rpm
             ls -lh /src/pkg/*.rpm
           '
 
