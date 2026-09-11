@@ -11,18 +11,18 @@
     OpenFolder,
   } from '../wailsjs/go/main/App.js'
   import { EventsOn, EventsOff } from '../wailsjs/runtime/runtime.js'
-  import type { main } from '../wailsjs/go/models.js'
+  import type { main, presets, media } from '../wailsjs/go/models.js'
 
   type ProgressEv = { jobId: string; stage: string; percent: number }
   type DoneEv = { jobId: string; outputPath: string; sizeMB: number; sizeBytes: number }
   type ErrorEv = { jobId: string; error: string }
 
-  let presets = $state<main.Preset[]>([])
+  let presetList = $state<presets.Preset[]>([])
   let ffmpegOk = $state(true)
   let ffmpegMsg = $state('')
 
   let inputPath = $state('')
-  let info = $state<main.MediaInfo | null>(null)
+  let info = $state<media.Info | null>(null)
   let outputPath = $state('')
   let selectedPresetId = $state('whatsapp-status')
   let sizeMB = $state(10)
@@ -35,7 +35,7 @@
   let currentJobId = $state('')
   let done = $state<DoneEv | null>(null)
 
-  const selectedPreset = $derived(presets.find((p) => p.id === selectedPresetId) ?? null)
+  const selectedPreset = $derived(presetList.find((p) => p.id === selectedPresetId) ?? null)
 
   const originalMB = $derived(info ? info.sizeMB : 0)
   const savedPct = $derived(done && info && info.sizeMB > 0 ? (1 - done.sizeMB / info.sizeMB) * 100 : 0)
@@ -66,7 +66,7 @@
   async function load() {
     try {
       const pres = await GetPresets()
-      presets = pres
+      presetList = pres
       const p = pres.find((x) => x.id === selectedPresetId)
       if (p?.mode === 'size') sizeMB = p.sizeMB
     } catch (err) {
@@ -106,7 +106,7 @@
     outputPath = path
   }
 
-  function selectPreset(p: main.Preset) {
+  function selectPreset(p: presets.Preset) {
     selectedPresetId = p.id
     if (p.mode === 'size') sizeMB = p.sizeMB
     else crf = p.crf
@@ -248,7 +248,7 @@
     </div>
 
     <div class="presets">
-      {#each presets as p (p.id)}
+      {#each presetList as p (p.id)}
         <button
           class="preset"
           class:picked={p.id === selectedPresetId}
