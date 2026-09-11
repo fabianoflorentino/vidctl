@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+
+# Build artifacts
+build/bin/
+frontend/dist/*
+!frontend/dist/.gitkeep
+*.exe
+*.dll
+*.so
+*.dylib
+*.syso
+
+# Test / coverage
+coverage.out
+*.test
+
+# Logs and temp
+*.log
+*.tmp
+
+# OS cruft
+.DS_Store
+Thumbs.db
+
+# Editors / IDE
+.idea/
+.vscode/
+*.swp
+
+# Agent skill cache (local, not project)
+.agents/
+skills-lock.json
