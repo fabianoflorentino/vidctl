@@ -1,8 +1,20 @@
 name: Release
 
 on:
+  workflow_dispatch:
   push:
-    tags: ["v*"]
+    branches:
+      - main
+    paths-ignore:
+      - "README.md"
+      - "LICENSE"
+      - "docs/**"
+      - "site/**"
+      - ".github/**"
+
+concurrency:
+  group: release
+  cancel-in-progress: true
 
 permissions:
   contents: write
@@ -58,6 +70,9 @@ jobs:
           mkdir -p pkg
           if [ "$OS" = "macos" ]; then
             (cd build/bin && zip -r "$OLDPWD/pkg/vidctl-$OS-$ARCH.zip" vidctl.app)
+          elif [ "$OS" = "windows" ]; then
+            cp build/bin/vidctl* pkg/
+            powershell -Command "Compress-Archive -Path pkg/* -DestinationPath pkg/vidctl-windows-$ARCH.zip -Force"
           else
             cp build/bin/vidctl* pkg/
             (cd pkg && zip -r "vidctl-$OS-$ARCH.zip" *)
@@ -70,10 +85,32 @@ jobs:
           path: pkg/*.zip
 
   release:
-    name: Create Release
+    name: Release
     needs: build
     runs-on: ubuntu-latest
+
     steps:
+      - uses: actions/checkout@v7
+
+      - name: Determine version
+        id: version
+        run: |
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            echo "VERSION=${{ github.ref_name }}" >> "$GITHUB_ENV"
+            echo "CREATE_TAG=false" >> "$GITHUB_ENV"
+          else
+            echo "VERSION=v1.0.${{ github.run_number }}" >> "$GITHUB_ENV"
+            echo "CREATE_TAG=true" >> "$GITHUB_ENV"
+          fi
+
+      - name: Tag version
+        if: env.CREATE_TAG == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "$VERSION"
+          git push origin "$VERSION"
+
       - name: Download artifacts
         uses: actions/download-artifact@v8
         with:
@@ -88,5 +125,15 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
         with:
+          tag_name: ${{ env.VERSION }}
+          name: ${{ env.VERSION }}
+          body: |
+            vidctl — vídeo leve, história completa.
+
+            1m33s · 1080×1920 · 22,1 MB → 9,7 MB com o preset WhatsApp Status (10 MB), sem cortar duração nem formato.
+
+            Desktop nativo para Linux, Windows e macOS · encode 2-pass com ffmpeg · 100% offline.
           files: assets/*
           generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
