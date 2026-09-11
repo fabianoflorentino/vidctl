@@ -18,10 +18,15 @@ cortar cena. Alimentado por encode **2-pass** quando há limite de tamanho ou
 
 ## Instalação
 
-Baixe a última release em
-<https://github.com/fabianoflorentino/vidctl/releases/latest> — cada release
-traz todos os pacotes: `.deb` (Debian/Ubuntu), `.rpm` (Fedora/RHEL), zip para
-Linux/macOS/Windows e `checksums.txt`.
+Baixe na [página de releases](https://github.com/fabianoflorentino/vidctl/releases)
+a tag mais recente que termina no seu sistema — o vidctl publica **uma release
+por plataforma**:
+
+| Tag da release | Pacotes |
+|---|---|
+| `v1.x.y-windows` | `vidctl-windows-x64.zip` + checksums |
+| `v1.x.y-macos` | `vidctl-macos-arm64.zip` + checksums |
+| `v1.x.y-linux` | zip + `.deb` + `.rpm` + checksums |
 
 Guia passo a passo, com verificação de integridade e o ffmpeg por sistema:
 **[docs/instalacao.md](docs/instalacao.md)**
@@ -78,14 +83,17 @@ flowchart LR
   R --> Z["build<br/>zips: linux · macos-a64 · windows"]
   R --> D["deb<br/>container golang:1.27"]
   R --> E["rpm<br/>container fedora:latest"]
-  Z --> S["sha256sum → checksums"]
-  D --> S
-  E --> S
-  S --> L["release v1.0.x<br/>6 assets + checksums.txt"]
+  R --> T["tags v1.0.x<br/>-windows · -linux · -macos"]
+  Z --> T
+  D --> T
+  E --> T
+  T --> L["releases por plataforma,<br/>cada uma com só os seus assets + checksums.txt"]
 ```
 
-Os três jobs rodam em paralelo e a **v1.0.x** é publicada com tudo anexado;
-não dá para liberar uma release incompleta.
+Uma **release por plataforma**: a **v1.0.x** publica três releases
+(`v1.0.x-windows`, `v1.0.x-linux`, `v1.0.x-macos`), cada uma com apenas os
+binários do seu sistema (a Linux leva zip + deb + rpm). A tag `v1.0.x` sem
+sufixo continua existindo como fonte para o PKGBUILD (Arch/AUR).
 
 ## Presets (destino → tamanho/qualidade)
 

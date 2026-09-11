@@ -182,10 +182,11 @@ jobs:
           name: vidctl-rpm
           path: pkg/vidctl-linux-x64.rpm
 
-  release:
-    name: Release
-    needs: [build, deb, rpm]
+  prepare:
+    name: Prepare tags
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
 
     steps:
       - uses: actions/checkout@v7
@@ -194,24 +195,38 @@ jobs:
         id: version
         run: |
           if [ "${{ github.ref_type }}" = "tag" ]; then
-            echo "VERSION=${{ github.ref_name }}" >> "$GITHUB_ENV"
-            echo "CREATE_TAG=false" >> "$GITHUB_ENV"
+            BASE="${{ github.ref_name }}"
           else
-            echo "VERSION=v1.0.${{ github.run_number }}" >> "$GITHUB_ENV"
-            echo "CREATE_TAG=true" >> "$GITHUB_ENV"
+            BASE="v1.0.${{ github.run_number }}"
           fi
+          echo "version=$BASE" >> "$GITHUB_OUTPUT"
 
-      - name: Tag version
-        if: env.CREATE_TAG == 'true'
+      - name: Create tags
         run: |
+          BASE="${{ steps.version.outputs.version }}"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag "$VERSION"
-          git push origin "$VERSION"
+          if [ "${{ github.ref_type }}" != "tag" ]; then
+            git tag "$BASE"
+            git push origin "$BASE"
+          fi
+          for os in windows linux macos; do
+            git tag "$BASE-$os"
+            git push origin "$BASE-$os"
+          done
 
-      - name: Download artifacts
+  release-windows:
+    name: Release (Windows)
+    needs: [build, prepare]
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.prepare.outputs.version }}-windows
+
+    steps:
+      - name: Download artifact
         uses: actions/download-artifact@v8
         with:
+          name: vidctl-windows-latest
           path: assets
           merge-multiple: true
 
@@ -226,11 +241,91 @@ jobs:
           tag_name: ${{ env.VERSION }}
           name: ${{ env.VERSION }}
           body: |
-            vidctl — vídeo leve, história completa.
+            vidctl — vídeo leve, história completa. Pacote oficial para **Windows 64-bit**.
 
             1m33s · 1080×1920 · 22,1 MB → 9,7 MB com o preset WhatsApp Status (10 MB), sem cortar duração nem formato.
+          files: assets/*
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
 
-            Desktop nativo para Linux, Windows e macOS · encode 2-pass com ffmpeg · 100% offline.
+  release-linux:
+    name: Release (Linux)
+    needs: [build, deb, rpm, prepare]
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.prepare.outputs.version }}-linux
+
+    steps:
+      - name: Download artifacts (zip, deb e rpm)
+        uses: actions/download-artifact@v8
+        with:
+          name: vidctl-ubuntu-latest
+          path: assets
+          merge-multiple: true
+
+      - name: Download .deb
+        uses: actions/download-artifact@v8
+        with:
+          name: vidctl-deb
+          path: assets
+          merge-multiple: true
+
+      - name: Download .rpm
+        uses: actions/download-artifact@v8
+        with:
+          name: vidctl-rpm
+          path: assets
+          merge-multiple: true
+
+      - name: Generate checksums
+        working-directory: assets
+        shell: bash
+        run: sha256sum * > checksums.txt
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ env.VERSION }}
+          name: ${{ env.VERSION }}
+          body: |
+            vidctl — vídeo leve, história completa. Pacote oficial para **Linux 64-bit** (.zip, .deb e .rpm).
+
+            1m33s · 1080×1920 · 22,1 MB → 9,7 MB com o preset WhatsApp Status (10 MB), sem cortar duração nem formato.
+          files: assets/*
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+  release-macos:
+    name: Release (macOS)
+    needs: [build, prepare]
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.prepare.outputs.version }}-macos
+
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: vidctl-macos-latest
+          path: assets
+          merge-multiple: true
+
+      - name: Generate checksums
+        working-directory: assets
+        shell: bash
+        run: sha256sum * > checksums.txt
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ env.VERSION }}
+          name: ${{ env.VERSION }}
+          body: |
+            vidctl — vídeo leve, história completa. Pacote oficial para **macOS arm64**.
+
+            1m33s · 1080×1920 · 22,1 MB → 9,7 MB com o preset WhatsApp Status (10 MB), sem cortar duração nem formato.
           files: assets/*
           generate_release_notes: true
         env:

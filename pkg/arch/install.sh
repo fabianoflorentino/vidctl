@@ -26,7 +26,7 @@ PKGDIR="$ROOT/pkg/aur"
 PKGVER=$(sed -n 's/^pkgver=\(.*\)/\1/p' "$PKGDIR/PKGBUILD")
 
 if git -C "$ROOT" rev-parse --git-dir >/dev/null 2>&1; then
-  LATEST=$(git ls-remote --tags origin 'v*' 2>/dev/null | sed 's#.*refs/tags/##' | sort -V | tail -1)
+  LATEST=$(git ls-remote --tags origin 'v*' 2>/dev/null | sed 's#.*refs/tags/##' | grep -v -- '-' | sort -V | tail -1)
   if [ -n "$LATEST" ] && [ "${LATEST#v}" != "$PKGVER" ]; then
     echo "aviso: release mais nova no GitHub é ${LATEST}. Atualize o PKGBUILD na raiz do repo:" >&2
     echo "  pkg/aur/update-aur.sh ${LATEST#v}" >&2

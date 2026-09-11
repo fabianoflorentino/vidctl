@@ -1,24 +1,22 @@
 # Instalação
 
-O vidctl é distribuído pelo repositório de [releases](https://github.com/fabianoflorentino/vidctl/releases).
-Cada release traz **todos** os pacotes de uma vez:
+O vidctl é publicado em **uma release por plataforma** — a mesma versão vira
+três tags, cada uma com apenas os pacotes do seu sistema:
 
-| Arquivo | Plataforma |
+| Tag da release | Pacotes (sempre com `checksums.txt`) |
 |---|---|
-| `vidctl-linux-x64.deb` | Debian / Ubuntu / derivados (64-bit) |
-| `vidctl-linux-x64.rpm` | Fedora / RHEL / derivados (x86_64) |
-| `vidctl-linux-x64.zip` | Linux genérico |
-| `vidctl-macos-arm64.zip` | macOS Apple Silicon (M1+) |
-| `vidctl-windows-x64.zip` | Windows 64-bit |
-| `checksums.txt` | Verificação de integridade |
+| `v1.x.y-linux` | `vidctl-linux-x64.zip`, `vidctl-linux-x64.deb`, `vidctl-linux-x64.rpm` |
+| `v1.x.y-macos` | `vidctl-macos-arm64.zip` |
+| `v1.x.y-windows` | `vidctl-windows-x64.zip` |
 
-Sempre use a versão mais recente: <https://github.com/fabianoflorentino/vidctl/releases/latest>
+Baixe na [página de releases](https://github.com/fabianoflorentino/vidctl/releases)
+a tag mais recente que termina no seu sistema (`-windows`, `-macos` ou `-linux`).
 
 ---
 
 ## Windows
 
-1. Baixe `vidctl-windows-x64.zip` da [última release](https://github.com/fabianoflorentino/vidctl/releases/latest).
+1. Baixe `vidctl-windows-x64.zip` da release mais recente que termina em [`-windows`](https://github.com/fabianoflorentino/vidctl/releases).
 2. Extraia o zip e rode `vidctl.exe`.
 3. O app exige ffmpeg e ffprobe no `PATH` (o vidctl avisa na primeira tela se estiverem faltando):
 
@@ -30,7 +28,7 @@ winget install Gyan.FFmpeg
 
 ## macOS (Apple Silicon)
 
-1. Baixe `vidctl-macos-arm64.zip` da [última release](https://github.com/fabianoflorentino/vidctl/releases/latest).
+1. Baixe `vidctl-macos-arm64.zip` da release mais recente que termina em [`-macos`](https://github.com/fabianoflorentino/vidctl/releases).
 2. Extraia e mova `vidctl.app` para a pasta Aplicativos.
 3. Por não ter assinatura, o Gatekeeper pede abertura manual: clique com o botão direito no `vidctl.app` → **Abrir**.
 4. Faltou o ffmpeg? `brew install ffmpeg` (e reinicie o app).
