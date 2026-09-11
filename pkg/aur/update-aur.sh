@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
-# Atualiza o PKGBUILD para uma nova versão (usa no AUR).
-# Uso: pkg/aur/update-aur.sh 1.0.2
+# Atualiza pkg/aur/PKGBUILD + .SRCINFO para uma nova release (rode no Arch Linux).
+# Uso: pkg/aur/update-aur.sh <versão>   (ex.: pkg/aur/update-aur.sh 1.0.7)
 set -euo pipefail
 
-VERSION="${1:?usage: $0 <version>}"
+VERSION="${1:?usage: $0 <versão>}"
 PKG="pkg/aur/PKGBUILD"
 [ -f "$PKG" ] || { echo "erro: $PKG não encontrado (rode do raiz do repo)" >&2; exit 1; }
+[ -f LICENSE ] || { echo "erro: LICENSE não encontrado" >&2; exit 1; }
 
 sed -i "s/^pkgver=.*/pkgver=${VERSION}/" "$PKG"
 
@@ -13,13 +14,15 @@ URL="https://github.com/fabianoflorentino/vidctl/archive/refs/tags/v${VERSION}.t
 SUM=$(curl -sL "$URL" | sha256sum | cut -d' ' -f1)
 [ -n "$SUM" ] || { echo "erro: falha ao baixar tarball v${VERSION}" >&2; exit 1; }
 
-python3 - "$SUM" <<'EOF'
-import sys, re
-path = "pkg/aur/PKGBUILD"
-s = open(path).read()
-s = re.sub(r"sha256sums=\('[0-9a-f]*'\)", "sha256sums=('" + sys.argv[1] + "')", s)
-open(path, "w").write(s)
-EOF
+sed -i "s/sha256sums=('[0-9a-f]*')/sha256sums=('${SUM}')/" "$PKG"
+cp LICENSE pkg/aur/LICENSE
 
-echo "PKGBUILD atualizado para v${VERSION} (sha256sums ok)"
-echo "Para publicar no AUR: cd <repo-aur> && cp $PKG PKGBUILD && makepkg --printsrcinfo > .SRCINFO && git add -A && git commit -m \"bump ${VERSION}\" && git push"
+if command -v makepkg >/dev/null 2>&1; then
+  (cd pkg/aur && makepkg --printsrcinfo > .SRCINFO)
+  echo "pkg/aur/.SRCINFO regenerado"
+else
+  echo "aviso: makepkg não encontrado. Em Arch, rode 'cd pkg/aur && makepkg --printsrcinfo > .SRCINFO' antes de publicar." >&2
+fi
+
+echo "PKGBUILD atualizado para v${VERSION} (sha256sums ${SUM:0:12}…)"
+echo "Próximo passo: pkg/aur/publish.sh"
