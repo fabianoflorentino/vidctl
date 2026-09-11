@@ -8,7 +8,6 @@ URL:            https://github.com/fabianoflorentino/vidctl
 Source0:        %{name}-%{version}.tar.gz
 
 BuildRequires:  gcc
-BuildRequires:  golang
 BuildRequires:  nodejs
 BuildRequires:  pkgconf-pkg-config
 BuildRequires:  gtk3-devel

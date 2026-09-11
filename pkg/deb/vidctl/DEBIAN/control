@@ -12,4 +12,3 @@ Description: Compress video to the exact size of each platform
  vidctl calculates the bitrate to fit a target size using ffmpeg two-pass
  encoding, keeping duration and format intact. Desktop app built with Wails
  and Go, 100% offline.
- Long description second paragraph.
