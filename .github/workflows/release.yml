@@ -66,22 +66,22 @@ jobs:
           set -euxo pipefail
           OS=$(echo "$RUNNER_OS" | tr '[:upper:]' '[:lower:]')
           ARCH=$(echo "$RUNNER_ARCH" | tr '[:upper:]' '[:lower:]')
-          mkdir -p pkg
+          mkdir -p dist
           if [ "$OS" = "macos" ]; then
-            (cd build/bin && zip -r "$OLDPWD/pkg/vidctl-$OS-$ARCH.zip" vidctl.app)
+            (cd build/bin && zip -r "$OLDPWD/dist/vidctl-$OS-$ARCH.zip" vidctl.app)
           elif [ "$OS" = "windows" ]; then
-            cp build/bin/vidctl* pkg/
-            powershell -Command "Compress-Archive -Path pkg/* -DestinationPath pkg/vidctl-windows-$ARCH.zip -Force"
+            cp build/bin/vidctl*.exe dist/
+            powershell -Command "Compress-Archive -Path dist/* -DestinationPath dist/vidctl-windows-$ARCH.zip -Force"
           else
-            cp build/bin/vidctl* pkg/
-            (cd pkg && zip -r "vidctl-$OS-$ARCH.zip" *)
+            cp build/bin/vidctl dist/
+            (cd dist && zip "vidctl-$OS-$ARCH.zip" vidctl)
           fi
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: vidctl-${{ matrix.os }}
-          path: pkg/*.zip
+          path: dist/*.zip
 
   deb:
     name: Debian package (.deb)

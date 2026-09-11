@@ -5,6 +5,7 @@ node_modules/
 build/bin/
 frontend/dist/*
 !frontend/dist/.gitkeep
+dist/
 *.exe
 *.dll
 *.so
