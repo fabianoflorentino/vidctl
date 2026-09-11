@@ -1,0 +1,36 @@
+# Maintainer: Fabiano Santos Florentino <fabianoflorentino@gmail.com>
+# Atualize pkgver + sha256sums a cada release (script: pkg/aur/update-aur.sh).
+# Build nativo a partir do fonte (go + npm + wails), encode 2-pass com ffmpeg.
+
+pkgname=vidctl
+pkgver=1.0.1
+pkgrel=1
+pkgdesc="Compress video to the exact size of each platform with ffmpeg 2-pass"
+pkgdesc[pt_BR]="Comprime vídeos para o tamanho exato de cada plataforma com ffmpeg 2-pass"
+arch=('x86_64')
+url="https://github.com/fabianoflorentino/vidctl"
+license=('MIT')
+depends=('gtk3' 'webkit2gtk-4.1' 'ffmpeg')
+makedepends=('go' 'npm')
+optdepends=('libnotify: desktop notifications for compression status')
+source=("https://github.com/fabianoflorentino/vidctl/archive/refs/tags/v${pkgver}.tar.gz")
+sha256sums=('87741619edbac726d4ddcb9e39c5de1231d4afa5b851a40fae186be2e9b49016')
+
+prepare() {
+  cd "${srcdir}/vidctl-v${pkgver}"
+  go install github.com/wailsapp/wails/v2/cmd/wails@v2.15.0
+}
+
+build() {
+  cd "${srcdir}/vidctl-v${pkgver}"
+  export PATH="$PATH:$(go env GOPATH)/bin"
+  wails build -clean -tags webkit2_41
+}
+
+package() {
+  cd "${srcdir}/vidctl-v${pkgver}"
+  install -Dm755 build/bin/vidctl "${pkgdir}/usr/bin/vidctl"
+  install -Dm644 pkg/vidctl.desktop "${pkgdir}/usr/share/applications/vidctl.desktop"
+  install -Dm644 pkg/icon/vidctl-128.png "${pkgdir}/usr/share/icons/hicolor/128x128/apps/vidctl.png"
+  install -Dm644 pkg/icon/vidctl-256.png "${pkgdir}/usr/share/icons/hicolor/256x256/apps/vidctl.png"
+}

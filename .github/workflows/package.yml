@@ -1,0 +1,89 @@
+name: Packages
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  deb:
+    name: Debian (.deb)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build Debian package
+        env:
+          VERSION: ${{ github.event.release.tag_name || 'v1.0.1' }}
+        run: |
+          docker run --rm -v "$PWD":/src -w /src golang:1.27-bookworm bash -euo pipefail -c '
+            set -x
+            apt-get update -qq
+            apt-get install -yqq --no-install-recommends ca-certificates curl \
+              libgtk-3-dev libwebkit2gtk-4.1-dev
+            curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
+            apt-get install -yqq nodejs
+            export PATH="$(go env GOPATH)/bin:$PATH"
+            go install github.com/wailsapp/wails/v2/cmd/wails@v2.15.0
+            wails build -clean -tags webkit2_41
+            VER=${VERSION#v}
+            ARCH=$(dpkg --print-architecture)
+            install -Dm755 build/bin/vidctl pkg/deb/vidctl/usr/bin/vidctl
+            install -Dm644 pkg/vidctl.desktop pkg/deb/vidctl/usr/share/applications/vidctl.desktop
+            install -Dm644 pkg/icon/vidctl-128.png pkg/deb/vidctl/usr/share/icons/hicolor/128x128/apps/vidctl.png
+            install -Dm644 pkg/icon/vidctl-256.png pkg/deb/vidctl/usr/share/icons/hicolor/256x256/apps/vidctl.png
+            sed -i "s/^Version:.*/Version: ${VER}/" pkg/deb/vidctl/DEBIAN/control
+            dpkg-deb --root-owner-group --build pkg/deb/vidctl pkg/vidctl_${VER}_${ARCH}.deb
+            ls -lh pkg/*.deb
+          '
+
+      - name: Upload .deb to release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          shopt -s nullglob
+          gh release upload "$TAG" pkg/*.deb --clobber
+
+  rpm:
+    name: Fedora (.rpm)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build RPM package
+        env:
+          VERSION: ${{ github.event.release.tag_name || 'v1.0.1' }}
+        run: |
+          docker run --rm -v "$PWD":/src -w /src fedora:latest bash -euo pipefail -c '
+            set -x
+            dnf install -y -q rpm-build gcc curl pkgconf-pkg-config \
+              gtk3-devel webkit2gtk4.1-devel nodejs
+            mkdir -p /root/rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
+            curl -fsSL https://go.dev/dl/go1.27.1.linux-amd64.tar.gz -o /tmp/go.tgz
+            rm -rf /usr/local/go
+            tar -C /usr/local -xzf /tmp/go.tgz
+            export PATH="/usr/local/go/bin:$(go env GOPATH)/bin:$PATH"
+            go install github.com/wailsapp/wails/v2/cmd/wails@v2.15.0
+            VER=${VERSION#v}
+            tar -czf /root/rpmbuild/SOURCES/vidctl-${VER}.tar.gz \
+              --transform="s,^\.,vidctl-${VER}," -C /src .
+            sed -i "s/^Version:.*/Version: ${VER}/" /src/pkg/rpm/vidctl.spec
+            cp /src/pkg/rpm/vidctl.spec /root/rpmbuild/SOURCES/vidctl.spec
+            rpmbuild -bb /root/rpmbuild/SOURCES/vidctl.spec
+            cp /root/rpmbuild/RPMS/x86_64/vidctl-*.rpm /src/pkg/
+            ls -lh /src/pkg/*.rpm
+          '
+
+      - name: Upload .rpm to release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          shopt -s nullglob
+          gh release upload "$TAG" pkg/*.rpm --clobber

@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=vidctl
+GenericName=Video Compressor
+GenericName[pt_BR]=Compressor de vídeo
+Comment=Compress video to the exact size of each platform with ffmpeg 2-pass
+Comment[pt_BR]=Comprime vídeos para o tamanho exato de cada plataforma com ffmpeg 2-pass
+Exec=/usr/bin/vidctl
+Icon=vidctl
+Terminal=false
+Categories=AudioVideo;Video;AudioVideoEditing;
+Keywords=video;compress;ffmpeg;whatsapp;instagram;
+StartupNotify=true

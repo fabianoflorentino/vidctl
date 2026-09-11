@@ -1,0 +1,15 @@
+Package: vidctl
+Version: 1.0.1
+Section: video
+Priority: optional
+Architecture: amd64
+Maintainer: Fabiano Santos Florentino <fabianoflorentino@gmail.com>
+Homepage: https://github.com/fabianoflorentino/vidctl
+Installed-Size: 20000
+Depends: libgtk-3-0 (>= 3.24), libwebkit2gtk-4.1-0, ffmpeg
+Recommends: libnotify-bin
+Description: Compress video to the exact size of each platform
+ vidctl calculates the bitrate to fit a target size using ffmpeg two-pass
+ encoding, keeping duration and format intact. Desktop app built with Wails
+ and Go, 100% offline.
+ Long description second paragraph.
