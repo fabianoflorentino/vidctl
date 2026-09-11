@@ -3,6 +3,9 @@ Version:        1.0.1
 Release:        1%{?dist}
 Summary:        Compress video to the exact size of each platform with ffmpeg 2-pass
 
+# Binário Go não gera debuginfo; evita erro de debugsourcefiles.list vazia.
+%global debug_package %{nil}
+
 License:        MIT
 URL:            https://github.com/fabianoflorentino/vidctl
 Source0:        %{name}-%{version}.tar.gz
