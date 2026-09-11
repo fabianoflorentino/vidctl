@@ -39,6 +39,33 @@ wails build -clean -tags webkit2_41
 
 O binário sai em `build/bin/vidctl`.
 
+## Instalação no Arch Linux (estilo AUR, manual)
+
+Sem precisar de conta no AUR, usando o PKGBUILD que vive no próprio repo:
+
+```bash
+git clone https://github.com/fabianoflorentino/vidctl
+cd vidctl
+pkg/arch/install.sh
+```
+
+O script faz o mesmo que o `yay` faz por baixo dos panos: roda
+`makepkg -si` sobre `pkg/aur/PKGBUILD` (resolve/instala as dependências,
+compila do fonte com `wails build -clean -tags webkit2_41` e instala o
+pacote `.zst`).
+
+Quer uma versão mais nova? Atualize o PKGBUILD antes (precisa de `makepkg`,
+do base-devel):
+
+```bash
+cd vidctl
+git pull
+pkg/aur/update-aur.sh <versão>   # ex.: 1.0.8
+```
+
+Conseguiu conta no AUR? Use `pkg/aur/publish.sh` para submeter/atualizar o
+pacote em https://aur.archlinux.org/packages/vidctl.
+
 ## Testes
 
 ```bash
