@@ -5,9 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
-	"os/exec"
 	"strconv"
 	"strings"
+
+	"github.com/fabianoflorentino/vidctl/internal/cmdutil"
 )
 
 // Info describes an input video probed with ffprobe.
@@ -53,7 +54,7 @@ type ffprobeOutput struct {
 }
 
 func ffprobePath() (string, error) {
-	p, err := exec.LookPath("ffprobe")
+	p, err := cmdutil.LookPath("ffprobe")
 	if err != nil {
 		return "", errors.New("ffprobe não encontrado. Instale o ffmpeg para usar o vidctl.")
 	}
@@ -67,7 +68,7 @@ func Probe(path string) (*Info, error) {
 		return nil, err
 	}
 
-	out, err := exec.Command(bin,
+	out, err := cmdutil.Command(bin,
 		"-v", "error",
 		"-print_format", "json",
 		"-show_format",

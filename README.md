@@ -14,7 +14,10 @@ cortar cena. Alimentado por encode **2-pass** quando há limite de tamanho ou
 - Progresso em tempo real com cancelamento a qualquer momento
 - Desktop nativo para **Linux, Windows e macOS** (Wails v2 + WebKit/WebView2)
 - Sem internet: fontes e interface bundladas no binário
-- Verifica `ffmpeg`/`ffprobe` na inicialização e avisa se faltarem
+- Verifica `ffmpeg`/`ffprobe` na inicialização e avisa se faltarem; o botão
+  "verificar de novo" relê o PATH do sistema, então dá para instalar o ffmpeg
+  com o app aberto sem reiniciar
+- No Windows, conversões e sondagens de arquivo não abrem janelas de console
 
 ## Instalação
 

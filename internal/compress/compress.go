@@ -15,6 +15,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/fabianoflorentino/vidctl/internal/cmdutil"
 	"github.com/fabianoflorentino/vidctl/internal/events"
 	"github.com/fabianoflorentino/vidctl/internal/media"
 	"github.com/fabianoflorentino/vidctl/internal/presets"
@@ -70,7 +71,7 @@ func (m *Manager) Remove(id string) {
 }
 
 func ffmpegPath() (string, error) {
-	p, err := exec.LookPath("ffmpeg")
+	p, err := cmdutil.LookPath("ffmpeg")
 	if err != nil {
 		return "", errors.New("ffmpeg não encontrado. Instale o ffmpeg para usar o vidctl.")
 	}
@@ -186,8 +187,8 @@ func buildSizePasses(ctx context.Context, jobID string, job Job, preset presets.
 		job.OutputPath,
 	}
 
-	return exec.CommandContext(ctx, bin, pass1Args...),
-		exec.CommandContext(ctx, bin, pass2Args...),
+	return cmdutil.CommandContext(ctx, bin, pass1Args...),
+		cmdutil.CommandContext(ctx, bin, pass2Args...),
 		nil
 }
 
@@ -208,7 +209,7 @@ func buildCrfPass(ctx context.Context, job Job, preset presets.Preset, info *med
 	args = append(args, "-movflags", "+faststart",
 		"-progress", "pipe:1", "-nostats",
 		job.OutputPath)
-	return exec.CommandContext(ctx, bin, args...)
+	return cmdutil.CommandContext(ctx, bin, args...)
 }
 
 // execute runs a command, scanning `-progress pipe:1` and emitting progress events.

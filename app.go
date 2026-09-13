@@ -9,6 +9,7 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/fabianoflorentino/vidctl/internal/cmdutil"
 	"github.com/fabianoflorentino/vidctl/internal/compress"
 	"github.com/fabianoflorentino/vidctl/internal/events"
 	"github.com/fabianoflorentino/vidctl/internal/media"
@@ -45,7 +46,7 @@ type SystemStatus struct {
 func (a *App) CheckFFmpeg() SystemStatus {
 	var missing []string
 	for _, bin := range []string{"ffmpeg", "ffprobe"} {
-		if _, err := exec.LookPath(bin); err != nil {
+		if _, err := cmdutil.LookPath(bin); err != nil {
 			missing = append(missing, bin)
 		}
 	}
