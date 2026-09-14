@@ -9,6 +9,7 @@ on:
       - "tools/**"
       - "site/**"
       - ".github/**"
+      - "docs/**"
       - "LICENSE"
       - "README.md"
       - "CHANGELOG.md"
