@@ -10,6 +10,8 @@ on:
       - "site/**"
       - ".github/**"
       - "LICENSE"
+      - "README.md"
+      - "CHANGELOG.md"
 
 concurrency:
   group: release
@@ -241,11 +243,10 @@ jobs:
           tag_name: ${{ env.VERSION }}
           name: ${{ env.VERSION }}
           body: |
-            vidctl — vídeo leve, história completa. Pacote oficial para **Windows 64-bit**.
+            vidctl v${{ env.VERSION }} — pacote oficial para **Windows 64-bit**.
 
-            1m33s · 1080×1920 · 22,1 MB → 9,7 MB com o preset WhatsApp Status (10 MB), sem cortar duração nem formato.
+            Changelog completo: [CHANGELOG.md](https://github.com/fabianoflorentino/vidctl/blob/main/CHANGELOG.md)
           files: assets/*
-          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ github.token }}
 
@@ -289,11 +290,10 @@ jobs:
           tag_name: ${{ env.VERSION }}
           name: ${{ env.VERSION }}
           body: |
-            vidctl — vídeo leve, história completa. Pacote oficial para **Linux 64-bit** (.zip, .deb e .rpm).
+            vidctl v${{ env.VERSION }} — pacote oficial para **Linux 64-bit** (.zip, .deb e .rpm).
 
-            1m33s · 1080×1920 · 22,1 MB → 9,7 MB com o preset WhatsApp Status (10 MB), sem cortar duração nem formato.
+            Changelog completo: [CHANGELOG.md](https://github.com/fabianoflorentino/vidctl/blob/main/CHANGELOG.md)
           files: assets/*
-          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ github.token }}
 
@@ -323,10 +323,9 @@ jobs:
           tag_name: ${{ env.VERSION }}
           name: ${{ env.VERSION }}
           body: |
-            vidctl — vídeo leve, história completa. Pacote oficial para **macOS arm64**.
+            vidctl v${{ env.VERSION }} — pacote oficial para **macOS arm64**.
 
-            1m33s · 1080×1920 · 22,1 MB → 9,7 MB com o preset WhatsApp Status (10 MB), sem cortar duração nem formato.
+            Changelog completo: [CHANGELOG.md](https://github.com/fabianoflorentino/vidctl/blob/main/CHANGELOG.md)
           files: assets/*
-          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ github.token }}
