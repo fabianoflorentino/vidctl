@@ -6,6 +6,8 @@ bitrate para caber no tamanho alvo — preservando a duração e o formato, sem
 cortar cena. Alimentado por encode **2-pass** quando há limite de tamanho ou
 **CRF** quando é qualidade em primeiro lugar. 100% offline.
 
+> Histórico de versões: [CHANGELOG.md](CHANGELOG.md)
+
 ## Funcionalidades
 
 - Presets exatos por plataforma (WhatsApp 10/16 MB, Instagram 16 MB, Shorts
