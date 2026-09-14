@@ -36,4 +36,6 @@ Thumbs.db
 
 # Agent skill cache (local, not project)
 .agents/
+.claude/
+agent/
 skills-lock.json
