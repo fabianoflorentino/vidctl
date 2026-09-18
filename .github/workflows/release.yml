@@ -81,7 +81,7 @@ jobs:
           fi
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: vidctl-${{ matrix.os }}
           path: dist/*.zip
@@ -129,7 +129,7 @@ jobs:
           '
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: vidctl-deb
           path: pkg/vidctl-linux-x64.deb
@@ -180,7 +180,7 @@ jobs:
           '
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: vidctl-rpm
           path: pkg/vidctl-linux-x64.rpm
