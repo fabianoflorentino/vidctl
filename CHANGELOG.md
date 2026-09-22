@@ -13,6 +13,39 @@ operacional dos pacotes.
 
 - Nada ainda.
 
+## [2.0.0] — 2026-09-22
+
+Primeira grande revisão da interface + corte de vídeo por tempo.
+
+### Adicionado
+
+- **Corte em partes (split)**: divide o vídeo por tempo — N partes iguais ou
+  X minutos por parte (ex.: 30 min → 6 × 5 min) — com mínimo de 1 min por
+  parte e teto de 60 partes; cada parte passa pela compressão escolhida e sai
+  como `nome-partN.mp4` (`internal/split` + `Job.Split` no pipeline).
+- **Redesign da interface no estilo Constrict** (branch `feat/ui-constrict`):
+  layout full-height com barra lateral de controles (Destino, Qualidade/
+  Tamanho alvo, Cortar em partes, Saída), estado vazio estilo StatusPage,
+  linha do vídeo como card com miniatura/statu/PIE de progresso e barra de
+  ações inferior.
+- **Tema claro/escuro manual**: botão sol/lua no topo; segue o sistema por
+  padrão e a escolha fica persistida entre execuções.
+- **Painel de progresso enriquecido**: card próprio abaixo do vídeo (mesma
+  largura e raio) com percentual agregado por parte e leitura ao vivo de
+  CPU, memória, % do ffmpeg e GPU (NVIDIA quando disponível) — novo
+  `internal/sysinfo` via polling 1s (`GetUsage`).
+- `OpenMultipleDialog` no backend para multi-seleção de arquivos (base da
+  futura fila batch).
+- Roadmap: Fase 11 (corte em segmentos) e plano de UI `docs/plano-ui-constrict.md`.
+
+### Corrigido
+
+- Rodapé/ação com faixa vazia gigante em janelas altas (layout agora ancora
+  `html/body/#app` em 100% com coluna flex).
+- Scroll horizontal indesejado na barra lateral (min-width de flex children
+  + overflow-x).
+- Ícone do estado vazio (troca de "pilha" por câmera de vídeo).
+
 ## [1.0.17] — 2026-09-13
 
 Primeira versão **production ready** do vidctl.

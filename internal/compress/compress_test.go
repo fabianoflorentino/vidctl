@@ -13,6 +13,7 @@ import (
 	"github.com/fabianoflorentino/vidctl/internal/events"
 	"github.com/fabianoflorentino/vidctl/internal/media"
 	"github.com/fabianoflorentino/vidctl/internal/presets"
+	"github.com/fabianoflorentino/vidctl/internal/split"
 )
 
 func skipOnWindows(t *testing.T) {
@@ -86,7 +87,7 @@ func TestComputeSizeBudget(t *testing.T) {
 				DurationSec: tt.duration,
 				HasAudio:    tt.hasAudio,
 			}
-			lines, err := computeSizeBudget(Job{}, preset, info)
+			lines, err := computeSizeBudget(Job{}, preset, info, tt.duration)
 			if tt.wantErr {
 				if err == nil {
 					t.Fatal("expected error, got nil")
@@ -110,7 +111,7 @@ func TestComputeSizeBudget(t *testing.T) {
 func TestComputeSizeBudgetFloorsBitrate(t *testing.T) {
 	preset := presets.Preset{Mode: "size", SizeMB: 1, AudioBitrate: "64k"}
 	info := &media.Info{DurationSec: 2000, HasAudio: false}
-	lines, err := computeSizeBudget(Job{}, preset, info)
+	lines, err := computeSizeBudget(Job{}, preset, info, 2000)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -202,7 +203,7 @@ func TestBuildSizePasses(t *testing.T) {
 	info := &media.Info{DurationSec: 80, HasAudio: true}
 	p := presets.Preset{Mode: "size", SizeMB: 10, AudioBitrate: "96k", CRF: 23}
 
-	p1, p2, err := buildSizePasses(context.Background(), "job-s", Job{InputPath: "in.mp4", OutputPath: "out.mp4"}, p, info)
+	p1, p2, err := buildSizePasses(context.Background(), "job-s", Job{InputPath: "in.mp4", OutputPath: "out.mp4"}, p, info, split.Segment{Index: 1, EndSec: 80})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -215,7 +216,7 @@ func TestBuildSizePasses(t *testing.T) {
 
 	t.Run("missing ffmpeg", func(t *testing.T) {
 		t.Setenv("PATH", t.TempDir())
-		if _, _, err := buildSizePasses(context.Background(), "j", Job{}, p, info); err == nil {
+		if _, _, err := buildSizePasses(context.Background(), "j", Job{}, p, info, split.Segment{}); err == nil {
 			t.Fatal("expected error, got nil")
 		}
 	})
@@ -224,7 +225,7 @@ func TestBuildSizePasses(t *testing.T) {
 		fakeToolchain(t)
 		info := &media.Info{DurationSec: 3600, HasAudio: true}
 		p := presets.Preset{Mode: "size", SizeMB: 1, AudioBitrate: "96k"}
-		if _, _, err := buildSizePasses(context.Background(), "j", Job{}, p, info); err == nil {
+		if _, _, err := buildSizePasses(context.Background(), "j", Job{}, p, info, split.Segment{Index: 1, EndSec: 3600}); err == nil {
 			t.Fatal("expected budget error, got nil")
 		}
 	})
@@ -235,19 +236,19 @@ func TestBuildCrfPass(t *testing.T) {
 	fakeToolchain(t)
 	p := presets.Preset{CRF: 23, AudioBitrate: "96k"}
 
-	withAudio := buildCrfPass(context.Background(), Job{InputPath: "in.mp4", OutputPath: "out.mp4"}, p, &media.Info{HasAudio: true})
+	withAudio := buildCrfPass(context.Background(), Job{InputPath: "in.mp4", OutputPath: "out.mp4"}, p, &media.Info{HasAudio: true}, split.Segment{})
 	if !containsStr(withAudio.Args, "-c:a", "aac") {
 		t.Errorf("com áudio deve incluir -c:a aac, args: %v", withAudio.Args)
 	}
 
-	noAudio := buildCrfPass(context.Background(), Job{InputPath: "in.mp4", OutputPath: "out.mp4"}, p, &media.Info{HasAudio: false})
+	noAudio := buildCrfPass(context.Background(), Job{InputPath: "in.mp4", OutputPath: "out.mp4"}, p, &media.Info{HasAudio: false}, split.Segment{})
 	if containsStr(noAudio.Args, "-c:a", "aac") {
 		t.Errorf("sem áudio não deve incluir -c:a aac, args: %v", noAudio.Args)
 	}
 
 	t.Run("missing ffmpeg ignores error", func(t *testing.T) {
 		t.Setenv("PATH", t.TempDir())
-		cmd := buildCrfPass(context.Background(), Job{}, p, &media.Info{HasAudio: false})
+		cmd := buildCrfPass(context.Background(), Job{}, p, &media.Info{HasAudio: false}, split.Segment{})
 		if cmd.Args[0] != "" {
 			t.Errorf("binário deveria estar vazio, got %q", cmd.Args[0])
 		}
@@ -265,7 +266,7 @@ func TestExecuteProgress(t *testing.T) {
 
 	got := captureCompressEvents(t)
 	cmd := exec.CommandContext(context.Background(), "ffmpeg")
-	if err := execute(context.Background(), cmd, "job-e", "pass1/2", 2.0); err != nil {
+	if err := execute(context.Background(), cmd, "job-e", "pass1/2", 2.0, 0, 100); err != nil {
 		t.Fatalf("execute failed: %v", err)
 	}
 
@@ -292,7 +293,7 @@ func TestExecuteFails(t *testing.T) {
 	t.Setenv("PATH", dir)
 
 	cmd := exec.CommandContext(context.Background(), "ffmpeg")
-	if err := execute(context.Background(), cmd, "job-f", "pass1/2", 2.0); err == nil {
+	if err := execute(context.Background(), cmd, "job-f", "pass1/2", 2.0, 0, 100); err == nil {
 		t.Fatal("expected error, got nil")
 	}
 }
@@ -462,6 +463,158 @@ func TestRunCanceled(t *testing.T) {
 		if r.name == "compress:error" || r.name == "compress:done" {
 			t.Errorf("cancelamento não deve emitir error/done, got %+v", *got)
 		}
+	}
+}
+
+const fakeFFprobeLong = `#!/bin/sh
+printf '%s\n' '{"streams":[
+	{"codec_type":"video","codec_name":"h264","width":320,"height":240,"duration":180.0},
+	{"codec_type":"audio","codec_name":"aac"}
+],"format":{"duration":180.0}}'
+`
+
+const fakeFFmpegRecord = `#!/bin/sh
+out=""
+for a in "$@"; do out="$a"; done
+case "$out" in /dev/null) ;; *) printf 'hi' > "$out" ;; esac
+printf '%s\n' "$*" >> "$ARGS_LOG"
+echo out_time_us=1000000
+exit 0
+`
+
+func TestRunSizeSplit(t *testing.T) {
+	skipOnWindows(t)
+	dir := t.TempDir()
+	bin := filepath.Join(dir, "bin")
+	if err := os.MkdirAll(bin, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	for name, script := range map[string]string{"ffmpeg": fakeFFmpegRecord, "ffprobe": fakeFFprobeLong} {
+		if err := os.WriteFile(filepath.Join(bin, name), []byte(script), 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	t.Setenv("PATH", bin)
+	argsLog := filepath.Join(dir, "args.log")
+	t.Setenv("ARGS_LOG", argsLog)
+
+	output := filepath.Join(dir, "out.mp4")
+	got := captureCompressEvents(t)
+	Run(context.Background(), "j-split", Job{
+		InputPath:  "in.mp4",
+		OutputPath: output,
+		PresetID:   "whatsapp-status",
+		Split:      &split.Spec{Parts: 3},
+	})
+
+	var donePaths []string
+	var stages []string
+	for _, r := range *got {
+		switch d := r.data.(type) {
+		case events.DoneEvent:
+			donePaths = append(donePaths, filepath.Base(d.OutputPath))
+			if d.SizeBytes <= 0 {
+				t.Errorf("done %s com SizeBytes <= 0", d.OutputPath)
+			}
+		case events.ProgressEvent:
+			stages = append(stages, d.Stage)
+		}
+	}
+	if e := findErr(got); e != "" {
+		t.Fatalf("erro inesperado: %q", e)
+	}
+	want := []string{"out-part1.mp4", "out-part2.mp4", "out-part3.mp4"}
+	if len(donePaths) != 3 || donePaths[0] != want[0] || donePaths[1] != want[1] || donePaths[2] != want[2] {
+		t.Fatalf("dones = %v, want %v", donePaths, want)
+	}
+	if len(stages) == 0 || !strings.Contains(stages[len(stages)-1], "parte 3/3") {
+		t.Errorf("última stage deveria indicar parte 3/3, got %v", stages)
+	}
+
+	raw, err := os.ReadFile(argsLog)
+	if err != nil {
+		t.Fatal(err)
+	}
+	lines := strings.Split(strings.TrimSpace(string(raw)), "\n")
+	if len(lines) != 6 {
+		t.Fatalf("esperava 6 comandos (2 por parte), got %d: %q", len(lines), string(raw))
+	}
+	if !strings.Contains(lines[0], "-ss 0.000 -to 60.000 -i in.mp4") {
+		t.Errorf("seek antes de -i ausente no pass1 da parte 1: %q", lines[0])
+	}
+	if !strings.Contains(lines[2], "-ss 60.000 -to 120.000") {
+		t.Errorf("seek da parte 2 ausente: %q", lines[2])
+	}
+	if !strings.Contains(lines[0], "vidctl-j-split-p1 ") || !strings.Contains(lines[2], "vidctl-j-split-p2 ") {
+		t.Errorf("passlogfile deveria diferir por parte: %q / %q", lines[0], lines[2])
+	}
+	part1 := strings.TrimSuffix(output, ".mp4") + "-part1.mp4"
+	part2 := strings.TrimSuffix(output, ".mp4") + "-part2.mp4"
+	if !strings.HasSuffix(lines[1], part1) || !strings.HasSuffix(lines[3], part2) {
+		t.Errorf("saídas por parte ausentes: %q / %q", lines[1], lines[3])
+	}
+}
+
+func TestRunSplitInvalid(t *testing.T) {
+	skipOnWindows(t)
+	dir := t.TempDir()
+	bin := filepath.Join(dir, "bin")
+	if err := os.MkdirAll(bin, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	for name, script := range map[string]string{"ffmpeg": fakeFFmpegOK, "ffprobe": fakeFFprobeLong} {
+		if err := os.WriteFile(filepath.Join(bin, name), []byte(script), 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	t.Setenv("PATH", bin)
+	got := captureCompressEvents(t)
+	Run(context.Background(), "j-bad-split", Job{
+		InputPath:  "in.mp4",
+		OutputPath: filepath.Join(t.TempDir(), "out.mp4"),
+		PresetID:   "whatsapp-status",
+		Split:      &split.Spec{Parts: 300},
+	})
+	if e := findErr(got); !strings.Contains(e, "máximo") {
+		t.Errorf("esperava erro de máximo de partes, got %q", e)
+	}
+}
+
+func TestRunNoSplitKeepsSingleDone(t *testing.T) {
+	skipOnWindows(t)
+	fakeToolchain(t)
+	dir := t.TempDir()
+	argsLog := filepath.Join(dir, "args.log")
+	t.Setenv("ARGS_LOG", argsLog)
+	bin := t.TempDir()
+	for name, script := range map[string]string{"ffmpeg": fakeFFmpegRecord, "ffprobe": fakeFFprobe} {
+		if err := os.WriteFile(filepath.Join(bin, name), []byte(script), 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	t.Setenv("PATH", bin)
+
+	got := captureCompressEvents(t)
+	Run(context.Background(), "j-nosplit", Job{
+		InputPath:  "in.mp4",
+		OutputPath: filepath.Join(dir, "out.mp4"),
+		PresetID:   "whatsapp-status",
+	})
+	var done int
+	for _, r := range *got {
+		if r.name == "compress:done" {
+			done++
+		}
+	}
+	if done != 1 {
+		t.Fatalf("esperava 1 done, got %d", done)
+	}
+	raw, err := os.ReadFile(argsLog)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(raw), "-ss") {
+		t.Errorf("sem split não deve conter -ss: %q", string(raw))
 	}
 }
 

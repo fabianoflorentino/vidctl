@@ -159,6 +159,14 @@ func TestCancelUnknownJob(t *testing.T) {
 	}
 }
 
+func TestVideoFilterPattern(t *testing.T) {
+	for _, ext := range []string{"mp4", "mkv", "mov", "avi", "webm", "m4v", "ts", "flv"} {
+		if !strings.Contains(videoFilterPattern, "*."+ext) {
+			t.Errorf("padrão deve contemplar *.%s: %q", ext, videoFilterPattern)
+		}
+	}
+}
+
 func TestCancelRegisteredJob(t *testing.T) {
 	a := NewApp()
 	canceled := false
@@ -230,5 +238,18 @@ printf '%s\n' '{"streams":[
 
 	if st, err := os.Stat(output); err != nil || st.Size() == 0 {
 		t.Errorf("arquivo de saída ausente: err=%v", err)
+	}
+}
+
+func TestGetUsageSmoke(t *testing.T) {
+	snap := NewApp().GetUsage()
+	if snap.MemTotalMB <= 0 {
+		t.Errorf("MemTotalMB = %v, esperava > 0", snap.MemTotalMB)
+	}
+	if snap.CPU < 0 || snap.CPU > 100 {
+		t.Errorf("CPU = %v, fora de 0..100", snap.CPU)
+	}
+	if snap.GPU < -1 || snap.GPU > 100 {
+		t.Errorf("GPU = %v, esperava -1 ou 0..100", snap.GPU)
 	}
 }

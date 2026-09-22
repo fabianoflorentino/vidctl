@@ -4,6 +4,7 @@ import {main} from '../models';
 import {compress} from '../models';
 import {media} from '../models';
 import {presets} from '../models';
+import {sysinfo} from '../models';
 
 export function Cancel(arg1:string):Promise<void>;
 
@@ -15,8 +16,12 @@ export function GetMediaInfo(arg1:string):Promise<media.Info>;
 
 export function GetPresets():Promise<Array<presets.Preset>>;
 
+export function GetUsage():Promise<sysinfo.Snapshot>;
+
 export function OpenFolder(arg1:string):Promise<void>;
 
 export function OpenInputDialog():Promise<string>;
+
+export function OpenMultipleDialog():Promise<Array<string>>;
 
 export function OpenOutputDialog(arg1:string):Promise<string>;

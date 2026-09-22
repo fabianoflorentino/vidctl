@@ -6,6 +6,7 @@ export namespace compress {
 	    presetId: string;
 	    sizeMB: number;
 	    crf: number;
+	    split?: split.Spec;
 	
 	    static createFrom(source: any = {}) {
 	        return new Job(source);
@@ -18,7 +19,26 @@ export namespace compress {
 	        this.presetId = source["presetId"];
 	        this.sizeMB = source["sizeMB"];
 	        this.crf = source["crf"];
+	        this.split = this.convertValues(source["split"], split.Spec);
 	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
 	}
 
 }
@@ -99,6 +119,50 @@ export namespace presets {
 	        this.sizeMB = source["sizeMB"];
 	        this.crf = source["crf"];
 	        this.audioBitrate = source["audioBitrate"];
+	    }
+	}
+
+}
+
+export namespace split {
+	
+	export class Spec {
+	    parts: number;
+	    minutesEach: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new Spec(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.parts = source["parts"];
+	        this.minutesEach = source["minutesEach"];
+	    }
+	}
+
+}
+
+export namespace sysinfo {
+	
+	export class Snapshot {
+	    cpu: number;
+	    memUsedMB: number;
+	    memTotalMB: number;
+	    ffmpegCpu: number;
+	    gpu: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new Snapshot(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.cpu = source["cpu"];
+	        this.memUsedMB = source["memUsedMB"];
+	        this.memTotalMB = source["memTotalMB"];
+	        this.ffmpegCpu = source["ffmpegCpu"];
+	        this.gpu = source["gpu"];
 	    }
 	}
 

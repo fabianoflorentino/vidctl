@@ -26,6 +26,11 @@ componente `App.svelte`).
 | 8 | Verificação de atualização no app | §8 | M |
 | 9 | Presets personalizados pelo usuário | §9 | M |
 | 10 | i18n (pt/en) — opcional | §10 | M |
+| 11 | Corte em segmentos por tempo (split) | §11 | G |
+
+Redesign da UI no estilo do Constrict (fila visual, drag&drop, tema adwaita)
+está detalhado em [`plano-ui-constrict.md`](./plano-ui-constrict.md); ele consome
+as Fases 1, 2, 3, 4 e 10 deste plano.
 
 Ordem por dependência: config (1) libera fila (2, `MaxParallel`), notificações
 (7), presets custom (9). Estimativa (3) e codec/hw (4) são independentes entre
@@ -227,6 +232,11 @@ com detecção de disponibilidade.
 
 **Objetivo:** controles de ajuste por vídeo além do preset fixo.
 
+> Diferença entre **corte** desta fase e **split** da fase 11: aqui `TrimStartSec/
+> TrimEndSec` guarda **uma única janela** de um vídeo (ex. só o trecho 1:00–3:30);
+> na fase 11 o vídeo é dividido em **N partes sequenciais** (ex. 30 min → 6 × 5 min)
+> reaproveitando o mesmo `-ss/-to` e a nomenclatura de segmentos.
+
 ### Backend
 - `compress.Job`: campos opcionais `Scale string`, `TrimStartSec/TrimEndSec
   float64`, `RemoveAudio bool`, `FPS float64`, `Rotate int`,
@@ -392,6 +402,80 @@ modo offline atual).
 
 ---
 
+## Fase 11 — Corte em segmentos por tempo (split em N partes)
+
+**Objetivo:** dividir um vídeo em N partes de duração fixa ou em N partes
+iguais. Ex. que o usuário descreveu: um vídeo de 30 minutos com a opção de
+cortar em 6 partes de 5 min cada — com mínimo de **1 min por parte**.
+
+### Regras de negócio
+
+- O usuário informa o **número de partes** (N) **ou a duração por parte**
+  (minutos); o campo que não foi informado é calculado a partir da duração do
+  vídeo (`media.Info.DurationSec`).
+- **Mínimo de 1 min por parte**: qualquer parte calculada < 60 s é rejeitada na
+  validação (não arredondar silenciosamente).
+- A **última parte pode ser menor** que a duração target quando a duração total
+  não é divisível (30 min / 6 = 5 min exatos; 32 min / 6 → cinco de 5 min + uma
+  de 2 min), desde que ≥ 1 min.
+- Limite de N (sugestão: ≤ 60 partes) para evitar acidente com vídeos muito
+  longos; validar no backend e no frontend.
+
+### Backend
+
+- `compress.Job` ganha `Split *SplitSpec` (`json:"split,omitempty"`):
+  ```go
+  type SplitSpec struct {
+      Parts       int `json:"parts"`       // 0 = derivar da duração
+      MinutesEach int `json:"minutesEach"` // 0 = derivar das partes
+  }
+  ```
+  Só um dos campos deve ser preenchido (frontend envia um; o outro fica 0).
+- Novo pacote `internal/split` (testável de forma pura):
+  - `Plan(durationSec float64, spec SplitSpec) ([]Segment, error)` —
+    calcula `[]Segment{StartSec, EndSec}` aplicando as regras acima; devolve
+    erro claro para "nenhum campo informado", "ambos informados",
+    "parte < 1 min", "N fora do limite".
+  - `Filename(path string, index, total int) string` —
+    `meu_video-part3.mp4` (ex. parte 3 de 6).
+- `compress.go`: quando `Job.Split != nil`, `Run` (compress.go:246) executa o
+  pipeline uma vez por segmento (job físico por parte, mesmo `JobID` pai):
+  - comando por parte = comandos atuais (fases 4/5 buildam args via builder)
+    com `-ss <Start>` `-to <End>` posicionados **antes** do `-i` (seek rápido,
+    igual ao trim da fase 5) e `OutputPath` substituído por `Filename(...)`.
+  - eventos `compress:progress` continuam por `JobID`; “parte X/N” entra no
+    `stage` (ex. `encoding 3/6`) para o pie/row mostrar progresso agregado.
+- Alternativa rápida (stream copy, sem reencodar): quando `Split` está ativo
+  e o preset é `title`-only/`crf` derivado sem redimensionamento, permitir
+  `-c copy` por parte. Default da fase: **reencodar** (consistente com o resto);
+  `stream copy` entra como opção depois (decisão aberta #6).
+
+### Frontend
+
+- `App.svelte`, no grupo "Destino" (sidebar): subseção **"Cortar em partes"**
+  com stepper `N partes` **ou** `minutos por parte` (toggle entre os dois),
+  preview calculado "30:00 → 6 × 5:00" usando `info.durationSec`, e aviso em
+  vermelho se alguma parte der < 1 min.
+- Botão de comprimir ganha o rótulo dinâmico: `COMPRIMIR → 6 PARTES`.
+- A fila (fase 2) lista um item por parte concluída (mesma fonte de `Filename`).
+
+### Testes
+
+- `internal/split`: tabela com 30 min/6 → 6×5 min; 32 min/6 → 5×5 + 2 min;
+  “só partes” e “só duração”; dur total < 1 min → erro; parte < 1 min → erro;
+  N > limite → erro; `Filename("a.mp4",3,6) == "a-part3.mp4"`.
+- `compress`: `Run` com `Split` gera N outputs (fakes sh, `skipOnWindows`) e
+  N eventos `compress:done`; `stage` carrega “x/N”.
+- Validação de `SplitSpec` (campos conflitantes).
+
+### Docs
+
+- README: seção "Cortar em partes" com exemplos (30 min → 6 × 5 min) e regra
+  do mínimo de 1 min.
+- CHANGELOG: entrada na feature.
+
+---
+
 ## Melhorias transversais necessárias
 
 - **Fila + Job + eventos**: o contrato `Job` muda nas fases 4/5 — definir os
@@ -429,6 +513,10 @@ modo offline atual).
 5. **Extração de áudio na fila (fase 6)**: integrar como `Task.Kind=audio` na
    fila (recomendado, uniformiza o modelo da fase 2) ou manter botão isolado do
    passo 01 na primeira entrega.
+6. **Split com stream copy (fase 11)**: na primeira entrega, partes sempre são
+   reencodadas (padrão consistente com preset). Adicionar depois um toggle
+   "copiar sem reencodar" (`-c copy`) quando a resolução/codec não muda — vale
+   validar com usuário se a velocidade do split importa mais que a qualidade.
 
 ---
 
@@ -439,12 +527,13 @@ v1.0.18 → Fase 1 (config)            [base p/ tudo]
 v1.0.19 → Fase 2 (fila)              [maior; define Task+Job de vez]
 v1.0.20 → Fase 3 (estimativa)
 v1.0.21 → Fase 4 (codec/hw)
-v1.0.22 → Fase 5 (ajustes)
+v1.0.22 → Fase 5 (ajustes)           [inclui trim -ss/-to reaproveitado na fase 11]
 v1.0.23 → Fase 6 (extrair áudio)
 v1.0.24 → Fase 7 (notificações)      [depende de config]
 v1.0.25 → Fase 8 (check update)
 v1.0.26 → Fase 9 (presets custom)    [depende de config]
 v1.0.27 → Fase 10 (i18n, opcional)
+v1.0.28 → Fase 11 (cortar em partes) [usa trim/seek e a fila das fases 2/5]
 ```
 
 Cada versão deve passar por `make check` (vet + test + gofmt + svelte-check) e

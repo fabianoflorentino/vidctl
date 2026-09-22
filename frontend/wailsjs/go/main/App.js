@@ -22,12 +22,20 @@ export function GetPresets() {
   return window['go']['main']['App']['GetPresets']();
 }
 
+export function GetUsage() {
+  return window['go']['main']['App']['GetUsage']();
+}
+
 export function OpenFolder(arg1) {
   return window['go']['main']['App']['OpenFolder'](arg1);
 }
 
 export function OpenInputDialog() {
   return window['go']['main']['App']['OpenInputDialog']();
+}
+
+export function OpenMultipleDialog() {
+  return window['go']['main']['App']['OpenMultipleDialog']();
 }
 
 export function OpenOutputDialog(arg1) {

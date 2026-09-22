@@ -12,9 +12,16 @@ cortar cena. Alimentado por encode **2-pass** quando há limite de tamanho ou
 
 - Presets exatos por plataforma (WhatsApp 10/16 MB, Instagram 16 MB, Shorts
   30 MB, YouTube CRF, ou um tamanho livre definido por você)
+- **Corte em partes**: divide o vídeo por tempo — N partes iguais ou X minutos
+  por parte (ex.: 30 min → 6 × 5 min) — com mínimo de 1 min por parte; cada
+  parte é comprimida de forma independente e sai como `nome-part1.mp4`, …
 - Encode ffmpeg **2-pass** para atingir o tamanho máximo sem estourar o limite
 - Progresso em tempo real com cancelamento a qualquer momento
+- Painel de progresso abaixo do vídeo com leitura de carga do sistema
+  (CPU, memória, processo do ffmpeg e GPU NVIDIA quando disponível)
 - Desktop nativo para **Linux, Windows e macOS** (Wails v2 + WebKit/WebView2)
+- Tema claro/escuro: segue o sistema por padrão e pode ser fixado no botão de
+  sol/lua no topo (a escolha persiste entre execuções)
 - Sem internet: fontes e interface bundladas no binário
 - Verifica `ffmpeg`/`ffprobe` na inicialização e avisa se faltarem; o botão
   "verificar de novo" relê o PATH do sistema, então dá para instalar o ffmpeg
@@ -110,6 +117,24 @@ sufixo continua existindo como fonte para o PKGBUILD (Arch/AUR).
 | YouTube Shorts | 2-pass | 30 MB |
 | YouTube (vídeo normal) | CRF 23 | sem limite |
 | Tamanho personalizado | 2-pass | definido pelo usuário |
+
+## Corte em partes (split por tempo)
+
+Na barra lateral, o grupo **"Cortar em partes"** divide o vídeo antes de
+comprimir — útil quando o destino tem limite de tamanho/duração (ex.: status
+de 60 s) ou quando você quer publicar o conteúdo fatiado.
+
+| Campo | Regra |
+|---|---|
+| **N partes** | o vídeo é dividido em N trechos iguais (ex.: 30 min → 6 × 5 min) |
+| **min/parte** | trechos com duração fixa; a sobra vira parte final se tiver ≥ 1 min, senão é juntada na última |
+| Mínimo | 1 minuto por parte — cortes que gerem parte menor são bloqueados |
+| Máximo | 60 partes por vídeo |
+
+Cada parte passa pelo pipeline de compressão escolhido (preset/tamanho/CRF) e
+gera um arquivo `saída-partN.mp4` (índice com zero à esquerda quando são 10+
+partes). O progresso mostra `parte X/N` e, ao final, o app resume a economia
+total sobre o arquivo original.
 
 ## Stack
 
