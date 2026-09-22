@@ -51,6 +51,23 @@ type SystemStatus struct {
 	Message  string `json:"message"`
 }
 
+// GetAdvice estimates the quality of the current settings before encoding,
+// suggesting better parameters when the video bitrate would be too low.
+func (a *App) GetAdvice(job compress.Job) (compress.Advice, error) {
+	if job.InputPath == "" {
+		return compress.Advice{}, errors.New("escolha um vídeo primeiro")
+	}
+	preset, ok := compress.EffectivePreset(job)
+	if !ok {
+		return compress.Advice{}, fmt.Errorf("preset desconhecido: %s", job.PresetID)
+	}
+	info, err := media.Probe(job.InputPath)
+	if err != nil {
+		return compress.Advice{}, err
+	}
+	return compress.Advise(info, preset, job), nil
+}
+
 // CheckFFmpeg verifies that ffmpeg and ffprobe are available.
 func (a *App) CheckFFmpeg() SystemStatus {
 	var missing []string

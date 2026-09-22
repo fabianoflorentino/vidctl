@@ -16,6 +16,9 @@ cortar cena. Alimentado por encode **2-pass** quando há limite de tamanho ou
   por parte (ex.: 30 min → 6 × 5 min) — com mínimo de 1 min por parte; cada
   parte é comprimida de forma independente e sai como `nome-part1.mp4`, …
 - Encode ffmpeg **2-pass** para atingir o tamanho máximo sem estourar o limite
+- **Aviso de qualidade antes de comprimir**: o app estima o bitrate que o
+  ajuste atual vai render (por parte, quando há corte); se ficar abaixo do
+  ideal para a resolução, sugere o alvo em MB ou o corte ideais com um clique
 - Progresso em tempo real com cancelamento a qualquer momento
 - Painel de progresso abaixo do vídeo com leitura de carga do sistema
   (CPU, memória, processo do ffmpeg e GPU NVIDIA quando disponível)

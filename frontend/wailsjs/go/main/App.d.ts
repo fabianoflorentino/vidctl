@@ -12,6 +12,8 @@ export function CheckFFmpeg():Promise<main.SystemStatus>;
 
 export function Compress(arg1:compress.Job):Promise<string>;
 
+export function GetAdvice(arg1:compress.Job):Promise<compress.Advice>;
+
 export function GetMediaInfo(arg1:string):Promise<media.Info>;
 
 export function GetPresets():Promise<Array<presets.Preset>>;

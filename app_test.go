@@ -253,3 +253,39 @@ func TestGetUsageSmoke(t *testing.T) {
 		t.Errorf("GPU = %v, esperava -1 ou 0..100", snap.GPU)
 	}
 }
+
+func TestGetAdvice(t *testing.T) {
+	skipOnWindows(t)
+	dir := t.TempDir()
+	scripts := map[string]string{
+		"ffmpeg": "#!/bin/sh\nexit 0\n",
+		"ffprobe": `#!/bin/sh
+printf '%s\n' '{"streams":[
+	{"codec_type":"video","codec_name":"h264","width":320,"height":240,"duration":2.0},
+	{"codec_type":"audio","codec_name":"aac"}
+],"format":{"duration":2.0}}'
+`,
+	}
+	for name, script := range scripts {
+		if err := os.WriteFile(filepath.Join(dir, name), []byte(script), 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	t.Setenv("PATH", dir)
+	a := NewApp()
+
+	if _, err := a.GetAdvice(compress.Job{}); err == nil {
+		t.Error("esperava erro sem inputPath")
+	}
+	if _, err := a.GetAdvice(compress.Job{InputPath: "in.mp4", PresetID: "nope"}); err == nil {
+		t.Error("esperava erro de preset desconhecido")
+	}
+	// clipe de 2s em 240p: orçamento folgado → OK
+	adv, err := a.GetAdvice(compress.Job{InputPath: "in.mp4", PresetID: "whatsapp-status", SizeMB: 10})
+	if err != nil {
+		t.Fatalf("GetAdvice: %v", err)
+	}
+	if !adv.OK {
+		t.Errorf("clipe curto deveria estar ok: %+v", adv)
+	}
+}
