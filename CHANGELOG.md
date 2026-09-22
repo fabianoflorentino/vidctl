@@ -9,7 +9,33 @@ As releases por plataforma (`vX.Y.Z-windows`, `vX.Y.Z-linux`, `vX.Y.Z-macos`)
 compartilham este mesmo changelog: a diferença entre elas é apenas o sistema
 operacional dos pacotes.
 
-## [Não publicado]
+## [2.0.1] — 2026-09-22
+
+Retoca a experiência da v2.0.0: qualidade assistida e ajustes de interface.
+
+### Adicionado
+
+- **Aviso de qualidade pré-encode**: estimativa do bitrate de vídeo (por parte
+  quando há corte) comparada a um mínimo por faixa de resolução; quando baixo,
+  a sidebar mostra o motivo e uma sugestão aplicável com um clique — subir o
+  alvo em MB, cortar em partes de X min ou migrar para preset CRF.
+- Card de **resumo do trabalho** no espaço livre abaixo do vídeo quando
+  ocioso: destino + alvo, plano de corte e bitrate estimado vs. mínimo — o
+  mesmo lugar que o card de progresso ocupa durante o processamento.
+- Landing page da era v2 no GitHub Pages, com demo animado fiel à UI real
+  (escolha de preset → corte → processamento → tema claro).
+
+### Mudado
+
+- Sidebar: o grupo de escolha de preset passou de "Destino" para **"Presets"**.
+- Sidebar mais larga (300→344px) para acomodar os banners de corte/qualidade.
+- Release passou a ser 100% intencional: push em `main` não dispara mais o
+  workflow (só `gh workflow run release.yml --ref vX.Y.Z` em uma tag).
+
+### Corrigido
+
+- Descrição dos presets na sidebar agora quebra linha e mostra o texto
+  completo (antes aparecia cortada com "…" em Instagram/YouTube).
 
 - Descrição dos presets na sidebar agora quebra linha e mostra o texto
   completo (antes aparecia cortada com "…" em Instagram/YouTube).
