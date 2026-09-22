@@ -14,6 +14,7 @@ import (
 	"github.com/fabianoflorentino/vidctl/internal/events"
 	"github.com/fabianoflorentino/vidctl/internal/media"
 	"github.com/fabianoflorentino/vidctl/internal/presets"
+	"github.com/fabianoflorentino/vidctl/internal/sysinfo"
 	wailsruntime "github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
@@ -21,13 +22,19 @@ import (
 type App struct {
 	ctx  context.Context
 	jobs *compress.Manager
+	sys  *sysinfo.Collector
 }
 
 const videoFilterPattern = "*.mp4;*.mkv;*.mov;*.avi;*.webm;*.m4v;*.ts;*.flv"
 
 // NewApp creates the application struct.
 func NewApp() *App {
-	return &App{jobs: compress.NewManager()}
+	return &App{jobs: compress.NewManager(), sys: sysinfo.NewCollector()}
+}
+
+// GetUsage returns live system resource usage for the progress panel.
+func (a *App) GetUsage() sysinfo.Snapshot {
+	return a.sys.Snapshot()
 }
 
 // startup is called when the app starts.

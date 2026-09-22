@@ -1,5 +1,6 @@
 <script lang="ts">
   import ProgressPie from './ProgressPie.svelte'
+  import { stageLabel } from './stages'
   import type { media } from '../../wailsjs/go/models'
 
   type RowStatus = 'idle' | 'progress' | 'done' | 'error'
@@ -27,27 +28,6 @@
     const m = Math.floor(sec / 60)
     const s = Math.floor(sec % 60)
     return m > 0 ? `${m}m${String(s).padStart(2, '0')}s` : `${s}s`
-  }
-
-  function stageLabel(s: string): string {
-    const m = s.match(/^(.*?) · parte (\d+\/\d+)$/)
-    if (m) {
-      return `${stageLabel(m[1])} · ${m[2]}`
-    }
-    switch (s) {
-      case 'pass1/2':
-        return 'ANALISANDO (1/2)'
-      case 'pass2/2':
-        return 'COMPRIMINDO (2/2)'
-      case 'encoding':
-        return 'ENCODANDO'
-      case 'done':
-        return 'CONCLUÍDO'
-      case 'queue':
-        return 'ENFILEIRADO'
-      default:
-        return s.toUpperCase()
-    }
   }
 </script>
 

@@ -9,6 +9,7 @@
     Compress as StartCompress,
     Cancel as CancelJob,
     OpenFolder,
+    GetUsage,
   } from '../wailsjs/go/main/App.js'
   import { EventsOn, EventsOff } from '../wailsjs/runtime/runtime.js'
   import type { main, presets, media } from '../wailsjs/go/models.js'
@@ -16,6 +17,7 @@
   import StatusPage from './lib/StatusPage.svelte'
   import ControlGroup from './lib/ControlGroup.svelte'
   import VideoRow from './lib/VideoRow.svelte'
+  import { stageLabel } from './lib/stages'
 
   type ProgressEv = { jobId: string; stage: string; percent: number }
   type DoneEv = { jobId: string; outputPath: string; sizeMB: number; sizeBytes: number }
@@ -67,6 +69,29 @@
   let done = $state<DoneEv | null>(null)
   let partsDone = $state<DoneEv[]>([])
   let jobTotalParts = $state(1)
+  let usage = $state<Awaited<ReturnType<typeof GetUsage>> | null>(null)
+
+  $effect(() => {
+    if (!running) {
+      usage = null
+      return
+    }
+    let stopped = false
+    const poll = async () => {
+      try {
+        const s = await GetUsage()
+        if (!stopped) usage = s
+      } catch {
+        /* collector indisponível: mantém último valor */
+      }
+    }
+    poll()
+    const id = setInterval(poll, 1000)
+    return () => {
+      stopped = true
+      clearInterval(id)
+    }
+  })
 
   type SplitAxis = 'parts' | 'minutes'
   let splitOn = $state(false)
@@ -430,44 +455,57 @@
         />
       {/if}
 
+      {#if running}
+        <div class="progress-card">
+          <div class="progress-head">
+            <span class="mono">{stageLabel(stage) || 'PROCESSANDO'}</span>
+            <span class="progress-pct mono">{percent.toFixed(1)}%</span>
+          </div>
+          <div class="track"><div class="fill" style="width:{percent}%"></div></div>
+          <div class="progress-foot">
+            <button class="btn small" onclick={cancel}>cancelar</button>
+            <div class="usage mono" aria-live="polite">
+              {#if usage}
+                CPU {Math.round(usage.cpu)}% · RAM {(usage.memUsedMB / 1024).toFixed(1)}/{(usage.memTotalMB / 1024).toFixed(1)} GB
+                {#if usage.ffmpegCpu > 0.5}· ffmpeg {Math.round(usage.ffmpegCpu)}%{/if}
+                {#if usage.gpu >= 0}· GPU {Math.round(usage.gpu)}%{/if}
+              {:else}
+                medindo uso…
+              {/if}
+            </div>
+          </div>
+        </div>
+      {:else if done}
+        <div class="result">
+          <div class="result-big">
+            <span class="result-pct mono">−{savedPct.toFixed(0)}%</span>
+            <span class="result-size mono">
+              {done.sizeMB.toFixed(1)} MB{#if jobTotalParts > 1} · {jobTotalParts} partes{/if}
+            </span>
+            <span class="result-from mono">de {originalMB.toFixed(1)} MB</span>
+          </div>
+          <div class="result-actions">
+            <button class="btn solid" onclick={() => OpenFolder(done!.outputPath)}>abrir pasta</button>
+            <button class="btn" onclick={reset}>novo vídeo</button>
+          </div>
+        </div>
+      {/if}
+
       {#if error}
         <div class="alert">
           <p class="mono">{error}</p>
         </div>
       {/if}
 
-      <div class="actionbar">
-        {#if running}
-          <div class="progress-block">
-            <div class="progress-head mono">
-              <span>{stage || 'PROCESSANDO'}</span>
-              <span>{percent.toFixed(1)}%</span>
-            </div>
-            <div class="track"><div class="fill" style="width:{percent}%"></div></div>
-            <div class="progress-actions"><button class="btn small" onclick={cancel}>cancelar</button></div>
-          </div>
-        {:else if done}
-          <div class="result">
-            <div class="result-big">
-              <span class="result-pct mono">−{savedPct.toFixed(0)}%</span>
-              <span class="result-size mono">
-                {done.sizeMB.toFixed(1)} MB{#if jobTotalParts > 1} · {jobTotalParts} partes{/if}
-              </span>
-              <span class="result-from mono">de {originalMB.toFixed(1)} MB</span>
-            </div>
-            <div class="result-actions">
-              <button class="btn solid" onclick={() => OpenFolder(done!.outputPath)}>abrir pasta</button>
-              <button class="btn" onclick={reset}>novo vídeo</button>
-            </div>
-          </div>
-        {:else}
+      {#if !running && !done}
+        <div class="actionbar">
           <span class="spacer"></span>
           <button class="btn solid" onclick={compress} disabled={!canRun()}>
             COMPRIMIR{#if activeSplit && !splitBlocked} → {activeSplit.count} PARTES
             {:else if selectedPreset} → {selectedPreset.name.toUpperCase()}{/if}
           </button>
-        {/if}
-      </div>
+        </div>
+      {/if}
     </main>
   </div>
 {/if}

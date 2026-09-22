@@ -143,3 +143,28 @@ export namespace split {
 
 }
 
+export namespace sysinfo {
+	
+	export class Snapshot {
+	    cpu: number;
+	    memUsedMB: number;
+	    memTotalMB: number;
+	    ffmpegCpu: number;
+	    gpu: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new Snapshot(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.cpu = source["cpu"];
+	        this.memUsedMB = source["memUsedMB"];
+	        this.memTotalMB = source["memTotalMB"];
+	        this.ffmpegCpu = source["ffmpegCpu"];
+	        this.gpu = source["gpu"];
+	    }
+	}
+
+}
+

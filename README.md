@@ -17,6 +17,8 @@ cortar cena. Alimentado por encode **2-pass** quando há limite de tamanho ou
   parte é comprimida de forma independente e sai como `nome-part1.mp4`, …
 - Encode ffmpeg **2-pass** para atingir o tamanho máximo sem estourar o limite
 - Progresso em tempo real com cancelamento a qualquer momento
+- Painel de progresso abaixo do vídeo com leitura de carga do sistema
+  (CPU, memória, processo do ffmpeg e GPU NVIDIA quando disponível)
 - Desktop nativo para **Linux, Windows e macOS** (Wails v2 + WebKit/WebView2)
 - Tema claro/escuro: segue o sistema por padrão e pode ser fixado no botão de
   sol/lua no topo (a escolha persiste entre execuções)

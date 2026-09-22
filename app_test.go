@@ -240,3 +240,16 @@ printf '%s\n' '{"streams":[
 		t.Errorf("arquivo de saída ausente: err=%v", err)
 	}
 }
+
+func TestGetUsageSmoke(t *testing.T) {
+	snap := NewApp().GetUsage()
+	if snap.MemTotalMB <= 0 {
+		t.Errorf("MemTotalMB = %v, esperava > 0", snap.MemTotalMB)
+	}
+	if snap.CPU < 0 || snap.CPU > 100 {
+		t.Errorf("CPU = %v, fora de 0..100", snap.CPU)
+	}
+	if snap.GPU < -1 || snap.GPU > 100 {
+		t.Errorf("GPU = %v, esperava -1 ou 0..100", snap.GPU)
+	}
+}
