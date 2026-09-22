@@ -62,7 +62,7 @@
             <header class="atb">
               <span class="abrand"><b>VIDCTL</b><small>compressor de vídeo</small></span>
               <span class="aend">
-                <span class="atheme" id="theme-pill">☾</span>
+                <span class="atheme" id="theme-pill">☀</span>
                 <span class="affmpeg"><i></i>ffmpeg OK</span>
               </span>
             </header>
@@ -304,7 +304,7 @@
           var s = schedule[i];
           demo.className = "demo " + s.name;
           wapp.className = "wapp" + (s.lite ? " lite" : "");
-          pill.textContent = s.lite ? "☀" : "☾";
+          pill.textContent = s.lite ? "☾" : "☀";
           if (s.btn !== undefined && arun) arun.textContent = s.btn;
           if (s.label !== undefined) stgl.textContent = s.label;
           if (s.m !== undefined) setMetrics(s.m[0], s.m[1], s.m[2]);
