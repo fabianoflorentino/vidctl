@@ -30,6 +30,10 @@
   }
 
   function stageLabel(s: string): string {
+    const m = s.match(/^(.*?) · parte (\d+\/\d+)$/)
+    if (m) {
+      return `${stageLabel(m[1])} · ${m[2]}`
+    }
     switch (s) {
       case 'pass1/2':
         return 'ANALISANDO (1/2)'

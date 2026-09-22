@@ -12,6 +12,7 @@
   } from '../wailsjs/go/main/App.js'
   import { EventsOn, EventsOff } from '../wailsjs/runtime/runtime.js'
   import type { main, presets, media } from '../wailsjs/go/models.js'
+  import { compress as bindings } from '../wailsjs/go/models.js'
   import StatusPage from './lib/StatusPage.svelte'
   import ControlGroup from './lib/ControlGroup.svelte'
   import VideoRow from './lib/VideoRow.svelte'
@@ -64,6 +65,52 @@
   let error = $state('')
   let currentJobId = $state('')
   let done = $state<DoneEv | null>(null)
+  let partsDone = $state<DoneEv[]>([])
+  let jobTotalParts = $state(1)
+
+  type SplitMode = 'off' | 'parts' | 'minutes'
+  let splitMode = $state<SplitMode>('off')
+  let splitParts = $state(6)
+  let splitMinutes = $state(5)
+
+  const MIN_PART_SEC = 60
+  const MAX_PARTS = 60
+
+  type SplitPlan = { count: number; sliceSec: number; error: string }
+
+  function planSplit(durationSec: number, mode: SplitMode, parts: number, minutes: number): SplitPlan | null {
+    if (mode === 'off' || !durationSec || durationSec <= 0) return null
+    if (durationSec < MIN_PART_SEC) {
+      return { count: 0, sliceSec: 0, error: 'vídeo tem menos de 1 min — impossível cortar' }
+    }
+    if (mode === 'parts') {
+      if (parts < 2) return { count: 0, sliceSec: 0, error: 'mínimo de 2 partes' }
+      if (parts > MAX_PARTS) return { count: 0, sliceSec: 0, error: `máximo de ${MAX_PARTS} partes` }
+      const slice = durationSec / parts
+      if (slice < MIN_PART_SEC) {
+        return { count: 0, sliceSec: 0, error: 'cada parte teria menos de 1 min — use menos partes' }
+      }
+      return { count: parts, sliceSec: slice, error: '' }
+    }
+    const slice = Math.max(1, minutes) * 60
+    const full = Math.floor(durationSec / slice)
+    const tail = durationSec - full * slice
+    let count = full
+    if (tail >= MIN_PART_SEC) count = full + 1
+    if (count < 2) return { count: 0, sliceSec: slice, error: 'o vídeo cabe em 1 parte; não há corte' }
+    if (count > MAX_PARTS) return { count: 0, sliceSec: slice, error: `corte geraria ${count} partes (máximo ${MAX_PARTS})` }
+    return { count, sliceSec: slice, error: '' }
+  }
+
+  const activeSplit = $derived(planSplit(info?.durationSec ?? 0, splitMode, splitParts, splitMinutes))
+  const splitBlocked = $derived(!!activeSplit?.error)
+
+  function fmtClock(sec: number): string {
+    if (!sec || sec < 0) return '—'
+    const m = Math.floor(sec / 60)
+    const s = Math.floor(sec % 60)
+    return `${m}:${String(s).padStart(2, '0')}`
+  }
 
   const selectedPreset = $derived(presetList.find((p) => p.id === selectedPresetId) ?? null)
 
@@ -81,10 +128,18 @@
     })
     EventsOn('compress:done', (e: DoneEv) => {
       if (e.jobId !== currentJobId) return
+      partsDone = [...partsDone, e]
+      if (partsDone.length < jobTotalParts) {
+        percent = (partsDone.length / jobTotalParts) * 100
+        return
+      }
       running = false
       percent = 100
       stage = 'done'
-      done = e
+      done = { jobId: e.jobId, outputPath: partsDone[0].outputPath, sizeMB: 0, sizeBytes: 0 }
+      const total = partsDone.reduce((acc, p) => acc + p.sizeBytes, 0)
+      done.sizeBytes = total
+      done.sizeMB = total / (1024 * 1024)
       currentJobId = ''
     })
     EventsOn('compress:error', (e: ErrorEv) => {
@@ -126,6 +181,8 @@
     inputPath = path
     outputPath = ''
     done = null
+    partsDone = []
+    jobTotalParts = 1
     error = ''
     try {
       info = await GetMediaInfo(path)
@@ -150,24 +207,36 @@
   }
 
   function canRun(): boolean {
-    return !running && !!inputPath && !!outputPath && !!selectedPreset && ffmpegOk
+    return (
+      !running && !!inputPath && !!outputPath && !!selectedPreset && ffmpegOk && !splitBlocked
+    )
+  }
+
+  function splitPayload(): { parts: number; minutesEach: number } | null {
+    if (splitMode === 'off' || splitBlocked || !activeSplit) return null
+    return splitMode === 'parts'
+      ? { parts: splitParts, minutesEach: 0 }
+      : { parts: 0, minutesEach: splitMinutes }
   }
 
   async function compress() {
     if (!canRun()) return
     error = ''
     done = null
+    partsDone = []
+    jobTotalParts = activeSplit && !splitBlocked ? activeSplit.count : 1
     percent = 0
     stage = 'queue'
     running = true
     try {
-      const jobId = await StartCompress({
+      const jobId = await StartCompress(new bindings.Job({
         inputPath,
         outputPath,
         presetId: selectedPresetId,
         sizeMB: sizeMB > 0 ? sizeMB : 10,
         crf,
-      })
+        split: splitPayload() ?? undefined,
+      }))
       currentJobId = jobId
     } catch (err) {
       running = false
@@ -187,6 +256,8 @@
     info = null
     outputPath = ''
     done = null
+    partsDone = []
+    jobTotalParts = 1
     error = ''
     percent = 0
     stage = ''
@@ -286,6 +357,49 @@
         </ControlGroup>
       {/if}
 
+      <ControlGroup
+        title="Cortar em partes"
+        help="Divide o vídeo em partes sequenciais de duração fixa. Cada parte passa pela compressão escolhida. Mínimo de 1 minuto por parte; a última pode ficar menor ou levar a sobra."
+      >
+        <div class="seg-btns">
+          <button class="seg-btn" class:on={splitMode === 'off'} onclick={() => (splitMode = 'off')}>sem corte</button>
+          <button class="seg-btn" class:on={splitMode === 'parts'} onclick={() => (splitMode = 'parts')}>N partes</button>
+          <button class="seg-btn" class:on={splitMode === 'minutes'} onclick={() => (splitMode = 'minutes')}>min/parte</button>
+        </div>
+
+        {#if splitMode === 'parts'}
+          <label class="tune-row">
+            <span class="meta-k">partes</span>
+            <div class="tune-control">
+              <input type="range" min="2" max="60" step="1" value={splitParts}
+                oninput={(e) => (splitParts = Number((e.currentTarget as HTMLInputElement).value))} />
+              <input class="num" type="number" min="2" max="60" bind:value={splitParts} />
+            </div>
+          </label>
+        {:else if splitMode === 'minutes'}
+          <label class="tune-row">
+            <span class="meta-k">min/parte</span>
+            <div class="tune-control">
+              <input type="range" min="1" max="60" step="1" value={splitMinutes}
+                oninput={(e) => (splitMinutes = Number((e.currentTarget as HTMLInputElement).value))} />
+              <input class="num" type="number" min="1" max="60" bind:value={splitMinutes} />
+            </div>
+          </label>
+        {/if}
+
+        {#if splitMode !== 'off'}
+          {#if !info}
+            <div class="hint">escolha o vídeo para calcular o corte</div>
+          {:else if activeSplit?.error}
+            <div class="split-error mono">{activeSplit.error}</div>
+          {:else if activeSplit}
+            <div class="hint mono">
+              {fmtClock(info.durationSec)} → {activeSplit.count} × ~{fmtClock(activeSplit.sliceSec)}
+            </div>
+          {/if}
+        {/if}
+      </ControlGroup>
+
       <ControlGroup title="Saída">
         <div class="out-row">
           <span class="out-path mono" class:empty={!outputPath}>
@@ -328,7 +442,9 @@
           <div class="result">
             <div class="result-big">
               <span class="result-pct mono">−{savedPct.toFixed(0)}%</span>
-              <span class="result-size mono">{done.sizeMB.toFixed(1)} MB</span>
+              <span class="result-size mono">
+                {done.sizeMB.toFixed(1)} MB{#if jobTotalParts > 1} · {jobTotalParts} partes{/if}
+              </span>
               <span class="result-from mono">de {originalMB.toFixed(1)} MB</span>
             </div>
             <div class="result-actions">
@@ -339,7 +455,8 @@
         {:else}
           <span class="spacer"></span>
           <button class="btn solid" onclick={compress} disabled={!canRun()}>
-            COMPRIMIR{selectedPreset ? ' → ' + selectedPreset.name.toUpperCase() : ''}
+            COMPRIMIR{#if activeSplit && !splitBlocked} → {activeSplit.count} PARTES
+            {:else if selectedPreset} → {selectedPreset.name.toUpperCase()}{/if}
           </button>
         {/if}
       </div>
