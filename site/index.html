@@ -6,14 +6,12 @@
     <title>vidctl — vídeo leve, história completa</title>
     <meta
       name="description"
-      content="vidctl comprime vídeos para o tamanho exato de cada plataforma (WhatsApp, Instagram, Shorts, YouTube) — mantendo duração e formato. Desktop, offline, open-source."
+      content="vidctl comprime vídeos para o tamanho exato de cada plataforma (WhatsApp, Instagram, Shorts, YouTube) e corta em partes por tempo — tema claro/escuro, métricas ao vivo, desktop, offline, open-source."
     />
     <link rel="icon" type="image/svg+xml" href="img/favicon.svg" />
     <link rel="stylesheet" href="css/main.css" />
   </head>
   <body>
-    <div class="strip" aria-hidden="true"></div>
-
     <header class="nav">
       <a class="brand" href="#">
         <span class="brand-mark" aria-hidden="true"></span>
@@ -21,6 +19,7 @@
       </a>
       <nav class="nav-links">
         <a href="#recursos">recursos</a>
+        <a href="#corte">corte</a>
         <a href="#presets">presets</a>
         <a href="#como-funciona">como funciona</a>
         <a class="nav-gh" href="https://github.com/fabianoflorentino/vidctl" target="_blank" rel="noopener">github ↗</a>
@@ -29,111 +28,108 @@
 
     <main>
       <section class="hero">
-        <p class="kicker">ffmpeg 2-pass &middot; desktop &middot; open-source</p>
+        <p class="kicker">ffmpeg 2-pass &middot; corte em partes &middot; desktop &middot; open-source</p>
         <h1>
           Vídeo leve,<br />
           <em>história completa.</em>
         </h1>
         <p class="lede">
           Escolha o destino — WhatsApp, Instagram, Shorts, YouTube. O vidctl calcula o bitrate pra caber
-          no tamanho alvo <strong>sem cortar a duração nem o formato</strong>. Tudo local, nada de nuvem.
+          no tamanho alvo <strong>sem cortar a duração nem o formato</strong>. E agora também
+          <strong>divide em partes</strong> — 30 min viram 6 × 5 min, prontos pra publicar. Tudo local, nada de nuvem.
         </p>
 
         <div class="cta-row">
-          <a class="btn btn-acid" href="https://github.com/fabianoflorentino/vidctl/releases" target="_blank" rel="noopener">
-            baixar app
-            <span class="btn-sub">escolha sua plataforma</span>
+          <a class="btn btn-acid" href="https://github.com/fabianoflorentino/vidctl/releases/tag/v2.0.0-linux" target="_blank" rel="noopener">
+            baixar v2.0.0
+            <span class="btn-sub">windows · linux (.deb/.rpm) · macos</span>
           </a>
           <a class="btn btn-ghost" href="https://github.com/fabianoflorentino/vidctl" target="_blank" rel="noopener">código no github ↗</a>
         </div>
 
         <div
-          class="demo"
+          class="demo st-pick"
           id="demo"
           role="img"
-          aria-label="Demonstração animada do vidctl: escolher o vídeo, definir o destino WhatsApp Status e comprimir de 22,1 MB para 9,7 MB."
+          aria-label="Demonstração animada da nova interface do vidctl: escolher o vídeo, cortar em 6 partes de 5 minutos, comprimir com acompanhamento de CPU e memória, e receber o resultado com economia de 73%."
         >
-          <div class="demo-bar">
-            <span class="demo-dot"></span><span class="demo-dot"></span><span class="demo-dot"></span>
-            <span class="demo-title">vidctl · desktop</span>
-            <span class="demo-live"><i></i>demonstração</span>
+          <div class="wbar">
+            <i></i><i></i><i></i>
+            <b>vidctl · desktop</b>
+            <em>demonstração</em>
           </div>
-
-          <div class="demo-stage">
-            <div class="demo-brand">
-              <span class="demo-brand-title">VIDCTL</span>
-              <span class="demo-brand-sub">compressor de vídeo · h264 + aac</span>
-              <span class="demo-ffmpeg"><i></i>ffmpeg OK</span>
-            </div>
-
-            <div class="demo-step">
-              <div class="demo-step-head"><span class="demo-step-num">01</span><span class="demo-step-label">entrada</span></div>
-              <div class="demo-picker">
-                <span class="demo-plus">+</span>
-                <span class="demo-picker-main">ESCOLHER VÍDEO</span>
-                <span class="demo-picker-sub">mp4 · mkv · mov · avi · webm</span>
-              </div>
-              <div class="demo-file">
-                <div class="demo-file-head">
-                  <span class="demo-file-name">comunismo.mp4</span>
-                  <span class="demo-chip">1080×1920</span>
-                  <span class="demo-chip vertical">9:16</span>
+          <div class="wapp" id="wapp">
+            <header class="atb">
+              <span class="abrand"><b>VIDCTL</b><small>compressor de vídeo</small></span>
+              <span class="aend">
+                <span class="atheme" id="theme-pill">☾</span>
+                <span class="affmpeg"><i></i>ffmpeg OK</span>
+              </span>
+            </header>
+            <div class="abody">
+              <aside class="aside">
+                <div class="grp">
+                  <h4>Destino</h4>
+                  <div class="prow"><span class="pn">WhatsApp Status<small>status e conversas</small></span><span class="pv">10 MB</span></div>
+                  <div class="prow"><span class="pn">Instagram<small>reels &amp; stories</small></span><span class="pv">16 MB</span></div>
+                  <div class="prow"><span class="pn">Shorts<small>vertical 9:16</small></span><span class="pv">30 MB</span></div>
+                  <div class="prow picked"><span class="pn">YouTube<small>qualidade primeiro</small></span><span class="pv">CRF 23</span></div>
                 </div>
-                <div class="demo-meta">
-                  <span><b>duração</b>1m33s</span>
-                  <span><b>tamanho</b>22.1 MB</span>
-                  <span><b>vídeo</b>h264</span>
-                  <span><b>áudio</b>aac</span>
+                <div class="grp">
+                  <h4>Qualidade</h4>
+                  <div class="trow"><span>CRF — quanto menor, melhor</span><span class="pv" style="margin-left:auto">23</span></div>
                 </div>
-              </div>
-            </div>
-
-            <div class="demo-lower">
-              <div class="demo-step">
-                <div class="demo-step-head"><span class="demo-step-num">02</span><span class="demo-step-label">destino</span></div>
-                <div class="demo-presets">
-                  <div class="demo-preset picked"><span class="n">WhatsApp Status</span><span class="d">status e conversas</span><span class="t">2-pass · 10 MB</span></div>
-                  <div class="demo-preset"><span class="n">WhatsApp</span><span class="d">vídeos longos</span><span class="t">2-pass · 16 MB</span></div>
-                  <div class="demo-preset"><span class="n">Instagram</span><span class="d">reels &amp; stories</span><span class="t">2-pass · 16 MB</span></div>
-                  <div class="demo-preset"><span class="n">Shorts</span><span class="d">vertical 9:16</span><span class="t">2-pass · 30 MB</span></div>
-                </div>
-                <div class="demo-tune">
-                  <span class="demo-tune-k">tamanho alvo</span>
-                  <span class="demo-slider"><span class="demo-thumb"></span></span>
-                  <span class="demo-num">10</span>
-                  <span class="demo-unit">MB</span>
-                </div>
-              </div>
-
-              <div class="demo-step">
-                <div class="demo-step-head"><span class="demo-step-num">03</span><span class="demo-step-label">saída</span></div>
-                <div class="demo-out">
-                  <span class="demo-outpath">/Downloads/comunismo-compressed.mp4</span>
-                  <span class="demo-gbtn">salvar como…</span>
-                </div>
-              </div>
-
-              <div class="demo-step">
-                <div class="demo-step-head"><span class="demo-step-num">04</span><span class="demo-step-label">executar</span></div>
-                <div class="demo-exec">
-                  <div class="demo-cta"><span>COMPRIMIR → WHATSAPP STATUS</span></div>
-                  <div class="demo-progress">
-                    <div class="demo-ph"><span id="demo-stage-label">ANALISANDO (1/2)</span><span id="demo-pct">0%</span></div>
-                    <div class="demo-sr"><span class="demo-fill" id="demo-fill"></span></div>
+                <div class="grp">
+                  <h4>Cortar em partes</h4>
+                  <div class="trow" style="gap:5px;padding-bottom:2px">
+                    <span class="obtn">sem corte</span>
+                    <span class="abtn solid" style="padding:4px 10px">partes</span>
+                    <span class="obtn">min/parte</span>
                   </div>
-                  <div class="demo-result">
-                    <span class="demo-big">−56%</span>
-                    <span class="demo-size">9.7 MB</span>
-                    <span class="demo-from">de 22.1 MB</span>
-                    <span class="demo-act">abrir pasta</span>
+                  <div class="trow"><span>N</span><span class="sl"><span class="th" style="left:22%"></span></span><span class="num">6</span></div>
+                  <div class="hint">30:00 → 6 × ~5:00</div>
+                </div>
+                <div class="grp">
+                  <h4>Saída</h4>
+                  <div class="out"><span class="opath">…/palestra-compressed.mp4</span><span class="obtn">salvar como…</span></div>
+                </div>
+              </aside>
+              <main class="amain">
+                <div class="apick">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M4 6.5 h11 a2.5 2.5 0 0 1 2.5 2.5 v6 a2.5 2.5 0 0 1 -2.5 2.5 H4 a2.5 2.5 0 0 1 -2.5 -2.5 V9 a2.5 2.5 0 0 1 2.5 -2.5 z M18.5 10.8 L23 8.2 v7.6 l-4.5 -2.6 z" />
+                  </svg>
+                  <b>Comprimir Vídeos</b>
+                  <small>arraste um arquivo aqui ou use “escolher vídeo…”</small>
+                </div>
+                <div class="avideo">
+                  <span class="athumb">1920×1080</span>
+                  <span class="ainfo"><b>palestra-open-source.mp4</b><small id="file-meta">16:9 · 30:00 · 420.0 MB · h264</small></span>
+                  <span class="astat">✔</span>
+                </div>
+                <div class="aprog">
+                  <div class="aphead"><span id="stage-label">ANALISANDO (1/2) · parte 1/6</span><span id="demo-pct">0%</span></div>
+                  <div class="atrack"><div class="afill" id="demo-fill"></div></div>
+                  <div class="afoot">
+                    <span class="acancel">cancelar</span>
+                    <span class="ametrics" id="demo-metrics">CPU <b>—</b> · RAM <b>—</b> · ffmpeg <b>—</b></span>
                   </div>
                 </div>
-              </div>
+                <div class="ares">
+                  <div class="abig"><b>−73%</b><span>112.4 MB · 6 partes</span><small>de 420.0 MB</small></div>
+                  <div class="aacts"><span class="abtn solid">abrir pasta</span><span class="abtn">novo vídeo</span></div>
+                </div>
+                <div class="abar">
+                  <span class="grow"></span>
+                  <button class="arun">COMPRIMIR → 6 PARTES</button>
+                </div>
+              </main>
             </div>
+            <footer class="aff">offline · h264 + aac · 2-pass quando há limite de tamanho</footer>
           </div>
         </div>
 
-        <p class="note">1m33s · 1080×1920 · 22,1 MB → 9,7 MB com o preset WhatsApp Status (10 MB) — sem cortar duração nem formato</p>
+        <p class="note">30:00 · 1080p · 420 MB → 6 partes de ~5 min somando 112,4 MB (−73%) no preset YouTube CRF — repare no tema claro/escuro mudando sozinho no fim da demonstração</p>
       </section>
 
       <section id="recursos" class="section">
@@ -143,6 +139,11 @@
         </div>
         <div class="grid">
           <article class="card">
+            <span class="tag">novo</span>
+            <h3>Corte em partes</h3>
+            <p>Divida o vídeo por tempo: N partes iguais ou X minutos por parte (30 min → 6 × 5 min). Mínimo de 1 min por parte, cada uma comprimida de verdade e salva como <code>nome-part1.mp4</code>.</p>
+          </article>
+          <article class="card">
             <h3>2-pass para tamanho exato</h3>
             <p>Primeiro passe analisa a cena, segundo aplica o bitrate. O arquivo sai no tamanho alvo — não em cima, não quase.</p>
           </article>
@@ -151,19 +152,53 @@
             <p>WhatsApp Status (10 MB), WhatsApp 16 MB, Instagram Reels, Shorts 30 MB, YouTube em CRF e tamanho personalizado.</p>
           </article>
           <article class="card">
-            <h3>Preserva duração e formato</h3>
-            <p>Sem cortar cena, sem mudar resolução obrigatória, sem reencodar mais do que precisa. O que muda é só o peso.</p>
+            <span class="tag">novo</span>
+            <h3>Métricas ao vivo</h3>
+            <p>Durante a conversão o painel mostra CPU, memória, carga do ffmpeg e GPU — pra você saber que a máquina está trabalhando sem travar a interface.</p>
+          </article>
+          <article class="card">
+            <span class="tag">novo</span>
+            <h3>Tema claro e escuro</h3>
+            <p>Segue o sistema e pode ser fixado no botão sol/lua. A escolha persiste entre aberturas do app.</p>
           </article>
           <article class="card">
             <h3>100% offline</h3>
-            <p>Encode local com ffmpeg nativo. Seu vídeo não sai da sua máquina — ideal pra material sensível ou em análise dimensional.</p>
+            <p>Encode local com ffmpeg nativo. Seu vídeo não sai da sua máquina — ideal pra material sensível.</p>
           </article>
+        </div>
+      </section>
+
+      <section id="corte" class="section">
+        <div class="section-head">
+          <span class="step-num">02</span>
+          <h2>Corte por tempo</h2>
+        </div>
+        <div class="corte">
+          <div class="corte-demo" aria-hidden="true">
+            <div class="src">palestra.mp4&nbsp; <b>30:00</b></div>
+            <div class="arrow">↓ 6 × 5 min</div>
+            <div class="parts">
+              <span>parte 1<br />5:00</span>
+              <span>parte 2<br />5:00</span>
+              <span>parte 3<br />5:00</span>
+              <span>parte 4<br />5:00</span>
+              <span>parte 5<br />5:00</span>
+              <span>parte 6<br />5:00</span>
+            </div>
+          </div>
+          <ul class="regras">
+            <li><b>Escolha uma barra:</b> número de partes ou minutos por parte — a outra opção fica desligada.</li>
+            <li><b>Mínimo de 1 min</b> por parte. O app bloqueia cortes que gerem partes menores.</li>
+            <li><b>Sobra honesta:</b> se o vídeo não divide exato, a sobra vira uma parte final menor ou é juntada na última — nada se perde.</li>
+            <li><b>Compressão por parte:</b> cada trecho passa pelo preset escolhido; em modo tamanho, o alvo vale para cada parte.</li>
+            <li><b>Nomes previsíveis:</b> <code>video-part1.mp4</code>, <code>video-part2.mp4</code>… com zero à esquerda a partir de 10 partes.</li>
+          </ul>
         </div>
       </section>
 
       <section id="presets" class="section">
         <div class="section-head">
-          <span class="step-num">02</span>
+          <span class="step-num">03</span>
           <h2>Destinos</h2>
         </div>
         <div class="presets">
@@ -202,14 +237,15 @@
 
       <section id="como-funciona" class="section">
         <div class="section-head">
-          <span class="step-num">03</span>
+          <span class="step-num">04</span>
           <h2>Como funciona</h2>
         </div>
         <ol class="steps">
           <li><span class="step-num">01</span><h3>Escolher</h3><p>Selecione o vídeo. O app lê duração, resolução e codecs na hora.</p></li>
           <li><span class="step-num">02</span><h3>Destino</h3><p>Defina a plataforma — ou um tamanho customizado em MB.</p></li>
-          <li><span class="step-num">03</span><h3>Executar</h3><p>Orçamento de bitrate calculado, 2-pass roda com barra de progresso.</p></li>
-          <li><span class="step-num">04</span><h3>Enviar</h3><p>Pronto. Toca em “abrir pasta” e manda pra plataforma.</p></li>
+          <li><span class="step-num">03</span><h3>Cortar (opcional)</h3><p>Ative o corte em partes e veja o plano na hora: 30:00 → 6 × ~5:00.</p></li>
+          <li><span class="step-num">04</span><h3>Executar</h3><p>2-pass com orçamento por parte, barra agregada e métricas de CPU/RAM/GPU ao vivo.</p></li>
+          <li><span class="step-num">05</span><h3>Enviar</h3><p>Pronto. Toca em “abrir pasta” e manda pra plataforma.</p></li>
         </ol>
       </section>
 
@@ -233,42 +269,55 @@
     <script>
       (function () {
         var demo = document.getElementById("demo");
-        if (!demo) return;
+        var wapp = document.getElementById("wapp");
         var fill = document.getElementById("demo-fill");
         var pct = document.getElementById("demo-pct");
-        var stgl = document.getElementById("demo-stage-label");
+        var stgl = document.getElementById("stage-label");
+        var metrics = document.getElementById("demo-metrics");
+        var pill = document.getElementById("theme-pill");
+
+        function setMetrics(cpu, ram, ff) {
+          metrics.innerHTML =
+            "CPU <b>" + cpu + "%</b> · RAM <b>" + ram + "/15.6 GB</b> · ffmpeg <b>" + ff + "%</b>";
+        }
+
         var schedule = [
           { name: "st-pick", dur: 1800 },
-          { name: "st-file", dur: 1700 },
-          { name: "st-run", dur: 2100, from: 0, to: 46, label: "ANALISANDO (1/2)" },
-          { name: "st-run", dur: 1900, from: 47, to: 100, label: "COMPRIMINDO (2/2)" },
-          { name: "st-done", dur: 2600 },
+          { name: "st-file", dur: 2000 },
+          { name: "st-run", dur: 1900, from: 2, to: 24, label: "ANALISANDO (1/2) · parte 1/6", m: [91, 7.8, 78] },
+          { name: "st-run", dur: 1700, from: 25, to: 50, label: "COMPRIMINDO (2/2) · parte 2/6", m: [96, 8.2, 92] },
+          { name: "st-run", dur: 1700, from: 51, to: 74, label: "COMPRIMINDO (2/2) · parte 4/6", m: [98, 8.4, 95] },
+          { name: "st-run", dur: 1700, from: 75, to: 99, label: "COMPRIMINDO (2/2) · parte 6/6", m: [94, 8.1, 90] },
+          { name: "st-done", dur: 3400 },
         ];
+
+        function enter(i) {
+          var s = schedule[i];
+          demo.className = "demo " + s.name;
+          wapp.className = "wapp" + (s.name === "st-done" ? " lite" : "");
+          pill.textContent = s.name === "st-done" ? "☀" : "☾";
+          if (s.label !== undefined) stgl.textContent = s.label;
+          if (s.m !== undefined) setMetrics(s.m[0], s.m[1], s.m[2]);
+          if (s.from !== undefined) {
+            fill.style.width = s.from + "%";
+            pct.textContent = s.from + "%";
+          }
+        }
 
         if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
           demo.className = "demo st-done";
-          if (stgl) stgl.textContent = "CONCLUÍDO (2/2)";
-          if (pct) pct.textContent = "100%";
-          if (fill) fill.style.width = "100%";
+          wapp.className = "wapp lite";
+          pill.textContent = "☀";
+          stgl.textContent = "CONCLUÍDO";
+          pct.textContent = "100%";
+          fill.style.width = "100%";
+          setMetrics(0, 6.2, 0);
           return;
         }
 
         var idx = 0;
         var elapsed = 0;
         var last = null;
-        var raf = 0;
-
-        function enter(i) {
-          idx = i;
-          elapsed = 0;
-          var s = schedule[idx];
-          demo.className = "demo " + s.name;
-          if (s.label !== undefined && stgl) stgl.textContent = s.label;
-          if (s.from !== undefined) {
-            if (fill) fill.style.width = s.from + "%";
-            if (pct) pct.textContent = s.from + "%";
-          }
-        }
 
         function frame(now) {
           if (last !== null) elapsed += now - last;
@@ -276,15 +325,18 @@
           var s = schedule[idx];
           if (s.from !== undefined) {
             var v = Math.round(s.from + (s.to - s.from) * Math.min(1, elapsed / s.dur));
-            if (fill) fill.style.width = v + "%";
-            if (pct) pct.textContent = v + "%";
+            fill.style.width = v + "%";
+            pct.textContent = v + "%";
           }
-          if (elapsed >= s.dur) enter((idx + 1) % schedule.length);
-          raf = requestAnimationFrame(frame);
+          if (elapsed >= s.dur) {
+            idx = (idx + 1) % schedule.length;
+            enter(idx);
+          }
+          requestAnimationFrame(frame);
         }
 
         enter(0);
-        raf = requestAnimationFrame(frame);
+        requestAnimationFrame(frame);
       })();
     </script>
   </body>
