@@ -27,6 +27,10 @@ componente `App.svelte`).
 | 9 | Presets personalizados pelo usuário | §9 | M |
 | 10 | i18n (pt/en) — opcional | §10 | M |
 
+Redesign da UI no estilo do Constrict (fila visual, drag&drop, tema adwaita)
+está detalhado em [`plano-ui-constrict.md`](./plano-ui-constrict.md); ele consome
+as Fases 1, 2, 3, 4 e 10 deste plano.
+
 Ordem por dependência: config (1) libera fila (2, `MaxParallel`), notificações
 (7), presets custom (9). Estimativa (3) e codec/hw (4) são independentes entre
 si, mas o job enriquecido da fase 4/5 deve ser desenhado junto com a fila (2)
