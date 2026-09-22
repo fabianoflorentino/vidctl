@@ -1,5 +1,5 @@
 Name:           vidctl
-Version:        1.0.1
+Version:        2.0.0
 Release:        1%{?dist}
 Summary:        Compress video to the exact size of each platform with ffmpeg 2-pass
 
@@ -47,5 +47,8 @@ install -Dm644 pkg/icon/vidctl-256.png %{buildroot}%{_datadir}/icons/hicolor/256
 %{_datadir}/icons/hicolor/256x256/apps/vidctl.png
 
 %changelog
-* Fri Sep 11 2026 Fabiano Santos Florentino <fabianoflorentino@gmail.com> - 1.0.1-1
+* Tue Sep 22 2026 Fabiano Santos Florentino <fabianoflorentino@gmail.com> - 2.0.0-1
+- Interface redesenhada, corte em partes e métricas de CPU/GPU/RAM ao vivo
+
+* Fri Sep 11 2026 Fabiano Santos Florentino <fabianoflorentino@gmail.com> - 1.0.1-1* Fri Sep 11 2026 Fabiano Santos Florentino <fabianoflorentino@gmail.com> - 1.0.1-1
 - Empacotamento inicial (Fedora)
