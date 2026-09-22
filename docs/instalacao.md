@@ -83,6 +83,25 @@ O script é o mesmo fluxo do `yay`: roda `makepkg -si` sobre
 compila do fonte com `wails build -clean -tags webkit2_41` e instala o pacote).
 Exige `base-devel`.
 
+### Direto no makepkg (sem o script)
+
+```bash
+git clone https://github.com/fabianoflorentino/vidctl
+cd vidctl/pkg/aur
+makepkg -si
+```
+
+- `-s` resolve e instala as dependências de build e runtime (pede sudo):
+  `go`, `npm`, `gtk3`, `webkit2gtk-4.1`, `ffmpeg`
+- `-i` instala o `.pkg.tar.zst` gerado ao final
+- Quer pular as confirmações? `makepkg -si --noconfirm`
+
+Para limpar os artefatos da compilação depois: `makepkg --cleanbuild` (ou
+apague as pastas `src/` e os `*.pkg.tar.zst` dentro de `pkg/aur/`).
+
+Quando o pacote estiver publicado no AUR, o mesmo resultado vem de
+`yay -S vidctl` (ou `paru -S vidctl`).
+
 Quer uma versão mais nova? Atualize o PKGBUILD antes de instalar:
 
 ```bash
