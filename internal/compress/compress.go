@@ -293,18 +293,12 @@ func Run(ctx context.Context, jobID string, job Job) {
 		return
 	}
 
-	preset, ok := presets.ByID(job.PresetID)
+	preset, ok := EffectivePreset(job)
 	if !ok {
 		events.EmitError(jobID, "preset desconhecido: "+job.PresetID)
 		return
 	}
 
-	if preset.Mode == "crf" && job.CRF > 0 {
-		preset.CRF = job.CRF
-	}
-	if preset.Mode == "size" && job.SizeMB > 0 {
-		preset.SizeMB = job.SizeMB
-	}
 	if preset.Mode == "size" && preset.SizeMB <= 0 {
 		events.EmitError(jobID, "tamanho alvo deve ser maior que zero")
 		return
@@ -407,4 +401,19 @@ func encodeSegment(ctx context.Context, jobID, logID string, job Job, preset pre
 
 func wrapStage(msg, suffix string, err error) error {
 	return fmt.Errorf("%s%s: %w", msg, suffix, err)
+}
+
+// EffectivePreset resolves the preset applying the user's overrides from the job.
+func EffectivePreset(job Job) (presets.Preset, bool) {
+	preset, ok := presets.ByID(job.PresetID)
+	if !ok {
+		return presets.Preset{}, false
+	}
+	if preset.Mode == "crf" && job.CRF > 0 {
+		preset.CRF = job.CRF
+	}
+	if preset.Mode == "size" && job.SizeMB > 0 {
+		preset.SizeMB = job.SizeMB
+	}
+	return preset, true
 }
