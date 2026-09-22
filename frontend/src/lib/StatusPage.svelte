@@ -15,7 +15,7 @@
 <div class="status-page">
   <svg viewBox="0 0 24 24" aria-hidden="true">
     <path
-      d="M6 2 h12 v20 h-12 z M10 0 h4 v2 h-4 z M10 6 l6 4 a2 2 0 0 1 -2 3 l-2 3 a2 2 0 0 1 -4 0 v-8 a2 2 0 0 1 2 -2 z M10 12 l6 -4"
+      d="M4 6.5 h11 a2.5 2.5 0 0 1 2.5 2.5 v6 a2.5 2.5 0 0 1 -2.5 2.5 H4 a2.5 2.5 0 0 1 -2.5 -2.5 V9 a2.5 2.5 0 0 1 2.5 -2.5 z M18.5 10.8 L23 8.2 v7.6 l-4.5 -2.6 z"
     />
   </svg>
   <h1>{title}</h1>
