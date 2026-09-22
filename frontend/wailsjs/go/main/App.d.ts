@@ -19,4 +19,6 @@ export function OpenFolder(arg1:string):Promise<void>;
 
 export function OpenInputDialog():Promise<string>;
 
+export function OpenMultipleDialog():Promise<Array<string>>;
+
 export function OpenOutputDialog(arg1:string):Promise<string>;

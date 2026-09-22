@@ -23,6 +23,8 @@ type App struct {
 	jobs *compress.Manager
 }
 
+const videoFilterPattern = "*.mp4;*.mkv;*.mov;*.avi;*.webm;*.m4v;*.ts;*.flv"
+
 // NewApp creates the application struct.
 func NewApp() *App {
 	return &App{jobs: compress.NewManager()}
@@ -82,13 +84,29 @@ func (a *App) OpenInputDialog() (string, error) {
 		Title: "Selecione o vídeo",
 		Filters: []wailsruntime.FileFilter{{
 			DisplayName: "Vídeos",
-			Pattern:     "*.mp4;*.mkv;*.mov;*.avi;*.webm;*.m4v;*.ts;*.flv",
+			Pattern:     videoFilterPattern,
 		}},
 	})
 	if err != nil {
 		return "", fmt.Errorf("falha ao abrir o seletor de arquivos: %w", err)
 	}
 	return path, nil
+}
+
+// OpenMultipleDialog opens the native dialog to pick several source videos.
+// Returns an empty slice when the user cancels.
+func (a *App) OpenMultipleDialog() ([]string, error) {
+	paths, err := wailsruntime.OpenMultipleFilesDialog(a.ctx, wailsruntime.OpenDialogOptions{
+		Title: "Selecione os vídeos",
+		Filters: []wailsruntime.FileFilter{{
+			DisplayName: "Vídeos",
+			Pattern:     videoFilterPattern,
+		}},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("falha ao abrir o seletor de arquivos: %w", err)
+	}
+	return paths, nil
 }
 
 // OpenOutputDialog opens the native save dialog for the compressed file.

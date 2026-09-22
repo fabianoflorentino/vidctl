@@ -30,6 +30,10 @@ export function OpenInputDialog() {
   return window['go']['main']['App']['OpenInputDialog']();
 }
 
+export function OpenMultipleDialog() {
+  return window['go']['main']['App']['OpenMultipleDialog']();
+}
+
 export function OpenOutputDialog(arg1) {
   return window['go']['main']['App']['OpenOutputDialog'](arg1);
 }

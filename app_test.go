@@ -159,6 +159,14 @@ func TestCancelUnknownJob(t *testing.T) {
 	}
 }
 
+func TestVideoFilterPattern(t *testing.T) {
+	for _, ext := range []string{"mp4", "mkv", "mov", "avi", "webm", "m4v", "ts", "flv"} {
+		if !strings.Contains(videoFilterPattern, "*."+ext) {
+			t.Errorf("padrão deve contemplar *.%s: %q", ext, videoFilterPattern)
+		}
+	}
+}
+
 func TestCancelRegisteredJob(t *testing.T) {
 	a := NewApp()
 	canceled := false
