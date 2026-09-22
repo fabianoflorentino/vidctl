@@ -10,6 +10,7 @@
     Cancel as CancelJob,
     OpenFolder,
     GetUsage,
+    GetAdvice,
   } from '../wailsjs/go/main/App.js'
   import { EventsOn, EventsOff } from '../wailsjs/runtime/runtime.js'
   import type { main, presets, media } from '../wailsjs/go/models.js'
@@ -70,6 +71,51 @@
   let partsDone = $state<DoneEv[]>([])
   let jobTotalParts = $state(1)
   let usage = $state<Awaited<ReturnType<typeof GetUsage>> | null>(null)
+  let advice = $state<Awaited<ReturnType<typeof GetAdvice>> | null>(null)
+  let adviceSeq = 0
+
+  $effect(() => {
+    const path = inputPath
+    const presetId = selectedPresetId
+    const targetMB = sizeMB
+    const qualityCRF = crf
+    const split = splitPayload()
+    const busy = running
+    if (!path || !info || busy) {
+      advice = null
+      return
+    }
+    const seq = ++adviceSeq
+    const timer = setTimeout(async () => {
+      try {
+        const ad = await GetAdvice(new bindings.Job({
+          inputPath: path,
+          outputPath: 'advice://placeholder',
+          presetId,
+          sizeMB: targetMB > 0 ? targetMB : 10,
+          crf: qualityCRF,
+          split: split ?? undefined,
+        }))
+        if (seq === adviceSeq) advice = ad
+      } catch {
+        if (seq === adviceSeq) advice = null
+      }
+    }, 250)
+    return () => clearTimeout(timer)
+  })
+
+  function applyAdvice() {
+    if (!advice) return
+    const sug = advice.suggestion
+    const mb = sug.sizeMB ?? 0
+    const mins = sug.minutesEach ?? 0
+    if (mb > 0) sizeMB = Math.min(100, Math.max(2, Math.round(mb)))
+    if (mins > 0) {
+      splitOn = true
+      splitAxis = 'minutes'
+      splitMinutes = mins
+    }
+  }
 
   $effect(() => {
     if (!running) {
@@ -375,11 +421,21 @@
             </label>
             <div class="hint mono">
               {#if info}
-                ≈ video
-                {Math.max(1, Math.round(((sizeMB * 8 * 1024 * 1024 * 0.95) / info.durationSec - 96000) / 1000))}
-                kbps · áudio 96k
+                {#if advice && advice.kbps > 0}
+                  ≈ video {advice.kbps} kbps · áudio 96k{#if splitOn} · por parte{/if}
+                {:else}
+                  ≈ video {Math.max(1, Math.round(((sizeMB * 8 * 1024 * 1024 * 0.95) / info.durationSec - 96000) / 1000))} kbps · áudio 96k
+                {/if}
               {/if}
             </div>
+            {#if advice && !advice.ok}
+              <div class="advice">
+                <p class="advice-msg">{advice.message}</p>
+                {#if (advice.suggestion.sizeMB ?? 0) > 0 || (advice.suggestion.minutesEach ?? 0) > 0}
+                  <button class="btn small" onclick={applyAdvice}>aplicar sugestão</button>
+                {/if}
+              </div>
+            {/if}
           {:else}
             <div class="tune-row">
               <span class="meta-k">CRF — quanto menor, melhor</span>

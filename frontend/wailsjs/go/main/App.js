@@ -14,6 +14,10 @@ export function Compress(arg1) {
   return window['go']['main']['App']['Compress'](arg1);
 }
 
+export function GetAdvice(arg1) {
+  return window['go']['main']['App']['GetAdvice'](arg1);
+}
+
 export function GetMediaInfo(arg1) {
   return window['go']['main']['App']['GetMediaInfo'](arg1);
 }
