@@ -88,7 +88,7 @@ Quer uma versão mais nova? Atualize o PKGBUILD antes de instalar:
 ```bash
 cd vidctl
 git pull
-pkg/aur/update-aur.sh 1.0.8   # use a versão da última release
+pkg/aur/update-aur.sh 2.0.0   # use a versão da última release
 pkg/arch/install.sh
 ```
 

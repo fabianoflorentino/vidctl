@@ -102,10 +102,10 @@ flowchart LR
   T --> L["releases por plataforma,<br/>cada uma com só os seus assets + checksums.txt"]
 ```
 
-Uma **release por plataforma**: a **v1.0.x** publica três releases
-(`v1.0.x-windows`, `v1.0.x-linux`, `v1.0.x-macos`), cada uma com apenas os
-binários do seu sistema (a Linux leva zip + deb + rpm). A tag `v1.0.x` sem
-sufixo continua existindo como fonte para o PKGBUILD (Arch/AUR).
+Uma **release por plataforma**: uma tag **vX.Y.Z** (ex.: `v2.0.0`) publica três
+releases (`vX.Y.Z-windows`, `vX.Y.Z-linux`, `vX.Y.Z-macos`), cada uma com apenas
+os binários do seu sistema (a Linux leva zip + deb + rpm). A tag `vX.Y.Z` sem
+sufixo é a fonte do tarball usado pelo PKGBUILD (Arch/AUR).
 
 ## Presets (destino → tamanho/qualidade)
 
