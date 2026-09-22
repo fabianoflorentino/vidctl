@@ -15,6 +15,8 @@ cortar cena. Alimentado por encode **2-pass** quando há limite de tamanho ou
 - Encode ffmpeg **2-pass** para atingir o tamanho máximo sem estourar o limite
 - Progresso em tempo real com cancelamento a qualquer momento
 - Desktop nativo para **Linux, Windows e macOS** (Wails v2 + WebKit/WebView2)
+- Tema claro/escuro: segue o sistema por padrão e pode ser fixado no botão de
+  sol/lua no topo (a escolha persiste entre execuções)
 - Sem internet: fontes e interface bundladas no binário
 - Verifica `ffmpeg`/`ffprobe` na inicialização e avisa se faltarem; o botão
   "verificar de novo" relê o PATH do sistema, então dá para instalar o ffmpeg
