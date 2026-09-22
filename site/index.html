@@ -51,7 +51,7 @@
           class="demo st-pick"
           id="demo"
           role="img"
-          aria-label="Demonstração animada da nova interface do vidctl: tela inicial sem barra lateral, escolha do vídeo, corte em 6 partes de 5 minutos, compressão com métricas de CPU e memória em tema escuro e, no fim, a tela inicial em tema claro."
+          aria-label="Demonstração animada da nova interface do vidctl: tela inicial sem barra lateral, escolha do vídeo, compressão no preset WhatsApp Status com corte em 6 partes de 5 minutos, métricas de CPU e memória em tema escuro e, no fim, a tela inicial em tema claro."
         >
           <div class="wbar">
             <i></i><i></i><i></i>
@@ -70,23 +70,24 @@
               <aside class="aside">
                 <div class="grp">
                   <h4>Destino</h4>
-                  <div class="prow"><span class="pn">WhatsApp Status<small>status e conversas</small></span><span class="pv">10 MB</span></div>
+                  <div class="prow picked"><span class="pn">WhatsApp Status<small>status e conversas</small></span><span class="pv">10 MB</span></div>
                   <div class="prow"><span class="pn">Instagram<small>reels &amp; stories</small></span><span class="pv">16 MB</span></div>
                   <div class="prow"><span class="pn">Shorts<small>vertical 9:16</small></span><span class="pv">30 MB</span></div>
-                  <div class="prow picked"><span class="pn">YouTube<small>qualidade primeiro</small></span><span class="pv">CRF 23</span></div>
+                  <div class="prow"><span class="pn">YouTube<small>qualidade primeiro</small></span><span class="pv">CRF 23</span></div>
                 </div>
                 <div class="grp">
-                  <h4>Qualidade</h4>
-                  <div class="trow"><span>CRF — quanto menor, melhor</span><span class="pv" style="margin-left:auto">23</span></div>
+                  <h4>Tamanho alvo</h4>
+                  <div class="trow"><span>tamanho</span><span class="sl"><span class="th" style="left:34%"></span></span><span class="num">10</span><span class="unit">MB</span></div>
+                  <div class="hint">≈ vídeo 169 kbps · áudio 96k por parte</div>
                 </div>
                 <div class="grp">
                   <h4>Cortar em partes</h4>
                   <div class="shead">
-                    <span class="obtn">sem corte</span>
+                    <span class="obtn snocut">sem corte</span>
                     <span class="stag">6 × ~5:00</span>
                   </div>
-                  <div class="trow on"><span>partes</span><span class="sl"><span class="th" style="left:22%"></span></span><span class="num">6</span></div>
-                  <div class="trow dim"><span>min/parte</span><span class="sl"><span class="th" style="left:10%"></span></span><span class="num">5</span></div>
+                  <div class="trow on split-row"><span>partes</span><span class="sl"><span class="th" style="left:22%"></span></span><span class="num">6</span></div>
+                  <div class="trow split-row"><span>min/parte</span><span class="sl"><span class="th" style="left:10%"></span></span><span class="num">5</span></div>
                 </div>
                 <div class="grp">
                   <h4>Saída</h4>
@@ -115,12 +116,12 @@
                   </div>
                 </div>
                 <div class="ares">
-                  <div class="abig"><b>−73%</b><span>112.4 MB · 6 partes</span><small>de 420.0 MB</small></div>
+                  <div class="abig"><b>−86%</b><span>59.4 MB · 6 partes</span><small>de 420.0 MB</small></div>
                   <div class="aacts"><span class="abtn solid">abrir pasta</span><span class="abtn">novo vídeo</span></div>
                 </div>
                 <div class="abar">
                   <span class="grow"></span>
-                  <button class="arun">COMPRIMIR → 6 PARTES</button>
+                  <button class="arun" id="arun-btn">COMPRIMIR → WHATSAPP STATUS</button>
                 </div>
               </main>
             </div>
@@ -128,7 +129,7 @@
           </div>
         </div>
 
-        <p class="note">30:00 · 1080p · 420 MB → 6 partes de ~5 min somando 112,4 MB (−73%) no preset YouTube CRF — no fim, a tela inicial aparece em tema claro (botão sol/lua do app)</p>
+        <p class="note">30:00 · 1080p · 420 MB → 6 partes de ~5 min somando 59,4 MB (−86%) no preset WhatsApp Status (10 MB por parte) — no fim, a tela inicial aparece em tema claro (botão sol/lua do app)</p>
       </section>
 
       <section id="recursos" class="section">
@@ -274,6 +275,7 @@
         var stgl = document.getElementById("stage-label");
         var metrics = document.getElementById("demo-metrics");
         var pill = document.getElementById("theme-pill");
+        var arun = document.getElementById("arun-btn");
 
         function setMetrics(cpu, ram, ff) {
           metrics.innerHTML =
@@ -282,7 +284,8 @@
 
         var schedule = [
           { name: "st-pick", dur: 1800 },
-          { name: "st-file", dur: 2000 },
+          { name: "st-file", dur: 1700, btn: "COMPRIMIR → WHATSAPP STATUS" },
+          { name: "st-split", dur: 2100, btn: "COMPRIMIR → 6 PARTES" },
           { name: "st-run", dur: 1900, from: 2, to: 24, label: "ANALISANDO (1/2) · parte 1/6", m: [91, 7.8, 78] },
           { name: "st-run", dur: 1700, from: 25, to: 50, label: "COMPRIMINDO (2/2) · parte 2/6", m: [96, 8.2, 92] },
           { name: "st-run", dur: 1700, from: 51, to: 74, label: "COMPRIMINDO (2/2) · parte 4/6", m: [98, 8.4, 95] },
@@ -302,6 +305,7 @@
           demo.className = "demo " + s.name;
           wapp.className = "wapp" + (s.lite ? " lite" : "");
           pill.textContent = s.lite ? "☀" : "☾";
+          if (s.btn !== undefined && arun) arun.textContent = s.btn;
           if (s.label !== undefined) stgl.textContent = s.label;
           if (s.m !== undefined) setMetrics(s.m[0], s.m[1], s.m[2]);
           if (s.from !== undefined) {

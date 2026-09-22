@@ -189,6 +189,7 @@ a {
   display: inline-flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 1px;
   padding: 11px 26px;
   border-radius: 999px;
@@ -585,6 +586,7 @@ a {
   font-size: 11px;
   letter-spacing: 0.05em;
   padding: 8px 18px;
+  border-radius: 999px;
 }
 
 .amain {
@@ -611,11 +613,45 @@ a {
 .demo.st-pick .apick,
 .demo.st-file .avideo,
 .demo.st-file .abar,
+.demo.st-split .avideo,
+.demo.st-split .abar,
 .demo.st-run .avideo,
 .demo.st-run .aprog,
 .demo.st-done .avideo,
 .demo.st-done .ares {
   display: flex;
+}
+
+/* corte: visível/ativo só a partir do estado st-split */
+.stag {
+  display: none;
+}
+
+.demo.st-split .stag,
+.demo.st-run .stag,
+.demo.st-done .stag {
+  display: inline;
+}
+
+.shead .snocut {
+  background: var(--acc);
+  border-color: var(--acc);
+  color: var(--acc-ink);
+  font-weight: 700;
+}
+
+.demo.st-split .snocut,
+.demo.st-run .snocut,
+.demo.st-done .snocut {
+  background: transparent;
+  border-color: var(--line);
+  color: var(--dim);
+  font-weight: 600;
+}
+
+.demo.st-file .split-row,
+.demo.st-pick .split-row {
+  opacity: 0.45;
 }
 
 .apick {
