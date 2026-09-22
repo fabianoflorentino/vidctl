@@ -517,6 +517,29 @@ a {
   padding: 2px 8px 0;
 }
 
+.shead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2px 8px 4px;
+}
+
+.stag {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--acc);
+  white-space: nowrap;
+}
+
+.trow.on > span:first-child {
+  color: var(--ink);
+}
+
+.trow.dim {
+  opacity: 0.5;
+}
+
 .out {
   display: flex;
   align-items: center;
