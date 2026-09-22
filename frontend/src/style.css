@@ -225,16 +225,17 @@ button {
   justify-content: center;
   width: 32px;
   height: 32px;
-  border: none;
+  border: 1px solid var(--border);
   border-radius: 999px;
-  background: transparent;
+  background: var(--inset);
   color: var(--fg-dim);
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
 .icon-btn:hover {
   background: var(--card-hover);
-  color: var(--fg);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 /* banner + alert */
@@ -769,9 +770,9 @@ input[type="number"].num {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 14px 18px;
-  border-top: 1px solid var(--border);
-  background: var(--card);
+  margin-top: auto;
+  padding: 14px 0 4px;
+  background: transparent;
 }
 
 .actionbar .spacer {
