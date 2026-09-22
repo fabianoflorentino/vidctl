@@ -1,20 +1,11 @@
 name: Release
 
+# Release é intencional: crie a tag e dispare no ref dela —
+#   git tag vX.Y.Z && git push origin vX.Y.Z
+#   gh workflow run release.yml --ref vX.Y.Z
+# Pushes em main NÃO publicam mais (evita releases v1.0.<run_number> fantasma).
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-    paths-ignore:
-      - "tools/**"
-      - "site/**"
-      - ".github/**"
-      - "docs/**"
-      - "pkg/aur/**"
-      - "pkg/arch/**"
-      - "LICENSE"
-      - "README.md"
-      - "CHANGELOG.md"
 
 concurrency:
   group: release

@@ -11,7 +11,9 @@ operacional dos pacotes.
 
 ## [Não publicado]
 
-- Nada ainda.
+- Sidebar: o grupo de escolha de preset passou de "Destino" para **"Presets"**.
+- Release passou a ser 100% intencional: push em `main` não dispara mais o
+  workflow (só `gh workflow run release.yml --ref vX.Y.Z` em uma tag).
 
 ## [2.0.0] — 2026-09-22
 

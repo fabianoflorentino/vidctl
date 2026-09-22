@@ -343,7 +343,7 @@
 {:else}
   <div class="split">
     <aside class="sidebar">
-      <ControlGroup title="Destino" help="Escolha um preset de saída. Presets de tamanho fazem o ffmpeg calcular o bitrate pela duração para caber no alvo (2-pass).">
+      <ControlGroup title="Presets" help="Escolha um preset de saída. Presets de tamanho fazem o ffmpeg calcular o bitrate pela duração para caber no alvo (2-pass).">
         {#each presetList as p (p.id)}
           <button class="row" class:selected={p.id === selectedPresetId} onclick={() => selectPreset(p)}>
             <span class="row-name">
