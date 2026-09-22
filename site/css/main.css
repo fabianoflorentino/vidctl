@@ -602,7 +602,8 @@ a {
 .avideo,
 .aprog,
 .ares,
-.apick {
+.apick,
+.abar {
   display: none;
 }
 
