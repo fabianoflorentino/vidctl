@@ -51,7 +51,7 @@
           class="demo st-pick"
           id="demo"
           role="img"
-          aria-label="Demonstração animada da nova interface do vidctl: escolher o vídeo, cortar em 6 partes de 5 minutos, comprimir com acompanhamento de CPU e memória, e receber o resultado com economia de 73%."
+          aria-label="Demonstração animada da nova interface do vidctl: tela inicial sem barra lateral, escolha do vídeo, corte em 6 partes de 5 minutos, compressão com métricas de CPU e memória em tema escuro e, no fim, a tela inicial em tema claro."
         >
           <div class="wbar">
             <i></i><i></i><i></i>
@@ -128,7 +128,7 @@
           </div>
         </div>
 
-        <p class="note">30:00 · 1080p · 420 MB → 6 partes de ~5 min somando 112,4 MB (−73%) no preset YouTube CRF — repare no tema claro/escuro mudando sozinho no fim da demonstração</p>
+        <p class="note">30:00 · 1080p · 420 MB → 6 partes de ~5 min somando 112,4 MB (−73%) no preset YouTube CRF — no fim, a tela inicial aparece em tema claro (botão sol/lua do app)</p>
       </section>
 
       <section id="recursos" class="section">
@@ -288,6 +288,7 @@
           { name: "st-run", dur: 1700, from: 51, to: 74, label: "COMPRIMINDO (2/2) · parte 4/6", m: [98, 8.4, 95] },
           { name: "st-run", dur: 1700, from: 75, to: 99, label: "COMPRIMINDO (2/2) · parte 6/6", m: [94, 8.1, 90] },
           { name: "st-done", dur: 3400 },
+          { name: "st-pick", dur: 3400, lite: true },
         ];
 
         var idx = 0;
@@ -299,8 +300,8 @@
           elapsed = 0;
           var s = schedule[i];
           demo.className = "demo " + s.name;
-          wapp.className = "wapp" + (s.name === "st-done" ? " lite" : "");
-          pill.textContent = s.name === "st-done" ? "☀" : "☾";
+          wapp.className = "wapp" + (s.lite ? " lite" : "");
+          pill.textContent = s.lite ? "☀" : "☾";
           if (s.label !== undefined) stgl.textContent = s.label;
           if (s.m !== undefined) setMetrics(s.m[0], s.m[1], s.m[2]);
           if (s.from !== undefined) {

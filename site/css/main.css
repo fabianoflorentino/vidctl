@@ -604,6 +604,10 @@ a {
   display: none;
 }
 
+.demo.st-pick .aside {
+  display: none;
+}
+
 .demo.st-pick .apick,
 .demo.st-file .avideo,
 .demo.st-file .abar,
