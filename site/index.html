@@ -291,7 +291,13 @@
           { name: "st-done", dur: 3400 },
         ];
 
+        var idx = 0;
+        var elapsed = 0;
+        var last = null;
+
         function enter(i) {
+          idx = i;
+          elapsed = 0;
           var s = schedule[i];
           demo.className = "demo " + s.name;
           wapp.className = "wapp" + (s.name === "st-done" ? " lite" : "");
@@ -305,33 +311,25 @@
         }
 
         if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-          demo.className = "demo st-done";
-          wapp.className = "wapp lite";
-          pill.textContent = "☀";
-          stgl.textContent = "CONCLUÍDO";
-          pct.textContent = "100%";
+          enter(schedule.length - 1);
           fill.style.width = "100%";
+          pct.textContent = "100%";
+          stgl.textContent = "CONCLUÍDO";
           setMetrics(0, 6.2, 0);
           return;
         }
 
-        var idx = 0;
-        var elapsed = 0;
-        var last = null;
-
         function frame(now) {
-          if (last !== null) elapsed += now - last;
+          var dt = last === null ? 0 : Math.min(now - last, 120);
           last = now;
+          elapsed += dt;
           var s = schedule[idx];
           if (s.from !== undefined) {
             var v = Math.round(s.from + (s.to - s.from) * Math.min(1, elapsed / s.dur));
             fill.style.width = v + "%";
             pct.textContent = v + "%";
           }
-          if (elapsed >= s.dur) {
-            idx = (idx + 1) % schedule.length;
-            enter(idx);
-          }
+          if (elapsed >= s.dur) enter((idx + 1) % schedule.length);
           requestAnimationFrame(frame);
         }
 
