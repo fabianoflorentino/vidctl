@@ -1,11 +1,11 @@
 module github.com/fabianoflorentino/vidctl
 
-go 1.25.0
+go 1.26.0
 
 require (
 	github.com/shirou/gopsutil/v4 v4.26.8
-	github.com/wailsapp/wails/v2 v2.15.0
-	golang.org/x/sys v0.46.0
+	github.com/wailsapp/wails/v2 v2.16.0
+	golang.org/x/sys v0.48.0
 )
 
 require (
