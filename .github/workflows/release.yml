@@ -86,14 +86,13 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Determine version
+      - name: Require release tag
         run: |
-          if [ "${{ github.ref_type }}" = "tag" ]; then
-            VER="${GITHUB_REF_NAME}"
-          else
-            VER="v1.0.${{ github.run_number }}"
+          if [ "${{ github.ref_type }}" != "tag" ]; then
+            echo "::error::Release só a partir de um tag: git tag vX.Y.Z && git push origin vX.Y.Z && gh workflow run release.yml --ref vX.Y.Z"
+            exit 1
           fi
-          echo "VERSION=$VER" >> "$GITHUB_ENV"
+          echo "VERSION=${GITHUB_REF_NAME}" >> "$GITHUB_ENV"
 
       - name: Build Debian package
         env:
@@ -134,14 +133,13 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Determine version
+      - name: Require release tag
         run: |
-          if [ "${{ github.ref_type }}" = "tag" ]; then
-            VER="${GITHUB_REF_NAME}"
-          else
-            VER="v1.0.${{ github.run_number }}"
+          if [ "${{ github.ref_type }}" != "tag" ]; then
+            echo "::error::Release só a partir de um tag: git tag vX.Y.Z && git push origin vX.Y.Z && gh workflow run release.yml --ref vX.Y.Z"
+            exit 1
           fi
-          echo "VERSION=$VER" >> "$GITHUB_ENV"
+          echo "VERSION=${GITHUB_REF_NAME}" >> "$GITHUB_ENV"
 
       - name: Build RPM package
         env:
@@ -187,25 +185,20 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Determine version
+      - name: Require release tag
         id: version
         run: |
-          if [ "${{ github.ref_type }}" = "tag" ]; then
-            BASE="${{ github.ref_name }}"
-          else
-            BASE="v1.0.${{ github.run_number }}"
+          if [ "${{ github.ref_type }}" != "tag" ]; then
+            echo "::error::Release só a partir de um tag: git tag vX.Y.Z && git push origin vX.Y.Z && gh workflow run release.yml --ref vX.Y.Z"
+            exit 1
           fi
-          echo "version=$BASE" >> "$GITHUB_OUTPUT"
+          echo "version=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
 
       - name: Create tags
         run: |
           BASE="${{ steps.version.outputs.version }}"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          if [ "${{ github.ref_type }}" != "tag" ]; then
-            git tag "$BASE"
-            git push origin "$BASE"
-          fi
           for os in windows linux macos; do
             git tag "$BASE-$os"
             git push origin "$BASE-$os"
