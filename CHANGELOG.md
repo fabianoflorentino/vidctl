@@ -5,7 +5,7 @@ Todas as mudanças relevantes do vidctl, no formato
 versionamento [SemVer](https://semver.org/lang/pt-BR/) e o release por
 plataforma conforme o workflow de publicação.
 
-As releases por plataforma (`v1.x.y-windows`, `v1.x.y-linux`, `v1.x.y-macos`)
+As releases por plataforma (`vX.Y.Z-windows`, `vX.Y.Z-linux`, `vX.Y.Z-macos`)
 compartilham este mesmo changelog: a diferença entre elas é apenas o sistema
 operacional dos pacotes.
 

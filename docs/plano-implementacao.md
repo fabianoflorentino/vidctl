@@ -523,17 +523,17 @@ cortar em 6 partes de 5 min cada — com mínimo de **1 min por parte**.
 ## Ordem sugerida de execução
 
 ```
-v1.0.18 → Fase 1 (config)            [base p/ tudo]
-v1.0.19 → Fase 2 (fila)              [maior; define Task+Job de vez]
-v1.0.20 → Fase 3 (estimativa)
-v1.0.21 → Fase 4 (codec/hw)
-v1.0.22 → Fase 5 (ajustes)           [inclui trim -ss/-to reaproveitado na fase 11]
-v1.0.23 → Fase 6 (extrair áudio)
-v1.0.24 → Fase 7 (notificações)      [depende de config]
-v1.0.25 → Fase 8 (check update)
-v1.0.26 → Fase 9 (presets custom)    [depende de config]
-v1.0.27 → Fase 10 (i18n, opcional)
-v1.0.28 → Fase 11 (cortar em partes) [usa trim/seek e a fila das fases 2/5]
+v2.0.0  → Fase 11 (cortado em partes) [entregue fora de ordem, junto do redesign de UI]
+v2.1.0  → Fase 1 (config)            [base p/ tudo]
+v2.2.0  → Fase 2 (fila)              [maior; define Task+Job de vez; usa OpenMultipleDialog já pronto]
+v2.3.0  → Fase 3 (estimativa)
+v2.4.0  → Fase 4 (codec/hw)
+v2.5.0  → Fase 5 (ajustes)           [inclui trim -ss/-to reaproveitado da fase 11]
+v2.6.0  → Fase 6 (extrair áudio)
+v2.7.0  → Fase 7 (notificações)      [depende de config]
+v2.8.0  → Fase 8 (check update)      [usa a API de releases por tag + fluxo de publish novo]
+v2.9.0  → Fase 9 (presets custom)    [depende de config]
+v2.10.0 → Fase 10 (i18n, opcional)
 ```
 
 Cada versão deve passar por `make check` (vet + test + gofmt + svelte-check) e
