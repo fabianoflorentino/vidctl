@@ -91,11 +91,11 @@ flowchart TD
 
 ```mermaid
 flowchart LR
-  P["push em main<br/>(fora de .github/**)"] --> R["workflow Release"]
+  P["tag vX.Y.Z +<br/>gh workflow run --ref"] --> R["workflow Release"]
   R --> Z["build<br/>zips: linux · macos-a64 · windows"]
   R --> D["deb<br/>container golang:1.27"]
   R --> E["rpm<br/>container fedora:latest"]
-  R --> T["tags v1.0.x<br/>-windows · -linux · -macos"]
+  R --> T["tags por plataforma<br/>-windows · -linux · -macos"]
   Z --> T
   D --> T
   E --> T
