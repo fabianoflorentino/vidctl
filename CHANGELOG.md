@@ -11,6 +11,10 @@ operacional dos pacotes.
 
 ## [Não publicado]
 
+- Sidebar mais larga (300→344px) e card de **resumo do trabalho** no espaço
+  livre abaixo do vídeo quando ocioso: destino + alvo, plano de corte e bitrate
+  estimado vs. mínimo — o mesmo lugar que o card de progresso ocupa durante o
+  processamento.
 - **Aviso de qualidade pré-encode**: estimativa do bitrate de vídeo (por parte
   quando há corte) comparada a um mínimo por faixa de resolução; quando baixo,
   a sidebar mostra o motivo e uma sugestão aplicável com um clique — subir o
