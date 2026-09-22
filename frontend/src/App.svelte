@@ -547,6 +547,39 @@
         </div>
       {/if}
 
+      {#if info && !running && !done}
+        <div class="summary-card">
+          <div class="sum-row">
+            <span class="meta-k">destino</span>
+            <span class="sum-v">
+              {#if selectedPreset}
+                {selectedPreset.name} · {selectedPreset.mode === 'size' ? `${sizeMB} MB${splitOn ? '/parte' : ''}` : `CRF ${crf}`}
+              {:else}
+                —
+              {/if}
+            </span>
+          </div>
+          <div class="sum-row">
+            <span class="meta-k">corte</span>
+            <span class="sum-v">
+              {#if splitOn && activeSplit && !splitBlocked}
+                {activeSplit.count} × ~{fmtClock(activeSplit.sliceSec)}
+              {:else if splitOn}
+                ajuste o corte
+              {:else}
+                sem corte
+              {/if}
+            </span>
+          </div>
+          {#if advice && advice.kbps > 0}
+            <div class="sum-row">
+              <span class="meta-k">bitrate</span>
+              <span class="sum-v">≈{advice.kbps} kbps{#if splitOn} / parte{/if} · mín {advice.minKbps}</span>
+            </div>
+          {/if}
+        </div>
+      {/if}
+
       {#if error}
         <div class="alert">
           <p class="mono">{error}</p>
