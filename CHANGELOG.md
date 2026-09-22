@@ -11,6 +11,10 @@ operacional dos pacotes.
 
 ## [Não publicado]
 
+- **Aviso de qualidade pré-encode**: estimativa do bitrate de vídeo (por parte
+  quando há corte) comparada a um mínimo por faixa de resolução; quando baixo,
+  a sidebar mostra o motivo e uma sugestão aplicável com um clique — subir o
+  alvo em MB, cortar em partes de X min ou migrar para preset CRF.
 - Sidebar: o grupo de escolha de preset passou de "Destino" para **"Presets"**.
 - Release passou a ser 100% intencional: push em `main` não dispara mais o
   workflow (só `gh workflow run release.yml --ref vX.Y.Z` em uma tag).
