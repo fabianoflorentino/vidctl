@@ -11,6 +11,8 @@ operacional dos pacotes.
 
 ## [Não publicado]
 
+- Descrição dos presets na sidebar agora quebra linha e mostra o texto
+  completo (antes aparecia cortada com "…" em Instagram/YouTube).
 - Sidebar mais larga (300→344px) e card de **resumo do trabalho** no espaço
   livre abaixo do vídeo quando ocioso: destino + alvo, plano de corte e bitrate
   estimado vs. mínimo — o mesmo lugar que o card de progresso ocupa durante o
