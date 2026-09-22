@@ -68,8 +68,9 @@
   let partsDone = $state<DoneEv[]>([])
   let jobTotalParts = $state(1)
 
-  type SplitMode = 'off' | 'parts' | 'minutes'
-  let splitMode = $state<SplitMode>('off')
+  type SplitAxis = 'parts' | 'minutes'
+  let splitOn = $state(false)
+  let splitAxis = $state<SplitAxis>('parts')
   let splitParts = $state(6)
   let splitMinutes = $state(5)
 
@@ -78,12 +79,13 @@
 
   type SplitPlan = { count: number; sliceSec: number; error: string }
 
-  function planSplit(durationSec: number, mode: SplitMode, parts: number, minutes: number): SplitPlan | null {
-    if (mode === 'off' || !durationSec || durationSec <= 0) return null
+  function planSplit(durationSec: number): SplitPlan | null {
+    if (!splitOn || !durationSec || durationSec <= 0) return null
     if (durationSec < MIN_PART_SEC) {
       return { count: 0, sliceSec: 0, error: 'vídeo tem menos de 1 min — impossível cortar' }
     }
-    if (mode === 'parts') {
+    if (splitAxis === 'parts') {
+      const parts = Math.floor(splitParts)
       if (parts < 2) return { count: 0, sliceSec: 0, error: 'mínimo de 2 partes' }
       if (parts > MAX_PARTS) return { count: 0, sliceSec: 0, error: `máximo de ${MAX_PARTS} partes` }
       const slice = durationSec / parts
@@ -92,7 +94,7 @@
       }
       return { count: parts, sliceSec: slice, error: '' }
     }
-    const slice = Math.max(1, minutes) * 60
+    const slice = Math.max(1, Math.floor(splitMinutes)) * 60
     const full = Math.floor(durationSec / slice)
     const tail = durationSec - full * slice
     let count = full
@@ -102,8 +104,13 @@
     return { count, sliceSec: slice, error: '' }
   }
 
-  const activeSplit = $derived(planSplit(info?.durationSec ?? 0, splitMode, splitParts, splitMinutes))
+  const activeSplit = $derived(planSplit(info?.durationSec ?? 0))
   const splitBlocked = $derived(!!activeSplit?.error)
+
+  function useAxis(axis: SplitAxis) {
+    splitOn = true
+    splitAxis = axis
+  }
 
   function fmtClock(sec: number): string {
     if (!sec || sec < 0) return '—'
@@ -213,10 +220,10 @@
   }
 
   function splitPayload(): { parts: number; minutesEach: number } | null {
-    if (splitMode === 'off' || splitBlocked || !activeSplit) return null
-    return splitMode === 'parts'
-      ? { parts: splitParts, minutesEach: 0 }
-      : { parts: 0, minutesEach: splitMinutes }
+    if (!splitOn || splitBlocked || !activeSplit) return null
+    return splitAxis === 'parts'
+      ? { parts: Math.floor(splitParts), minutesEach: 0 }
+      : { parts: 0, minutesEach: Math.floor(splitMinutes) }
   }
 
   async function compress() {
@@ -359,44 +366,45 @@
 
       <ControlGroup
         title="Cortar em partes"
-        help="Divide o vídeo em partes sequenciais de duração fixa. Cada parte passa pela compressão escolhida. Mínimo de 1 minuto por parte; a última pode ficar menor ou levar a sobra."
+        help="Divide o vídeo em partes sequenciais de duração fixa. Cada parte passa pela compressão escolhida. Mínimo de 1 minuto por parte; a última pode ficar menor ou levar a sobra. Ajuste uma das barras para ativar o corte."
       >
-        <div class="seg-btns">
-          <button class="seg-btn" class:on={splitMode === 'off'} onclick={() => (splitMode = 'off')}>sem corte</button>
-          <button class="seg-btn" class:on={splitMode === 'parts'} onclick={() => (splitMode = 'parts')}>N partes</button>
-          <button class="seg-btn" class:on={splitMode === 'minutes'} onclick={() => (splitMode = 'minutes')}>min/parte</button>
+        <div class="split-head">
+          <button class="btn small" class:solid={!splitOn} onclick={() => (splitOn = false)}>
+            sem corte
+          </button>
+          {#if splitOn && activeSplit && !splitBlocked}
+            <span class="split-tag mono">{activeSplit.count} × ~{fmtClock(activeSplit.sliceSec)}</span>
+          {/if}
         </div>
 
-        {#if splitMode === 'parts'}
-          <label class="tune-row">
-            <span class="meta-k">partes</span>
-            <div class="tune-control">
-              <input type="range" min="2" max="60" step="1" value={splitParts}
-                oninput={(e) => (splitParts = Number((e.currentTarget as HTMLInputElement).value))} />
-              <input class="num" type="number" min="2" max="60" bind:value={splitParts} />
-            </div>
-          </label>
-        {:else if splitMode === 'minutes'}
-          <label class="tune-row">
-            <span class="meta-k">min/parte</span>
-            <div class="tune-control">
-              <input type="range" min="1" max="60" step="1" value={splitMinutes}
-                oninput={(e) => (splitMinutes = Number((e.currentTarget as HTMLInputElement).value))} />
-              <input class="num" type="number" min="1" max="60" bind:value={splitMinutes} />
-            </div>
-          </label>
-        {/if}
+        <label class="tune-row" class:active={splitOn && splitAxis === 'parts'} class:dim={!splitOn}>
+          <span class="meta-k">partes</span>
+          <div class="tune-control">
+            <input type="range" min="2" max="60" step="1" value={splitParts}
+              onpointerdown={() => useAxis('parts')}
+              onfocus={() => useAxis('parts')}
+              oninput={(e) => (splitParts = Number((e.currentTarget as HTMLInputElement).value))} />
+            <input class="num" type="number" min="2" max="60" bind:value={splitParts}
+              onchange={() => useAxis('parts')} />
+          </div>
+        </label>
 
-        {#if splitMode !== 'off'}
-          {#if !info}
-            <div class="hint">escolha o vídeo para calcular o corte</div>
-          {:else if activeSplit?.error}
-            <div class="split-error mono">{activeSplit.error}</div>
-          {:else if activeSplit}
-            <div class="hint mono">
-              {fmtClock(info.durationSec)} → {activeSplit.count} × ~{fmtClock(activeSplit.sliceSec)}
-            </div>
-          {/if}
+        <label class="tune-row" class:active={splitOn && splitAxis === 'minutes'} class:dim={!splitOn}>
+          <span class="meta-k">min/parte</span>
+          <div class="tune-control">
+            <input type="range" min="1" max="60" step="1" value={splitMinutes}
+              onpointerdown={() => useAxis('minutes')}
+              onfocus={() => useAxis('minutes')}
+              oninput={(e) => (splitMinutes = Number((e.currentTarget as HTMLInputElement).value))} />
+            <input class="num" type="number" min="1" max="60" bind:value={splitMinutes}
+              onchange={() => useAxis('minutes')} />
+          </div>
+        </label>
+
+        {#if splitOn && !info}
+          <div class="hint">escolha o vídeo para calcular o corte</div>
+        {:else if splitOn && activeSplit?.error}
+          <div class="split-error mono">{activeSplit.error}</div>
         {/if}
       </ControlGroup>
 
