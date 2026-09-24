@@ -503,9 +503,14 @@
         </div>
         <div class="group-card-body">
           <div class="split-head">
-            <button class="btn small" class:solid={!splitOn} onclick={() => (splitOn = false)}>
-              sem corte
-            </button>
+            <div class="split-toggle">
+              <button class="btn small" class:solid={!splitOn} onclick={() => (splitOn = false)}>
+                sem corte
+              </button>
+              <button class="btn small" class:solid={splitOn} onclick={() => (splitOn = true)}>
+                cortar
+              </button>
+            </div>
             {#if splitOn && activeSplit && !splitBlocked}
               <span class="split-tag mono">{activeSplit.count} × ~{fmtClock(activeSplit.sliceSec)}</span>
             {/if}
