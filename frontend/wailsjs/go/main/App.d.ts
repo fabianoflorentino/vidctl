@@ -18,6 +18,8 @@ export function GetMediaInfo(arg1:string):Promise<media.Info>;
 
 export function GetPresets():Promise<Array<presets.Preset>>;
 
+export function GetThumbnail(arg1:string,arg2:number):Promise<string>;
+
 export function GetUsage():Promise<sysinfo.Snapshot>;
 
 export function OpenFolder(arg1:string):Promise<void>;

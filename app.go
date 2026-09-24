@@ -159,6 +159,12 @@ func (a *App) GetMediaInfo(path string) (media.Info, error) {
 	return *info, nil
 }
 
+// GetThumbnail returns a JPEG data-URL with a frame of the video, cached by
+// path, size and mtime in the system temp dir.
+func (a *App) GetThumbnail(path string, durationSec float64) (string, error) {
+	return media.ThumbDataURL(path, durationSec)
+}
+
 // Compress starts an async compression job and returns its ID.
 func (a *App) Compress(req compress.Job) (string, error) {
 	if req.InputPath == "" {

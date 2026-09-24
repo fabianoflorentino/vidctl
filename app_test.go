@@ -129,6 +129,12 @@ func TestGetMediaInfoError(t *testing.T) {
 	}
 }
 
+func TestGetThumbnailError(t *testing.T) {
+	if _, err := NewApp().GetThumbnail(filepath.Join(t.TempDir(), "nope.mp4"), 2); err == nil {
+		t.Fatal("expected error, got nil")
+	}
+}
+
 func TestGetMediaInfoSuccess(t *testing.T) {
 	skipOnWindows(t)
 	in := filepath.Join(t.TempDir(), "input.mp4")

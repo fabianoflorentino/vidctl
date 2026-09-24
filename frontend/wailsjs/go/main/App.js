@@ -26,6 +26,10 @@ export function GetPresets() {
   return window['go']['main']['App']['GetPresets']();
 }
 
+export function GetThumbnail(arg1, arg2) {
+  return window['go']['main']['App']['GetThumbnail'](arg1, arg2);
+}
+
 export function GetUsage() {
   return window['go']['main']['App']['GetUsage']();
 }

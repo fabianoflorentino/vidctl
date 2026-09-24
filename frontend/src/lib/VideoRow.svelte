@@ -11,10 +11,11 @@
     stage?: string
     percent?: number
     savedPct?: number
+    thumb?: string
     onSwitch?: () => void
   }
 
-  let { info, status = 'idle', stage = '', percent = 0, savedPct = 0, onSwitch = () => {} }: Props = $props()
+  let { info, status = 'idle', stage = '', percent = 0, savedPct = 0, thumb = '', onSwitch = () => {} }: Props = $props()
 
   const orientation = $derived(info.width > info.height ? '16:9' : '9:16')
 
@@ -33,7 +34,11 @@
 
 <div class="video-row">
   <div class="video-thumb">
-    <span class="thumb-badge">{info.width}×{info.height}</span>
+    {#if thumb}
+      <img src={thumb} alt="" />
+    {:else}
+      <span class="thumb-badge">{info.width}×{info.height}</span>
+    {/if}
   </div>
 
   <div class="video-info">

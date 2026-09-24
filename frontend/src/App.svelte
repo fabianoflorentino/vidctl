@@ -5,6 +5,7 @@
     GetPresets,
     OpenInputDialog,
     GetMediaInfo,
+    GetThumbnail,
     OpenOutputDialog,
     Compress as StartCompress,
     Cancel as CancelJob,
@@ -57,6 +58,7 @@
 
   let inputPath = $state('')
   let info = $state<media.Info | null>(null)
+  let thumb = $state('')
   let outputPath = $state('')
   let selectedPresetId = $state('whatsapp-status')
   let sizeMB = $state(10)
@@ -99,10 +101,18 @@
     partsDone = []
     jobTotalParts = 1
     error = ''
+    thumb = ''
     try {
       info = await GetMediaInfo(path)
       const base = path.replace(/\.[^.]+$/, '')
       outputPath = base + '-compressed.mp4'
+      GetThumbnail(path, info.durationSec)
+        .then((t) => {
+          if (inputPath === path) thumb = t
+        })
+        .catch(() => {
+          thumb = ''
+        })
     } catch (err) {
       info = null
       error = String(err)
@@ -396,6 +406,7 @@
   function reset() {
     inputPath = ''
     info = null
+    thumb = ''
     outputPath = ''
     done = null
     partsDone = []
@@ -564,7 +575,9 @@
           {stage}
           {percent}
           {savedPct}
+          {thumb}
           onSwitch={pickInput}
+          onClear={reset}
         />
       {/if}
 
