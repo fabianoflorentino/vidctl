@@ -23,36 +23,3 @@
   <button class="btn solid" onclick={onAction}>{actionLabel}</button>
   {@render children?.()}
 </div>
-
-<style>
-  .status-page {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 48px 24px;
-    text-align: center;
-    border: 2px dashed var(--border);
-    border-radius: var(--radius);
-    margin: 18px;
-    background: var(--card);
-  }
-  .status-page svg {
-    width: 72px;
-    height: 72px;
-    fill: var(--accent);
-    opacity: 0.85;
-  }
-  .status-page h1 {
-    margin: 6px 0 0;
-    font-size: 24px;
-    font-weight: 700;
-    color: var(--fg);
-  }
-  .status-page p {
-    margin: 0 0 14px;
-    color: var(--fg-dim);
-  }
-</style>

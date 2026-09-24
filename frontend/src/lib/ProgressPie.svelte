@@ -28,16 +28,3 @@
     transform={`rotate(-90 ${size / 2} ${size / 2})`}
   />
 </svg>
-
-<style>
-  .pie-bg {
-    fill: none;
-    stroke: var(--border);
-  }
-  .pie-val {
-    fill: none;
-    stroke: var(--accent);
-    stroke-linecap: round;
-    transition: stroke-dashoffset 0.2s ease;
-  }
-</style>
