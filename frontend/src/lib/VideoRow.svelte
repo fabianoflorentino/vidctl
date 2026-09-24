@@ -1,5 +1,7 @@
 <script lang="ts">
   import ProgressPie from './ProgressPie.svelte'
+  import KebabMenu from './KebabMenu.svelte'
+  import type { KebabItem } from './KebabMenu.svelte'
   import { stageLabel } from './stages'
   import type { media } from '../../wailsjs/go/models'
 
@@ -13,11 +15,31 @@
     savedPct?: number
     thumb?: string
     onSwitch?: () => void
+    onClear?: () => void
   }
 
-  let { info, status = 'idle', stage = '', percent = 0, savedPct = 0, thumb = '', onSwitch = () => {} }: Props = $props()
+  let {
+    info,
+    status = 'idle',
+    stage = '',
+    percent = 0,
+    savedPct = 0,
+    thumb = '',
+    onSwitch = () => {},
+    onClear = () => {},
+  }: Props = $props()
 
   const orientation = $derived(info.width > info.height ? '16:9' : '9:16')
+
+  const kebabItems: KebabItem[] = [
+    { id: 'switch', label: 'trocar arquivo' },
+    { id: 'clear', label: 'limpar' },
+  ]
+
+  function onKebab(id: string) {
+    if (id === 'switch') onSwitch()
+    if (id === 'clear') onClear()
+  }
 
   function fmtMB(n: number): string {
     if (!n || n <= 0) return '—'
@@ -63,8 +85,8 @@
       <span class="icon-err" aria-label="erro">
         <svg width="22" height="22" viewBox="0 0 24 24"><path d="M12 4 l8 14 h-16 z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" /><circle cx="12" cy="14" r="1" fill="currentColor" /><path d="M12 9 v3" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
       </span>
-    {:else}
-      <button class="btn subtle small" onclick={onSwitch}>trocar arquivo</button>
     {/if}
   </div>
+
+  <KebabMenu items={kebabItems} onselect={onKebab} />
 </div>
