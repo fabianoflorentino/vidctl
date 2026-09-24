@@ -16,19 +16,23 @@
   import type { main, presets, media } from '../wailsjs/go/models.js'
   import { compress as bindings } from '../wailsjs/go/models.js'
   import StatusPage from './lib/StatusPage.svelte'
-  import ControlGroup from './lib/ControlGroup.svelte'
   import VideoRow from './lib/VideoRow.svelte'
+  import Stepper from './lib/Stepper.svelte'
+  import RadioCardGroup from './lib/RadioCardGroup.svelte'
+  import InfoTip from './lib/InfoTip.svelte'
+  import PreferencesModal from './lib/PreferencesModal.svelte'
   import { stageLabel } from './lib/stages'
 
   type ProgressEv = { jobId: string; stage: string; percent: number }
   type DoneEv = { jobId: string; outputPath: string; sizeMB: number; sizeBytes: number }
   type ErrorEv = { jobId: string; error: string }
+  type ThemeChoice = 'system' | 'light' | 'dark'
 
   let presetList = $state<presets.Preset[]>([])
   let ffmpegOk = $state(true)
   let ffmpegMsg = $state('')
 
-  let theme = $state<'light' | 'dark' | ''>('')
+  let theme = $state<ThemeChoice>('system')
 
   try {
     const saved = localStorage.getItem('vidctl-theme')
@@ -40,16 +44,12 @@
     /* localStorage indisponível: segue o tema do sistema */
   }
 
-  function currentTheme(): 'light' | 'dark' {
-    if (theme) return theme
-    return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
-  }
-
-  function toggleTheme() {
-    theme = currentTheme() === 'light' ? 'dark' : 'light'
-    document.documentElement.dataset.theme = theme
+  function setTheme(next: ThemeChoice) {
+    theme = next
+    if (next === 'system') delete document.documentElement.dataset.theme
+    else document.documentElement.dataset.theme = next
     try {
-      localStorage.setItem('vidctl-theme', theme)
+      localStorage.setItem('vidctl-theme', next)
     } catch {
       /* sem persistência disponível; tema vale para a sessão */
     }
@@ -73,6 +73,58 @@
   let usage = $state<Awaited<ReturnType<typeof GetUsage>> | null>(null)
   let advice = $state<Awaited<ReturnType<typeof GetAdvice>> | null>(null)
   let adviceSeq = 0
+
+  let prefsOpen = $state(false)
+  let dragging = $state(false)
+
+  const VIDEO_EXT = ['.mp4', '.mov', '.mkv', '.webm', '.m4v', '.avi', '.wmv', '.flv']
+
+  function isVideoPath(p: string): boolean {
+    const low = p.toLowerCase()
+    return VIDEO_EXT.some((ext) => low.endsWith(ext))
+  }
+
+  async function adoptFile(path: string) {
+    if (running) {
+      error = 'aguarde o job atual terminar antes de trocar o vídeo'
+      return
+    }
+    if (!isVideoPath(path)) {
+      error = `extensão não suportada: ${path.split('.').pop() || path}`
+      return
+    }
+    inputPath = path
+    outputPath = ''
+    done = null
+    partsDone = []
+    jobTotalParts = 1
+    error = ''
+    try {
+      info = await GetMediaInfo(path)
+      const base = path.replace(/\.[^.]+$/, '')
+      outputPath = base + '-compressed.mp4'
+    } catch (err) {
+      info = null
+      error = String(err)
+    }
+  }
+
+  function handleDrop(paths: string[]) {
+    const first = paths.find(isVideoPath) ?? paths[0]
+    if (first) adoptFile(first)
+  }
+
+  function onDragOver(e: DragEvent) {
+    if (e.dataTransfer?.types.includes('Files')) dragging = true
+  }
+
+  function onDragLeave(e: DragEvent) {
+    if (e.relatedTarget === null) dragging = false
+  }
+
+  function onDropEnd() {
+    dragging = false
+  }
 
   $effect(() => {
     const path = inputPath
@@ -183,6 +235,16 @@
     splitAxis = axis
   }
 
+  function setParts(v: number) {
+    useAxis('parts')
+    splitParts = v
+  }
+
+  function setMinutes(v: number) {
+    useAxis('minutes')
+    splitMinutes = v
+  }
+
   function fmtClock(sec: number): string {
     if (!sec || sec < 0) return '—'
     const m = Math.floor(sec / 60)
@@ -191,6 +253,14 @@
   }
 
   const selectedPreset = $derived(presetList.find((p) => p.id === selectedPresetId) ?? null)
+
+  const presetOptions = $derived(
+    presetList.map((p) => ({
+      id: p.id,
+      title: p.name,
+      description: `${p.description} · ${p.mode === 'size' ? `${Math.round(p.sizeMB)} MB` : `CRF ${p.crf}`}`,
+    })),
+  )
 
   const appView = $derived(info ? 'queue' : 'empty')
 
@@ -226,10 +296,14 @@
       error = e.error
       currentJobId = ''
     })
+    EventsOn('wails:file-drop', (_x: number, _y: number, paths: string[]) => {
+      handleDrop(paths)
+    })
     return () => {
       EventsOff('compress:progress')
       EventsOff('compress:done')
       EventsOff('compress:error')
+      EventsOff('wails:file-drop')
     }
   })
 
@@ -256,19 +330,7 @@
   async function pickInput() {
     const path = await OpenInputDialog()
     if (!path) return
-    inputPath = path
-    outputPath = ''
-    done = null
-    partsDone = []
-    jobTotalParts = 1
-    error = ''
-    try {
-      info = await GetMediaInfo(path)
-      const base = path.replace(/\.[^.]+$/, '')
-      outputPath = base + '-compressed.mp4'
-    } catch (err) {
-      error = String(err)
-    }
+    await adoptFile(path)
   }
 
   async function pickOutput() {
@@ -278,7 +340,9 @@
     outputPath = path
   }
 
-  function selectPreset(p: presets.Preset) {
+  function selectPresetById(id: string) {
+    const p = presetList.find((x) => x.id === id)
+    if (!p) return
     selectedPresetId = p.id
     if (p.mode === 'size') sizeMB = p.sizeMB
     else crf = p.crf
@@ -342,33 +406,20 @@
   }
 </script>
 
+<svelte:window ondragover={onDragOver} ondragleave={onDragLeave} ondrop={onDropEnd} />
+
 <header class="topbar">
-  <div class="brand">
-    <span class="brand-title">VIDCTL</span>
-    <span class="brand-sub">compressor de vídeo</span>
-  </div>
+  <span class="ffmpeg-pill" class:bad={!ffmpegOk}>
+    <span class="dot"></span>
+    {ffmpegOk ? 'ffmpeg OK' : 'ffmpeg ausente'}
+  </span>
+  <span class="topbar-title">vidctl</span>
   <div class="topbar-end">
-    <button
-      class="icon-btn"
-      onclick={toggleTheme}
-      aria-label="Alternar tema claro/escuro"
-      title={`Tema: ${currentTheme() === 'light' ? 'claro' : 'escuro'} — clicar para alternar`}
-    >
-      {#if currentTheme() === 'light'}
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z" />
-        </svg>
-      {:else}
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <circle cx="12" cy="12" r="4" />
-          <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
-        </svg>
-      {/if}
+    <button class="icon-btn" onclick={() => (prefsOpen = true)} aria-label="Preferências" title="Preferências">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <path d="M4 7h16M4 12h16M4 17h16" />
+      </svg>
     </button>
-    <span class="ffmpeg-pill" class:bad={!ffmpegOk}>
-      <span class="dot"></span>
-      {ffmpegOk ? 'ffmpeg OK' : 'ffmpeg ausente'}
-    </span>
   </div>
 </header>
 
@@ -382,43 +433,25 @@
 {#if appView === 'empty'}
   <StatusPage
     title="Comprimir Vídeos"
-    subtitle="Escolha um vídeo para começar"
-    actionLabel="Escolher vídeo…"
+    subtitle="Arraste e solte vídeos aqui"
+    actionLabel="Abrir…"
     onAction={pickInput}
+    hot={dragging}
   />
 {:else}
   <div class="split">
     <aside class="sidebar">
-      <ControlGroup title="Presets" help="Escolha um preset de saída. Presets de tamanho fazem o ffmpeg calcular o bitrate pela duração para caber no alvo (2-pass).">
-        {#each presetList as p (p.id)}
-          <button class="row" class:selected={p.id === selectedPresetId} onclick={() => selectPreset(p)}>
-            <span class="row-name">
-              {p.name}
-              <span class="row-desc">{p.description}</span>
-            </span>
-            <span class="row-val">{p.mode === 'size' ? `${Math.round(p.sizeMB)} MB` : `CRF ${p.crf}`}</span>
-          </button>
-        {/each}
-      </ControlGroup>
-
-      {#if selectedPreset}
-        <ControlGroup title={selectedPreset.mode === 'size' ? 'Tamanho alvo' : 'Qualidade'}>
-          {#if selectedPreset.mode === 'size'}
-            <label class="tune-row">
-              <span class="meta-k">tamanho</span>
-              <div class="tune-control">
-                <input
-                  type="range"
-                  min="2"
-                  max="100"
-                  step="1"
-                  value={sizeMB}
-                  oninput={(e) => (sizeMB = Number((e.currentTarget as HTMLInputElement).value))}
-                />
-                <input class="num" type="number" min="2" max="100" bind:value={sizeMB} />
-                <span class="unit">MB</span>
-              </div>
-            </label>
+      {#if selectedPreset?.mode === 'size'}
+        <section class="group-card">
+          <div class="group-card-head">
+            <span class="group-card-title">Tamanho alvo</span>
+            <InfoTip text="Presets de tamanho fazem o ffmpeg calcular o bitrate pela duração para caber no alvo (encode 2-pass)." />
+          </div>
+          <div class="group-card-body">
+            <div class="tune-row">
+              <span class="meta-k">tamanho (MB)</span>
+              <Stepper value={sizeMB} min={2} max={100} ariaLabel="tamanho alvo" onchange={(v) => (sizeMB = v)} />
+            </div>
             <div class="hint mono">
               {#if info}
                 {#if advice && advice.kbps > 0}
@@ -436,77 +469,96 @@
                 {/if}
               </div>
             {/if}
-          {:else}
+          </div>
+        </section>
+      {:else if selectedPreset}
+        <section class="group-card">
+          <div class="group-card-head">
+            <span class="group-card-title">Qualidade</span>
+            <InfoTip text="Encode CRF: qualidade constante sem limite de tamanho. Quanto menor o CRF, melhor a imagem e maior o arquivo." />
+          </div>
+          <div class="group-card-body">
             <div class="tune-row">
               <span class="meta-k">CRF — quanto menor, melhor</span>
-              <span class="row-val mono">{crf}</span>
+              <Stepper value={crf} min={16} max={34} ariaLabel="CRF" onchange={(v) => (crf = v)} />
             </div>
-          {/if}
-        </ControlGroup>
+          </div>
+        </section>
       {/if}
 
-      <ControlGroup
-        title="Cortar em partes"
-        help="Divide o vídeo em partes sequenciais de duração fixa. Cada parte passa pela compressão escolhida. Mínimo de 1 minuto por parte; a última pode ficar menor ou levar a sobra. Ajuste uma das barras para ativar o corte."
-      >
-        <div class="split-head">
-          <button class="btn small" class:solid={!splitOn} onclick={() => (splitOn = false)}>
-            sem corte
-          </button>
-          {#if splitOn && activeSplit && !splitBlocked}
-            <span class="split-tag mono">{activeSplit.count} × ~{fmtClock(activeSplit.sliceSec)}</span>
+      <section class="group-card">
+        <div class="group-card-head">
+          <span class="group-card-title">Presets</span>
+          <InfoTip text="Escolha um preset de saída. Presets de tamanho calculam o bitrate pela duração para caber no alvo (2-pass); presets CRF priorizam qualidade." />
+        </div>
+        <div class="group-card-body">
+          <RadioCardGroup options={presetOptions} selected={selectedPresetId} name="presets" onchange={selectPresetById} />
+        </div>
+      </section>
+
+      <section class="group-card">
+        <div class="group-card-head">
+          <span class="group-card-title">Cortar em partes</span>
+          <InfoTip text="Divide o vídeo em partes sequenciais de duração fixa. Cada parte passa pela compressão escolhida. Mínimo de 1 minuto por parte; a última pode ficar menor ou levar a sobra. Ajuste um dos contadores para ativar o corte." />
+        </div>
+        <div class="group-card-body">
+          <div class="split-head">
+            <button class="btn small" class:solid={!splitOn} onclick={() => (splitOn = false)}>
+              sem corte
+            </button>
+            {#if splitOn && activeSplit && !splitBlocked}
+              <span class="split-tag mono">{activeSplit.count} × ~{fmtClock(activeSplit.sliceSec)}</span>
+            {/if}
+          </div>
+
+          <div class="tune-row" class:active={splitOn && splitAxis === 'parts'} class:dim={!splitOn}>
+            <span class="meta-k">partes</span>
+            <Stepper value={splitParts} min={2} max={60} ariaLabel="partes" onchange={setParts} />
+          </div>
+
+          <div class="tune-row" class:active={splitOn && splitAxis === 'minutes'} class:dim={!splitOn}>
+            <span class="meta-k">min/parte</span>
+            <Stepper value={splitMinutes} min={1} max={60} ariaLabel="minutos por parte" onchange={setMinutes} />
+          </div>
+
+          {#if splitOn && !info}
+            <div class="hint">escolha o vídeo para calcular o corte</div>
+          {:else if splitOn && activeSplit?.error}
+            <div class="split-error mono">{activeSplit.error}</div>
           {/if}
         </div>
+      </section>
 
-        <label class="tune-row" class:active={splitOn && splitAxis === 'parts'} class:dim={!splitOn}>
-          <span class="meta-k">partes</span>
-          <div class="tune-control">
-            <input type="range" min="2" max="60" step="1" value={splitParts}
-              onpointerdown={() => useAxis('parts')}
-              onfocus={() => useAxis('parts')}
-              oninput={(e) => (splitParts = Number((e.currentTarget as HTMLInputElement).value))} />
-            <input class="num" type="number" min="2" max="60" bind:value={splitParts}
-              onchange={() => useAxis('parts')} />
-          </div>
-        </label>
-
-        <label class="tune-row" class:active={splitOn && splitAxis === 'minutes'} class:dim={!splitOn}>
-          <span class="meta-k">min/parte</span>
-          <div class="tune-control">
-            <input type="range" min="1" max="60" step="1" value={splitMinutes}
-              onpointerdown={() => useAxis('minutes')}
-              onfocus={() => useAxis('minutes')}
-              oninput={(e) => (splitMinutes = Number((e.currentTarget as HTMLInputElement).value))} />
-            <input class="num" type="number" min="1" max="60" bind:value={splitMinutes}
-              onchange={() => useAxis('minutes')} />
-          </div>
-        </label>
-
-        {#if splitOn && !info}
-          <div class="hint">escolha o vídeo para calcular o corte</div>
-        {:else if splitOn && activeSplit?.error}
-          <div class="split-error mono">{activeSplit.error}</div>
-        {/if}
-      </ControlGroup>
-
-      <ControlGroup title="Saída">
-        <div class="out-row">
-          <span class="out-path mono" class:empty={!outputPath}>
-            {outputPath || 'escolha o vídeo para gerar o caminho de saída'}
-          </span>
-          <button class="btn subtle small" onclick={pickOutput} disabled={!inputPath}>salvar como…</button>
+      <section class="group-card">
+        <div class="group-card-head">
+          <span class="group-card-title">Saída</span>
         </div>
-      </ControlGroup>
+        <div class="group-card-body">
+          <div class="out-row">
+            <span class="out-path mono" class:empty={!outputPath}>
+              {outputPath || 'escolha o vídeo para gerar o caminho de saída'}
+            </span>
+            <button class="btn subtle small" onclick={pickOutput} disabled={!inputPath}>salvar como…</button>
+          </div>
+        </div>
+      </section>
     </aside>
 
-    <main class="content">
+    <main class="content dropzone" class:hot={dragging}>
+      <div class="sources-head">
+        <span class="group-card-title">Fontes de vídeo</span>
+        {#if info}
+          <button class="btn subtle small" onclick={reset}>limpar</button>
+        {/if}
+      </div>
+
       {#if info}
         <VideoRow
-          info={info}
+          {info}
           status={running ? 'progress' : done ? 'done' : error ? 'error' : 'idle'}
-          stage={stage}
-          percent={percent}
-          savedPct={savedPct}
+          {stage}
+          {percent}
+          {savedPct}
           onSwitch={pickInput}
         />
       {/if}
@@ -588,11 +640,7 @@
 
       {#if !running && !done}
         <div class="actionbar">
-          <span class="spacer"></span>
-          <button class="btn solid" onclick={compress} disabled={!canRun()}>
-            COMPRIMIR{#if activeSplit && !splitBlocked} → {activeSplit.count} PARTES
-            {:else if selectedPreset} → {selectedPreset.name.toUpperCase()}{/if}
-          </button>
+          <button class="pill-btn" onclick={compress} disabled={!canRun()}>Comprimir…</button>
         </div>
       {/if}
     </main>
@@ -602,3 +650,13 @@
 <footer class="foot mono">
   offline · h264 + aac · 2-pass quando há limite de tamanho
 </footer>
+
+<PreferencesModal
+  open={prefsOpen}
+  {theme}
+  {ffmpegOk}
+  {ffmpegMsg}
+  onclose={() => (prefsOpen = false)}
+  ontheme={setTheme}
+  onRecheck={() => load()}
+/>
