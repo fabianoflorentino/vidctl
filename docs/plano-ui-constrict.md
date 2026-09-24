@@ -1,186 +1,189 @@
-# Plano de UI — redesign estilo Constrict
+# Plano de implementação — redesign estilo Constrict + drag and drop
 
 Referência de UX/visual: [Wartybix/Constrict](https://github.com/Wartybix/Constrict)
-(GTK4 + libadwaita, app GNOME que comprime vídeo para um tamanho-alvo).
-Este plano **reproduz o visual e o fluxo no frontend Svelte 5 + Wails** — não há
-porta para GTK/Python. As dependências de backend já estão orquestradas em
+(app de compressão de vídeo com sidebar de cards, fila de fontes, modal de
+Preferências e empty state com drop zone). Este plano **reproduz o visual e o
+fluxo no frontend Svelte 5 + Wails** — não há porta para GTK. Dependências de
+backend futuras continuam orquestradas em
 [`plano-implementacao.md`](./plano-implementacao.md) (chamadas de ↗ Fase N).
 
-Branch de trabalho: `feat/ui-constrict` (tudo aqui é validado aqui antes de ir à main).
+Branch de trabalho: `feat/ui-constrict`. Cada fase termina com o app
+compilando e o fluxo atual funcionando; merge só com aceite visual do usuário.
 
 ---
 
-## O que faz o Constrict parecer "o Constrict" (extraído do source)
+## Decisões técnicas (verificadas no source do Wails v2.16.0)
 
-Do `window.blp`, `sources_row.blp`, `drag_overlay.blp`, `style.css`:
+- **Drag and drop nativo do Wails**, não HTML5: em `main.go`,
+  `options.App.DragAndDrop = &options.DragAndDrop{EnableFileDrop: true, DisableWebViewDrop: true}`.
+  O alvo do drop é marcado no CSS com a propriedade customizada
+  `--wails-drop-target: drop` (defaults `CSSDropProperty`/`CSSDropValue`); o
+  frontend recebe os caminhos absolutos pelo evento `wails:file-drop` via
+  `EventsOn('wails:file-drop', (x, y, paths) => …)` — mesmo `EventsOn` já
+  importado em `App.svelte`.
+- **Thumbnails**: binding Go novo `GetThumbnail(path)` extrai frame via ffmpeg
+  (`-ss <min(1s,dur/2)> -frames:v 1`) e retorna **data-URL base64** (evita
+  servir arquivo local no webview); cache em `os.TempDir()/vidctl-thumbs`
+  chaveado por path+mtime+size.
+- **Escopo monovídeo mantido**: o visual de fila do Constrict é reproduzido
+  com 1 vídeo ativo (drop substitui a seleção). Fila real de N jobs é a
+  ↗ Fase 2 de `plano-implementacao.md` (evolução futura, fora deste plano).
+- **Tema**: dark é o alvo visual do redesign; o tema claro continua existindo,
+  rederivado dos mesmos tokens (o app já tem claro/escuro persistido em
+  `localStorage['vidctl-theme']`).
+- **Preferências**: enquanto a ↗ Fase 1 (config persistente no Go) não chega,
+  o modal persiste em `localStorage` (chave de sufixo nova); migrar depois.
 
-1. **Duas vistas em stack**: `status_page` (vazio, drop zone gigante com
-   "Drag and drop videos here" + botão _Open…`) → `queue_page` (trabalho).
-2. **Split view com sidebar** (~300–360 px) só com controles de compressão,
-   agrupados em cards com título (`Framerate Limit`, `Encoding Options`,
-   `Advanced Options`) e um botão `?` no cabeçalho de cada grupo (popover de
-   explicação).
-3. **Lista de fontes**: uma `Adw.ActionRow` por vídeo — thumbnail à esquerda,
-   título (nome do arquivo), subtítulo com a transformação (`1080p@30 →
-   720p@30`), e **uma suíte de sufixos por estado**: ícone de erro,
-   pie de progresso de 16 px clicável (popover com detalhes), spinner, ✔ de
-   concluído (popover com "Show File Location") e menu ⋮ (Move Up / Move Down /
-   Remove — reordenação por drag também).
-4. **Estados por linha**: queued → compressing (pie+spinner) → done ✔ / error ✕
-   (com details em popover). Banner de aviso global quando alguma fonte está
-   inválida (`Adw.Banner` "fix before compressing").
-5. **Ação primária única**: pill `Export To…` (escolhe pasta de saída para o
-   lote inteiro); durante o processa a barra some e vira `Cancel…`.
-6. **Feedback global**: barra de progresso OSD no topo da janela durante o lote;
-   toasts para eventos.
-7. **Responsivo**: breakpoint `max-width: 750sp` colapsa a sidebar em
-   "show_sidebar_button" (vira página, estilo mobile).
-8. **Preferências** em dialog próprio (GPU encoding, sufixo de exportação);
-   menu hambúrguer com Preferences / Keyboard Shortcuts / About.
-9. **Visual adwaita**: fundo claro (ou dark do sistema), cards com cantos
-   ~12 px, labels "dim", botões pill, tipografia Cantarell-like.
+## O que faz o visual ser "Constrict" (checklist de referência)
 
-## Princípios do redesign no vidctl
-
-- Manter o backend atual intacto onde der: `GetMediaInfo`, `Compress`,
-  `Cancel`, eventos `compress:*` já servem para U0–U2.
-- Componentizar o `App.svelte` monolito (954 linhas) em `frontend/src/lib/`.
-- Tokens de design em CSS (leve clone do vocabulário adwaita), com tema
-  claro/escuro por `prefers-color-scheme` (o app hoje é só dark).
-- Estado da fila no frontend como `$derived`/`$state` sobre os eventos
-  `compress:progress|done|error` já existentes por `jobId`.
-- Cada fase U é um PR pequeno, testável visualmente com `make build` +
-  rodando o app; merge na main só quando o usuário aprovar o visual.
+1. Empty state: ícone de câmera, título "Comprimir Vídeos", subtítulo
+   "Drag and drop videos here", botão pill "Open…" — tudo é drop zone.
+2. Split view: sidebar (~300–360 px) com cards empilhados, cada um com título
+   e ícone ⓘ de ajuda; controles dentro dos cards.
+3. Controles característicos: stepper −/+ redondo (Target Size, Tolerance),
+   radio-cards com título+descrição (Framerate Limit), toggle switch
+   (Extra Quality), select (Video Codec).
+4. Lista de fontes: linha com thumbnail, nome, transformação
+   (`720p@24 → 144p@24`) e menu ⋮; header da lista com "Clear All".
+5. Ação primária única em pill no rodapé ("Export To…" / aqui "Comprimir…").
+6. Modal "Preferências" centralizado com cards internos e toggles.
+7. Paleta dark fosca (janela `#141414`, sidebar `#1e1e1e`, cards `#262626`),
+   cantos 12–16 px, tipografia sans (mono só para números/dados).
 
 ---
 
 ## Fases
 
-### U0 — Tokens de design + tema adwaita-like (CSS puro)
+### Fase 0 — Baseline (0,5 h)
 
-- `frontend/src/style.css`: reescrever variáveis (`--bg`, `--card`, `--fg`,
-  `--dim`, `--accent`, `--radius`, `--success`, `--error`), fontes do sistema
-  (mantendo fallback mono), **light + dark** via `@media (prefers-color-scheme)`.
-- Classes utilitárias de cards/rows/pills/banners/popovers.
-- Restilizar o fluxo atual **sem mexer na lógica** (v1.0.17 com cara nova).
-- Aceite: mesmos comportamentos de v1.0.17 funcionando; zero mudança em Go.
-- Esforço: **0,5–1 d**.
+- Criar branch `feat/ui-constrict`; rodar `go test ./...` e
+  `npm run check` em `frontend/`; screenshot do UI atual para comparação.
+- Aceite: ponto de partida verde, sem mudança de código.
 
-### U1 — Estrutura de vistas + componentes
+### Fase 1 — Design system em `frontend/src/style.css` (0,5–1 d)
 
-- Split de `App.svelte` em: `StatusPage` (drop zone vazio), `QueuePage`,
-  `SidePanel` (groups com `?` popover), `VideoRow`, `ProgressPie` (SVG,
-  stroke-dasharray), `Popover`, `Banner`, `Menu` (⋮).
-- View stack controlado por estado: `appView = 'empty' | 'queue'`.
-- Menu hambúrguer no masthead (Preferences placeholder, About).
-- Aceite: fluxo atual (1 arquivo) roda todo pela nova estrutura.
-- Esforço: **1–2 d**.
+- Novos tokens: paleta Constrict (ver checklist §7), radius 12–16 px, botões
+  pill, ícones redondos; sans como fonte principal (IBM Plex Mono restrito a
+  dados numéricos); tema claro rederivado dos mesmos tokens.
+- Classes base novas: `.card`, `.group-card`, `.stepper`, `.toggle`,
+  `.radio-card`, `.select`, `.modal`, `.pill-btn`, `.icon-round`, `.kebab`,
+  `.dropzone` (com `--wails-drop-target: drop`).
+- Restiliza o fluxo atual **sem mexer em lógica**.
+- Aceite: `npm run check` verde; fluxo v-atual funcionando com a pele nova.
 
-### U2 — Drag & drop real de arquivos (sem backend novo)
+### Fase 2 — Componentes em `frontend/src/lib/` (1 d)
 
-- `OnFileDrop` / `OnFileDropCallback` do runtime Wails + overlay "Drop Videos
-  to Import" (clone do `drag_overlay.blp`); filtro por extensão no frontend e
-  validação com `GetMediaInfo` por arquivo (rejeita com estado `broken` na
-  linha, como o Constrict faz com `broken-video-symbolic`).
-- Botão `+ Add Videos…` no fim da lista (chama `OpenInputDialog` multi-arquivo —
-  precisa de `OpenMultipleDialog` no Go: método novo ~30 min).
-- Aceite: arrastar 3 vídeos da mesa cria 3 linhas informadas; um `.txt` vira
-  linha quebrada com tooltip.
-- Esforço: **0,5–1 d** (+ Go `OpenMultipleDialog`).
+- `Stepper.svelte` (valor + botões −/+ redondos, min/max) → substitui sliders
+  de tamanho alvo, partes e min/parte.
+- `Toggle.svelte` (switch com título+descrição).
+- `RadioCardGroup.svelte` (radio cards com título+descrição) → presets e modo
+  de corte.
+- `Modal.svelte` (overlay, título, botão fechar) → Preferências.
+- `InfoTip.svelte` (ⓘ com tooltip) → substitui o `help` do `ControlGroup`.
+- `KebabMenu.svelte` (⋮: trocar vídeo, abrir pasta, limpar).
+- Aceite: `svelte-check` verde; componentes consumidos nas Fases 3–5
+  (projeto não tem test runner de UI; ver §Testes).
 
-### U3 — Fila com estado por linha (frontend; consome ↗ Fase 2)
+### Fase 3 — Layout + drag and drop (1–1,5 d)
 
-- Depende da **↗ Fase 2** (backend enfileirar N jobs, eventos com `jobId`) e de
-  um método novo `GetThumbnail(path) string` (frame via ffmpeg → PNG em
-  `os.TempDir()` ou data URL; cache por path+mtime).
-- VídeoRow com: thumbnail, nome, `WxHp@fps → alvo`, pie de progresso clicável
-  (popover com stage/percent/ETA), ✔/✕, menu ⋮ com Remover/Reordenar,
-  botão por linha para cancelar o job.
-- Barra OSD no topo com progresso agregado do lote; `Clear All` só habilita
-  sem job rodando; `Export To…` (↗ Fase 2: pasta de saída única).
-- Aceite: 4 vídeos na fila, 2º em compressão com pie, 1º ✔, um com codec
-  estranho ✕ com motivo no popover.
-- Esforço frontend: **2–3 d** (+1 d backend `GetThumbnail`).
+- `App.svelte`: topbar mínima (título + hambúrguer → Preferências); sidebar em
+  cards (Tamanho alvo, Presets, Corte, Saída) usando os componentes da Fase 2;
+  main com lista estilo "Video Sources" (linha do vídeo ativo + header com
+  limpar); pill "Comprimir…" no rodapé substituindo a actionbar.
+- `StatusPage.svelte` vira o empty state do checklist §1 (ícone, textos, pill
+  "Open…"), inteiro como drop zone.
+- Drag and drop:
+  - `main.go`: opção `DragAndDrop` (ver §Decisões).
+  - `--wails-drop-target: drop` no empty state e na área da lista.
+  - `App.svelte`: `EventsOn('wails:file-drop', …)` → filtra extensão de vídeo,
+    roda o fluxo `GetMediaInfo` existente; drop substitui o vídeo atual;
+    não-vídeo → alert com motivo.
+  - Highlight durante dragover via listeners `window.dragover/dragleave`
+    (fallback aceitável: sem highlight, drop funciona).
+- Aceite: arrastar `.mp4/.mov/.mkv/.webm` seleciona e informa o vídeo;
+  arrastar `.txt` mostra erro; clique em "Open…" continua funcionando.
 
-### U4 — Painel de opções estilo Constrict (consome ↗ Fases 3–4)
+### Fase 4 — Thumbnails via ffmpeg (0,5–1 d)
 
-- `Target Size (MiB)` com stepper ±; `Framerate Limit` em radio group
-  (Automatic / 30 / 60, com subtítulos); `Video Codec` dropdown
-  (H.264/HEVC/AV1/VP9 — **↗ Fase 4**); `Extra Quality` switch (preset slow —
-  **↗ Fase 4**); `Tolerance (%)` spin (**↗ Fase 3**, estimativa).
-- Campos mapeiam 1:1 no `Job` (↗ Fase 2 já desenha `Job` extensível).
-- Aceite: comprimir para 10 MiB com HEVC e limite 30 fps gera arquivo ≤ alvo.
-- Esforço frontend: **1–2 d** (backend nas ↗ Fases 3–4).
+- `internal/media/thumbnail.go`: extração de frame + cache (ver §Decisões);
+  binding `GetThumbnail(path)` em `app.go` retornando data-URL base64.
+- `VideoRow.svelte`: thumbnail + `WxHp@fps → alvo` + `KebabMenu`.
+- Testes em `internal/media` com fixture gerado por ffmpeg lavfi (padrão dos
+  testes de integração existentes); `make cover` ≥ 80%.
+- Aceite: linha do vídeo mostra thumb em < 1 s após seleção; segundo select do
+  mesmo arquivo usa cache.
 
-### U5 — Preferences + dialogs (consome ↗ Fase 1)
+### Fase 5 — Modal Preferências (0,5 d)
 
-- Dialog `Preferences`: GPU encoding (**↗ Fase 4**), sufixo de exportação
-  (`-compressed` custom — novo campo em `config`), pasta inicial de
-  open/export, paths de ffmpeg/ffprobe (↗ Fase 1).
-- Dialog `Keyboard Shortcuts` + `About` (versão, licença).
-- Aceite: config sobrevive a restart.
-- Esforço: **1 d** (backend já é ↗ Fase 1).
+- `PreferencesModal.svelte` (aberto pelo hambúrguer): tema
+  (sistema/claro/escuro), sufixo de saída (default `-compressed`), botão
+  "verificar ffmpeg de novo".
+- Persistência em `localStorage` (tema já existe; sufixo novo); aplicação do
+  sufixo no caminho sugerido em `pickInput`.
+- Aceite: preferências sobrevivem a restart; sufixo aparece no outputPath
+  sugerido.
 
-### U6 — Responsivo + acessibilidade
+### Fase 6 — Docs, qualidade e release (0,5 d)
 
-- Breakpoints espelhando o do Constrict: `≤ 750 px` sidebar colapsa (toggle no
-  header); grid de presets vira coluna.
-- `focus-visible`, `aria-label` em botões de ícone, navegação por tab na fila,
-  contraste AA nos dois temas.
-- Esforço: **1 d**.
-
-### U7 — i18n pt/en (↗ Fase 10, opcional)
-
-- Mesmos textos de UI; usar catálogo `pt`/`en` com `locale` vindo do config.
+- README: drag and drop, thumbnails, novo UI; CHANGELOG; screenshots no
+  `site/`; atualizar este doc com o que divergir na execução.
+- `go test -race -shuffle=on -count=1 ./...`, `make cover` (≥ 80%),
+  `npm run check`, `wails build -clean -tags webkit2_41`, smoke manual
+  (`VIDCTL_SMOKE=… go test -run TestSmokeReal ./internal/compress/`).
+- Aceite: CI verde + checklist visual §"O que faz o visual ser Constrict"
+  conferido no binário buildado.
 
 ---
 
-## Ordem de execução na branch
+## Ordem de execução e empacotamento
 
 ```
-U0 → U1 → U2          (só frontend + 1 método Go trivial)
-   ↳ requer ↗Fase 1  → U5
-   ↳ requer ↗Fase 2  → U3 → U4 (com ↗Fases 3–4)
-U6 por último.
+Fase 0 → Fase 1 → Fase 2 → Fase 3 → Fase 4 → Fase 5 → Fase 6
 ```
 
-Sugestão de empacotamento de PRs desta branch:
-
-1. **PR-A**: U0 + U1 (visual novo, sem fila) — testável à mão, risco baixo.
-2. **PR-B**: U2 (drag&drop) + `OpenMultipleDialog`.
-3. Depois: ↗Fase 1 e ↗Fase 2 no plano geral, e U3/U5 voltam para esta branch
-   ou saem dela, conforme preferir.
+PRs sugeridos: **PR-A** Fases 0–2 (pele + componentes, risco baixo);
+**PR-B** Fase 3 (layout + drag and drop); **PR-C** Fases 4–5 (thumbs +
+Preferências); **PR-D** Fase 6 (docs/release).
 
 ## Testes
 
-- **Backend** (regra do AGENTS.md): `OpenMultipleDialog`, `GetThumbnail` com
-  `app_test.go`/`compress` usando fixtures pequenas; cobertura ≥ 80% mantida.
-- **Frontend**: hoje o projeto não tem test runner de UI. Proponho `vitest` +
-  `@testing-library/svelte` em U1 (mínimo: view stack, reducer de fila com
-  eventos fake por `jobId`). Componentes visuais puros ficam para aceite manual
-  com checklist neste doc.
-- **Manual (por fase)**: `make build && build/bin/vidctl` e rodar o checklist
-  de aceite da fase.
+- **Backend** (regra do AGENTS.md): `GetThumbnail` e filtros de extensão com
+  testes em `internal/media`/`app_test.go`; cobertura ≥ 80% mantida
+  (`go test -race ./...` + gate no CI).
+- **Frontend**: sem test runner de UI hoje; garantia via `svelte-check`
+  (`npm run check`) + checklist de aceite manual por fase com
+  `make build && build/bin/vidctl`. Introduzir `vitest` +
+  `@testing-library/svelte` fica como evolução opcional (não bloqueia).
+- **Manual por fase**: rodar o aceite listado na fase antes de considerar
+  concluída.
 
 ## Riscos
 
-- `OnFileDrop` no Windows + acentos em caminhos (validar cedo na PR-B).
-- Pie/SVG atualizando a cada frame de progresso pode custar — throttle dos
-  eventos a ~10 Hz (debounce no emissor backend se necessário).
-- Tema claro em cima do design atual (escuro, "neon") é reescrever a maior
-  parte do `style.css` — por isso U0 isola isso e permite reverter fácil.
-- Contrato dos eventos (`jobId`, stage) pode mudar na ↗Fase 2; U3 só começa
-  com o contrato fechado.
+- `wails:file-drop` no Windows com caminhos contendo acentos/espaços —
+  validar cedo na Fase 3 (PR-B).
+- Highlight de dragover pode não firing em algum WebKit/WebView2 (DOM events
+  suprimidos com `DisableWebViewDrop`) — degradar sem highlight é aceitável.
+- Base64 de thumb de vídeos 4K pode pesar memória — limitar lado maior a
+  ~320 px no ffmpeg (`-vf scale`) já na Fase 4.
+- Reescrever `style.css` inteiro toca os dois temas — Fase 1 isolada em PR-A
+  permite revert rápido.
+- Eventos `compress:*`/`Job` podem mudar na ↗ Fase 2 (fila real); este plano
+  não depende deles além do contrato atual.
 
-## Esforço total estimado
+## Esforço total
 
 | Bloco | Dias |
 |---|---|
-| U0–U2 (frontend visual + d&d) | 3–5 |
-| U3 + thumbnail | 3–4 |
-| U4 (UI; backend nas ↗Fases 3–4) | 1–2 |
-| U5–U6 | 2 |
-| **Total desta branch** | **~9–13 d úteis** |
+| Fase 0–2 (baseline, tokens, componentes) | 1,5–2,5 |
+| Fase 3 (layout + drag and drop) | 1–1,5 |
+| Fase 4 (thumbnails) | 0,5–1 |
+| Fase 5–6 (Preferências, docs/release) | 1 |
+| **Total** | **~4–6 d úteis** (~1,5–2 d com agente executando) |
 
-Sem fila/codec (só U0–U2 + U6): **~4–6 d** para o app "parecer Constrict"
-mantendo o fluxo de arquivo único — bom primeiro incremento de branch.
+## Evoluções futuras (fora deste plano)
+
+- Fila real de N vídeos com progresso por linha: ↗ Fase 2 de
+  [`plano-implementacao.md`](./plano-implementacao.md).
+- Codec/GPU encoding e tolerance: ↗ Fases 3–4 do mesmo plano.
+- Config persistente no Go substituindo `localStorage`: ↗ Fase 1.
+- Responsivo (sidebar colapsada ≤ 750 px) e i18n pt/en: opcional, pós-Fase 6.
