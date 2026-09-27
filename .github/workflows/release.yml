@@ -3,6 +3,8 @@ name: Release
 # Release é intencional: crie a tag e dispare no ref dela —
 #   git tag vX.Y.Z && git push origin vX.Y.Z
 #   gh workflow run release.yml --ref vX.Y.Z
+# O job bump-aur atualiza o PKGBUILD/.SRCINFO do Arch automaticamente,
+# commitando na main — o install.sh local já compila a release nova.
 # Pushes em main NÃO publicam mais (evita releases v1.0.<run_number> fantasma).
 on:
   workflow_dispatch:
@@ -39,7 +41,7 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install Wails CLI
-        run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.15.0
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.16.0
 
       - name: Linux dependencies
         if: runner.os == 'Linux'
@@ -106,7 +108,7 @@ jobs:
             curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
             apt-get install -yqq nodejs
             export PATH="$(go env GOPATH)/bin:$PATH"
-            go install github.com/wailsapp/wails/v2/cmd/wails@v2.15.0
+            go install github.com/wailsapp/wails/v2/cmd/wails@v2.16.0
             wails build -clean -tags webkit2_41
             VER=${VERSION#v}
             ARCH=$(dpkg --print-architecture)
@@ -155,7 +157,7 @@ jobs:
             tar -C /usr/local -xzf /tmp/go.tgz
             export PATH="/usr/local/go/bin:$PATH"
             export PATH="$(go env GOPATH)/bin:$PATH"
-            go install github.com/wailsapp/wails/v2/cmd/wails@v2.15.0
+            go install github.com/wailsapp/wails/v2/cmd/wails@v2.16.0
             VER=${VERSION#v}
             git config --global --add safe.directory /src
             mkdir -p /tmp/treesrc
@@ -203,6 +205,58 @@ jobs:
             git tag "$BASE-$os"
             git push origin "$BASE-$os"
           done
+
+  bump-aur:
+    name: Bump AUR PKGBUILD
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    env:
+      VERSION: ''
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+
+      - name: Require release tag
+        run: |
+          if [ "${{ github.ref_type }}" != "tag" ]; then
+            echo "::error::Release só a partir de um tag: git tag vX.Y.Z && git push origin vX.Y.Z && gh workflow run release.yml --ref vX.Y.Z"
+            exit 1
+          fi
+          VERSION=${GITHUB_REF_NAME#v}
+          case "$VERSION" in
+            *[!0-9.]*|''|.*|*..*)
+              echo "::error::esperava tag semver vX.Y.Z; recebi ${GITHUB_REF_NAME}"
+              exit 1 ;;
+          esac
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+
+      - name: Bump PKGBUILD (pkgver + sha256sums)
+        run: ./pkg/aur/update-aur.sh "$VERSION"
+
+      - name: Regenerate .SRCINFO (archlinux + makepkg)
+        run: |
+          docker run --rm -v "$PWD":/src -w /src archlinux:base-devel bash -euo pipefail -c '
+            useradd -m builder
+            chown -R builder:builder /src
+            runuser -u builder -- bash -c "cd /src/pkg/aur && makepkg --printsrcinfo > .SRCINFO"
+          '
+
+      - name: Commit and push to main
+        env:
+          VERSION: ${{ env.VERSION }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet && git diff --cached --quiet; then
+            echo ">> PKGBUILD já na v${VERSION}; nada a commitar"
+            exit 0
+          fi
+          git add pkg/aur/PKGBUILD pkg/aur/.SRCINFO pkg/aur/LICENSE
+          git commit -m "chore(arch): PKGBUILD/.SRCINFO na v${VERSION} (bump automático do release)"
+          git pull --rebase origin main
+          git push origin main
 
   release-windows:
     name: Release (Windows)
