@@ -34,6 +34,20 @@ if git -C "$ROOT" rev-parse --git-dir >/dev/null 2>&1; then
 fi
 
 echo ">> Compilando vidctl ${PKGVER} (makepkg -si; pede sudo para instalar as dependências)"
+
+# O tarball do GitHub para uma tag é regenerado de tempos em tempos com o
+# header gzip cambiante, então o sha256sums fixo do PKGBUILD pode destoar do
+# arquivo baixado. Ressincroniza com o tarball atual antes do build (edita o
+# PKGBUILD local em pkg/aur/). Para um resync manual: cd pkg/aur && updpkgsums.
+if command -v updpkgsums >/dev/null 2>&1; then
+  if (cd "$PKGDIR" && updpkgsums >/dev/null); then
+    echo ">> sha256sums ressincronizado com o tarball atual (updpkgsums)"
+  fi
+else
+  echo "aviso: updpkgsums não encontrado (instale pacman-contrib). Se o checksum falhar no makepkg:" >&2
+  echo "  cd pkg/aur && updpkgsums && makepkg -si" >&2
+fi
+
 cd "$PKGDIR"
 makepkg -si
 echo ">> vidctl ${PKGVER} instalado."
