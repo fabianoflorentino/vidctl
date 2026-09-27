@@ -141,6 +141,21 @@ func TestPlanByMinutes(t *testing.T) {
 			wantErr:     "cabe em 1 parte",
 		},
 		{
+			name:        "minutos fracionarios cortam em partes de 1m30s",
+			durationSec: 720, // 8x90s = 720
+			spec:        Spec{MinutesEach: 1.5},
+			wantSegs: []Segment{
+				{Index: 1, StartSec: 0, EndSec: 90},
+				{Index: 2, StartSec: 90, EndSec: 180},
+				{Index: 3, StartSec: 180, EndSec: 270},
+				{Index: 4, StartSec: 270, EndSec: 360},
+				{Index: 5, StartSec: 360, EndSec: 450},
+				{Index: 6, StartSec: 450, EndSec: 540},
+				{Index: 7, StartSec: 540, EndSec: 630},
+				{Index: 8, StartSec: 630, EndSec: 720},
+			},
+		},
+		{
 			name:        "escolhas conflitantes",
 			durationSec: 1800,
 			spec:        Spec{Parts: 6, MinutesEach: 5},

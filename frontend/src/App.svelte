@@ -227,7 +227,7 @@
       }
       return { count: parts, sliceSec: slice, error: '' }
     }
-    const slice = Math.max(1, Math.floor(splitMinutes)) * 60
+    const slice = Math.max(1, splitMinutes) * 60
     const full = Math.floor(durationSec / slice)
     const tail = durationSec - full * slice
     let count = full
@@ -368,7 +368,7 @@
     if (!splitOn || splitBlocked || !activeSplit) return null
     return splitAxis === 'parts'
       ? { parts: Math.floor(splitParts), minutesEach: 0 }
-      : { parts: 0, minutesEach: Math.floor(splitMinutes) }
+      : { parts: 0, minutesEach: splitMinutes }
   }
 
   async function compress() {

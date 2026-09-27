@@ -94,7 +94,7 @@ func lowAdvice(kbps, minKbps int, segSec float64, info *media.Info, preset prese
 	default:
 		perPartSec := (maxTargetMB * 0.95 * 8 * 1048576) / (float64(minKbps)*1000 + audioBits)
 		minutes := int(math.Floor(perPartSec / 60))
-		segs, err := split.Plan(info.DurationSec, split.Spec{MinutesEach: minutes})
+		segs, err := split.Plan(info.DurationSec, split.Spec{MinutesEach: float64(minutes)})
 		if minutes >= 1 && err == nil && len(segs) >= 2 && len(segs) <= split.MaxParts {
 			need.MinutesEach = minutes
 			need.Parts = len(segs)

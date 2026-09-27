@@ -427,7 +427,7 @@ cortar em 6 partes de 5 min cada — com mínimo de **1 min por parte**.
   ```go
   type SplitSpec struct {
       Parts       int `json:"parts"`       // 0 = derivar da duração
-      MinutesEach int `json:"minutesEach"` // 0 = derivar das partes
+      MinutesEach float64 `json:"minutesEach"` // 0 = derivar das partes; aceita frações (1.5 = 1m30s)
   }
   ```
   Só um dos campos deve ser preenchido (frontend envia um; o outro fica 0).

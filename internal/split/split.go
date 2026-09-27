@@ -21,8 +21,8 @@ const (
 
 // Spec describes the cut request: exactly one of Parts or MinutesEach is set.
 type Spec struct {
-	Parts       int `json:"parts"`
-	MinutesEach int `json:"minutesEach"`
+	Parts       int     `json:"parts"`
+	MinutesEach float64 `json:"minutesEach"`
 }
 
 // Segment is one cut of the video, in seconds, half-open [StartSec, EndSec).
@@ -80,14 +80,14 @@ func planByParts(durationSec float64, parts int) ([]Segment, error) {
 	}, parts), nil
 }
 
-func planByMinutes(durationSec float64, minutes int) ([]Segment, error) {
+func planByMinutes(durationSec float64, minutes float64) ([]Segment, error) {
 	if minutes < 1 {
 		return nil, errors.New("cada parte precisa ter pelo menos 1 minuto")
 	}
 	if minutes > MaxMinutesEach {
 		return nil, fmt.Errorf("máximo de %d minutos por parte", MaxMinutesEach)
 	}
-	slice := float64(minutes) * 60
+	slice := minutes * 60
 	full := int(math.Floor(durationSec / slice))
 	tail := durationSec - float64(full)*slice
 
@@ -100,7 +100,7 @@ func planByMinutes(durationSec float64, minutes int) ([]Segment, error) {
 	}
 	if total < 2 {
 		return nil, fmt.Errorf(
-			"com %d min por parte o vídeo inteiro cabe em 1 parte; não há corte", minutes)
+			"com %g min por parte o vídeo inteiro cabe em 1 parte; não há corte", minutes)
 	}
 	if total > MaxParts {
 		return nil, fmt.Errorf("corte geraria %d partes; o máximo é %d", total, MaxParts)
