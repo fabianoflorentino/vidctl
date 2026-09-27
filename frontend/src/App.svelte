@@ -461,7 +461,7 @@
           <div class="group-card-body">
             <div class="tune-row">
               <span class="meta-k">tamanho (MB)</span>
-              <Stepper value={sizeMB} min={2} max={100} ariaLabel="tamanho alvo" onchange={(v) => (sizeMB = v)} />
+              <Stepper value={sizeMB} min={2} max={100} digits={1} ariaLabel="tamanho alvo" onchange={(v) => (sizeMB = v)} />
             </div>
             <div class="hint mono">
               {#if info}
@@ -534,7 +534,7 @@
 
           <div class="tune-row" class:active={splitOn && splitAxis === 'minutes'} class:dim={!splitOn}>
             <span class="meta-k">min/parte</span>
-            <Stepper value={splitMinutes} min={1} max={60} ariaLabel="minutos por parte" onchange={setMinutes} />
+            <Stepper value={splitMinutes} min={1} max={60} digits={1} ariaLabel="minutos por parte" onchange={setMinutes} />
           </div>
 
           {#if splitOn && !info}

@@ -977,11 +977,27 @@ input[type="number"].num {
 }
 
 .stepper-value {
-  min-width: 3ch;
+  width: 7ch;
   text-align: center;
   font-family: var(--mono);
   font-size: 13px;
   color: var(--fg);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  padding: 4px 2px;
+  outline: none;
+}
+
+.stepper-value:focus {
+  border-color: var(--accent);
+  background: var(--inset);
+}
+
+.stepper-value::-webkit-inner-spin-button,
+.stepper-value::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .icon-round {
