@@ -9,6 +9,42 @@ As releases por plataforma (`vX.Y.Z-windows`, `vX.Y.Z-linux`, `vX.Y.Z-macos`)
 compartilham este mesmo changelog: a diferença entre elas é apenas o sistema
 operacional dos pacotes.
 
+## [2.1.0] — 2026-09-27
+
+Redesign visual no padrão Constrict com drag and drop, miniaturas e ajuste
+fino dos contadores.
+
+### Adicionado
+
+- **Visual no padrão Constrict**: tema escuro fosco (tokens recentes com
+  accent slate), tema claro derivado e ícone próprio nos instaladores de
+  Linux/Windows/macOS; layout de duas colunas (sidebar de ajustes + área do
+  vídeo), cards por grupo, e o modal de Preferências (tema sistema/claro/escuro
+  e recheck do ffmpeg).
+- **Drag and drop**: solte um vídeo na janela para selecioná-lo; a área vazia
+  fica destacada em hover (`--wails-drop-target`, evento `wails:file-drop`).
+- **Miniaturas**: a linha do vídeo mostra um frame extraído via ffmpeg
+  (procurando em `min(1s, dur/2)`, limitado a 320px), cacheado por
+  path+size+mtime em `os.TempDir()/vidctl-thumbs`; novo binding
+  `GetThumbnail`.
+- **Contadores com valor editável e ajuste fino**: clique no número para
+  digitar (Enter/clique fora confirma, Esc cancela, vírgula aceita) e segure
+  **Shift** nas setas `+/−` (ou `↑/↓`) para passo fino de 0,1.
+- **min/parte fracionário de ponta a ponta**: `split.Spec.MinutesEach` aceita
+  fração (`1.5` = 1 m 30 s) do frontend ao corte, com camada de `internal/split`
+  testada.
+- **Menu da linha do vídeo (⋮)**: trocar arquivo / limpar.
+- Redesign do ícone do app: fundo escuro arredondado com glyph de compressão
+  no accent slate (appicon.png, icon.ico e pkg/icon do Linux).
+
+### Mudado
+
+- Fase 4 do plano Constrict entregue: componentes base (Stepper, Toggle,
+  RadioCardGroup, Modal, InfoTip, KebabMenu) sem estilos scoped, movidos
+  para o design system global.
+- `internal/media` agora também gera miniaturas; documentação das
+  Preferências, pipeline e estrutura atualizadas no README.
+
 ## [2.0.1] — 2026-09-22
 
 Retoca a experiência da v2.0.0: qualidade assistida e ajustes de interface.

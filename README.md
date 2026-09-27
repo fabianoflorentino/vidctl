@@ -15,6 +15,10 @@ cortar cena. Alimentado por encode **2-pass** quando há limite de tamanho ou
 - **Corte em partes**: divide o vídeo por tempo — N partes iguais ou X minutos
   por parte (ex.: 30 min → 6 × 5 min) — com mínimo de 1 min por parte; cada
   parte é comprimida de forma independente e sai como `nome-part1.mp4`, …
+  O `min/parte` aceita fração (ex.: `1.5` = 1 m 30 s) e os contadores têm
+  campo editável + setas com **Shift** para ajuste fino
+- **Drag and drop**: arraste um vídeo para a janela (ou use "Abrir…"); a área
+  de seleção vazia vira um alvo destacado quando você passa por cima
 - Encode ffmpeg **2-pass** para atingir o tamanho máximo sem estourar o limite
 - **Aviso de qualidade antes de comprimir**: o app estima o bitrate que o
   ajuste atual vai render (por parte, quando há corte); se ficar abaixo do
@@ -25,6 +29,8 @@ cortar cena. Alimentado por encode **2-pass** quando há limite de tamanho ou
 - Desktop nativo para **Linux, Windows e macOS** (Wails v2 + WebKit/WebView2)
 - Tema claro/escuro: segue o sistema por padrão e pode ser fixado no botão de
   sol/lua no topo (a escolha persiste entre execuções)
+- Visual no padrão **Constrict**: tema escuro fosco com accent slate, tema
+  claro derivado e ícone próprio nos instaladores de todas as plataformas
 - Sem internet: fontes e interface bundladas no binário
 - Verifica `ffmpeg`/`ffprobe` na inicialização e avisa se faltarem; o botão
   "verificar de novo" relê o PATH do sistema, então dá para instalar o ffmpeg
@@ -75,7 +81,8 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-  A["Selecionar o vídeo<br/>(dialog nativo)"] --> B["ffprobe: duração · áudio · formato"]
+  A["Selecionar o vídeo<br/>(dialog nativo ou arraste & solte)"] --> B["ffprobe: duração · áudio · formato"]
+  B --> T["ffmpeg: miniatura cacheada<br/>(linha do vídeo)"]
   B --> C{"preset tem limite de tamanho?"}
   C -- "size" --> D["orçamento de bitrate<br/>alvo × 0,95 (overhead) − áudio"]
   D --> E["ffmpeg pass 1<br/>análise de taxas"]
@@ -130,7 +137,7 @@ de 60 s) ou quando você quer publicar o conteúdo fatiado.
 | Campo | Regra |
 |---|---|
 | **N partes** | o vídeo é dividido em N trechos iguais (ex.: 30 min → 6 × 5 min) |
-| **min/parte** | trechos com duração fixa; a sobra vira parte final se tiver ≥ 1 min, senão é juntada na última |
+| **min/parte** | trechos com duração fixa (aceita fração: `1.5` = 1 m 30 s); a sobra vira parte final se tiver ≥ 1 min, senão é juntada na última |
 | Mínimo | 1 minuto por parte — cortes que gerem parte menor são bloqueados |
 | Máximo | 60 partes por vídeo |
 
@@ -141,14 +148,14 @@ total sobre o arquivo original.
 
 ## Stack
 
-- **Backend:** Go 1.25+ (Wails v2.15.0, ffmpeg/ffprobe)
+- **Backend:** Go 1.25+ (Wails v2.16.0, ffmpeg/ffprobe)
 - **Frontend:** Svelte 5 + Vite, com fontes bundladas (funciona offline)
 
 ## Pré-requisitos (desenvolvimento)
 
 - Go 1.25+
 - Node.js 22+
-- Wails CLI: `go install github.com/wailsapp/wails/v2/cmd/wails@v2.15.0`
+- Wails CLI: `go install github.com/wailsapp/wails/v2/cmd/wails@v2.16.0`
 - ffmpeg e ffprobe no `PATH`
 - Linux: pacotes de desenvolvimento GTK/WebKit
   - Debian/Ubuntu: `libgtk-3-dev libwebkit2gtk-4.1-dev`
@@ -196,7 +203,7 @@ VIDCTL_SMOKE="/caminho/para/video.mp4" go test -run TestSmokeReal -v ./internal/
 ├── internal/
 │   ├── compress/              # pipeline ffmpeg: orçamento de bitrate, 2-pass e CRF, gestão de jobs
 │   ├── events/                # eventos backend → frontend (progress/done/error)
-│   ├── media/                 # leitura de metadados via ffprobe
+│   ├── media/                 # leitura de metadados via ffprobe e miniaturas via ffmpeg
 │   └── presets/               # perfis por plataforma (WhatsApp, Instagram, Shorts, YouTube)
 ├── frontend/                  # UI Svelte 5 + Vite (bindings em frontend/wailsjs)
 ├── pkg/
