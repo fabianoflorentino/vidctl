@@ -214,11 +214,10 @@ button {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  padding: 5px 12px;
-  background: var(--inset);
-  border-radius: 999px;
+  justify-self: start;
   font-size: 11px;
   color: var(--fg-dim);
+  line-height: 1;
 }
 
 .ffmpeg-pill .dot {
