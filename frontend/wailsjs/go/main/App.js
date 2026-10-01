@@ -18,6 +18,10 @@ export function GetAdvice(arg1) {
   return window['go']['main']['App']['GetAdvice'](arg1);
 }
 
+export function GetConfig() {
+  return window['go']['main']['App']['GetConfig']();
+}
+
 export function GetMediaInfo(arg1) {
   return window['go']['main']['App']['GetMediaInfo'](arg1);
 }
@@ -48,4 +52,8 @@ export function OpenMultipleDialog() {
 
 export function OpenOutputDialog(arg1) {
   return window['go']['main']['App']['OpenOutputDialog'](arg1);
+}
+
+export function SaveConfig(arg1) {
+  return window['go']['main']['App']['SaveConfig'](arg1);
 }

@@ -11,6 +11,7 @@ import (
 
 	"github.com/fabianoflorentino/vidctl/internal/cmdutil"
 	"github.com/fabianoflorentino/vidctl/internal/compress"
+	"github.com/fabianoflorentino/vidctl/internal/config"
 	"github.com/fabianoflorentino/vidctl/internal/events"
 	"github.com/fabianoflorentino/vidctl/internal/media"
 	"github.com/fabianoflorentino/vidctl/internal/presets"
@@ -20,16 +21,33 @@ import (
 
 // App is the root binding struct exposed to the frontend.
 type App struct {
-	ctx  context.Context
-	jobs *compress.Manager
-	sys  *sysinfo.Collector
+	ctx   context.Context
+	jobs  *compress.Manager
+	sys   *sysinfo.Collector
+	store *config.Store
 }
 
 const videoFilterPattern = "*.mp4;*.mkv;*.mov;*.avi;*.webm;*.m4v;*.ts;*.flv"
 
-// NewApp creates the application struct.
+// NewApp creates the application struct with the settings file in the default
+// user configuration directory. A machine without a writable configuration
+// directory still runs: it just does not remember anything between sessions.
 func NewApp() *App {
-	return &App{jobs: compress.NewManager(), sys: sysinfo.NewCollector()}
+	store, err := config.NewStore("")
+	if err != nil {
+		store = nil
+	}
+	return newApp(store)
+}
+
+// newApp creates the application with an explicit settings store. Tests pass a
+// store rooted in a temporary directory; a nil store disables persistence.
+func newApp(store *config.Store) *App {
+	return &App{
+		jobs:  compress.NewManager(),
+		sys:   sysinfo.NewCollector(),
+		store: store,
+	}
 }
 
 // GetUsage returns live system resource usage for the progress panel.
@@ -43,6 +61,44 @@ func (a *App) startup(ctx context.Context) {
 	events.SetEmitter(func(name string, data any) {
 		wailsruntime.EventsEmit(ctx, name, data)
 	})
+	a.applyToolPaths(a.loadConfig())
+}
+
+// loadConfig returns the persisted settings, or the defaults when there is no
+// store or the file cannot be read. Loading never fails, so the app always
+// starts with a usable configuration.
+func (a *App) loadConfig() config.Config {
+	if a.store == nil {
+		return config.Defaults()
+	}
+	cfg, _ := a.store.Load()
+	return cfg
+}
+
+// applyToolPaths points the binary lookup at the configured ffmpeg/ffprobe.
+// An unusable path stays configured so the preferences screen can show the
+// problem instead of the app silently using a different binary.
+func (a *App) applyToolPaths(cfg config.Config) {
+	cmdutil.SetOverride("ffmpeg", cfg.FFmpegPath)
+	cmdutil.SetOverride("ffprobe", cfg.FFprobePath)
+}
+
+// GetConfig returns the persisted settings.
+func (a *App) GetConfig() config.Config {
+	return a.loadConfig()
+}
+
+// SaveConfig persists the settings and applies the tool paths immediately, so
+// the next job uses them without a restart.
+func (a *App) SaveConfig(cfg config.Config) error {
+	if a.store == nil {
+		return errors.New("sem pasta de configuração disponível para salvar as preferências")
+	}
+	if err := a.store.Save(cfg); err != nil {
+		return err
+	}
+	a.applyToolPaths(cfg)
+	return nil
 }
 
 // SystemStatus reports the state of required external tools.
@@ -68,11 +124,12 @@ func (a *App) GetAdvice(job compress.Job) (compress.Advice, error) {
 	return compress.Advise(info, preset, job), nil
 }
 
-// CheckFFmpeg verifies that ffmpeg and ffprobe are available.
+// CheckFFmpeg verifies that ffmpeg and ffprobe are available, honouring the
+// paths configured in the preferences.
 func (a *App) CheckFFmpeg() SystemStatus {
 	var missing []string
 	for _, bin := range []string{"ffmpeg", "ffprobe"} {
-		if _, err := cmdutil.LookPath(bin); err != nil {
+		if _, err := cmdutil.Resolve(bin); err != nil {
 			missing = append(missing, bin)
 		}
 	}
