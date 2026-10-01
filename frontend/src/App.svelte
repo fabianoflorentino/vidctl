@@ -12,10 +12,12 @@
     OpenFolder,
     GetUsage,
     GetAdvice,
+    GetConfig,
+    SaveConfig,
   } from '../wailsjs/go/main/App.js'
   import { EventsOn, EventsOff } from '../wailsjs/runtime/runtime.js'
-  import type { main, presets, media } from '../wailsjs/go/models.js'
-  import { compress as bindings } from '../wailsjs/go/models.js'
+  import type { main, presets, media, config } from '../wailsjs/go/models.js'
+  import { compress as bindings, config as configBindings } from '../wailsjs/go/models.js'
   import StatusPage from './lib/StatusPage.svelte'
   import VideoRow from './lib/VideoRow.svelte'
   import Stepper from './lib/Stepper.svelte'
@@ -64,6 +66,69 @@
   let sizeMB = $state(10)
   let crf = $state(23)
 
+  let outputDir = $state('')
+  let ffmpegPath = $state('')
+  let ffprobePath = $state('')
+  let configReady = $state(false)
+  let saveTimer: ReturnType<typeof setTimeout> | undefined
+
+  const CONFIG_DEFAULTS: config.Config = new configBindings.Config({
+    presetId: 'whatsapp-status',
+    sizeMB: 10,
+    crf: 23,
+    outputDir: '',
+    ffmpegPath: '',
+    ffprobePath: '',
+    language: 'pt',
+    maxParallel: 1,
+    notifyOnDone: false,
+    openFolderOnDone: false,
+  })
+
+  function currentConfig(): config.Config {
+    return new configBindings.Config({
+      ...CONFIG_DEFAULTS,
+      presetId: selectedPresetId,
+      sizeMB,
+      crf,
+      outputDir,
+      ffmpegPath,
+      ffprobePath,
+    })
+  }
+
+  // Evita gravar de volta o que acabou de ser lido e writes em mudanças que não
+  // alteram nada (o Stepper emite o mesmo valor ao receber foco).
+  let lastSavedConfig = ''
+
+  function scheduleSaveConfig() {
+    if (!configReady) return
+    if (saveTimer) clearTimeout(saveTimer)
+    saveTimer = setTimeout(async () => {
+      saveTimer = undefined
+      const snapshot = JSON.stringify(currentConfig())
+      if (snapshot === lastSavedConfig) return
+      try {
+        await SaveConfig(currentConfig())
+        lastSavedConfig = snapshot
+      } catch (err) {
+        error = 'falha ao salvar as preferências: ' + err
+      }
+    }, 500)
+  }
+
+  $effect(() => {
+    currentConfig()
+    scheduleSaveConfig()
+  })
+
+  function suggestedOutput(base: string): string {
+    const name = base + '-compressed.mp4'
+    if (!outputDir) return name
+    const sep = outputDir.includes('\\') && !outputDir.includes('/') ? '\\' : '/'
+    return outputDir.replace(/[\\/]+$/, '') + sep + name
+  }
+
   let running = $state(false)
   let stage = $state('')
   let percent = $state(0)
@@ -105,7 +170,7 @@
     try {
       info = await GetMediaInfo(path)
       const base = path.replace(/\.[^.]+$/, '')
-      outputPath = base + '-compressed.mp4'
+      outputPath = suggestedOutput(base)
       GetThumbnail(path, info.durationSec)
         .then((t) => {
           if (inputPath === path) thumb = t
@@ -321,12 +386,15 @@
     try {
       const pres = await GetPresets()
       presetList = pres
-      const p = pres.find((x) => x.id === selectedPresetId)
-      if (p?.mode === 'size') sizeMB = p.sizeMB
     } catch (err) {
       error = 'falha ao carregar presets: ' + err
     }
 
+    await loadConfig()
+    await checkFFmpeg()
+  }
+
+  async function checkFFmpeg() {
     try {
       const st = await CheckFFmpeg()
       ffmpegOk = st.ffmpegOK
@@ -335,6 +403,36 @@
       ffmpegOk = false
       ffmpegMsg = 'não foi possível verificar o ffmpeg'
     }
+  }
+
+  async function loadConfig() {
+    let saved: config.Config | undefined
+    try {
+      saved = await GetConfig()
+    } catch (err) {
+      error = 'falha ao carregar as preferências: ' + err
+      configReady = true
+      return
+    }
+    if (saved) {
+      // Só aceita o preset se ele ainda existir na lista; um preset removido
+      // numa versão futura não pode deixar a sidebar sem seleção.
+      if (presetList.some((p) => p.id === saved.presetId)) {
+        selectedPresetId = saved.presetId
+      }
+      // sizeMB 0 significa "sem alvo salvo" e cai no tamanho do preset.
+      const hasSavedSize = saved.sizeMB > 0
+      if (hasSavedSize) sizeMB = saved.sizeMB
+      if (saved.crf > 0) crf = saved.crf
+      outputDir = saved.outputDir ?? ''
+      ffmpegPath = saved.ffmpegPath ?? ''
+      ffprobePath = saved.ffprobePath ?? ''
+
+      const p = presetList.find((x) => x.id === selectedPresetId)
+      if (p?.mode === 'size' && !hasSavedSize) sizeMB = p.sizeMB
+    }
+    lastSavedConfig = JSON.stringify(currentConfig())
+    configReady = true
   }
 
   async function pickInput() {
@@ -674,7 +772,13 @@
   {theme}
   {ffmpegOk}
   {ffmpegMsg}
+  {outputDir}
+  {ffmpegPath}
+  {ffprobePath}
   onclose={() => (prefsOpen = false)}
   ontheme={setTheme}
-  onRecheck={() => load()}
+  onRecheck={checkFFmpeg}
+  onoutputdir={(v) => (outputDir = v)}
+  onffmpegpath={(v) => (ffmpegPath = v)}
+  onffprobepath={(v) => (ffprobePath = v)}
 />
