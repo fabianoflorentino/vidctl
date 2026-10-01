@@ -1,14 +1,47 @@
 # Plano de implementação — novas funcionalidades
 
 Documento de plano para a próxima rodada de funcionalidades do vidctl.
-Baseado no estado atual do código (Go 1.25 + Wails v2.15 + Svelte 5, um único
+Baseado no estado atual do código (Go 1.26 + Wails v2.16 + Svelte 5, um único
 componente `App.svelte`).
 
 > Regras do projeto (AGENTS.md) que valem para **todas** as fases:
 > - toda mudança de código vem com testes cobrindo o comportamento;
 > - rodar sempre `go test ./...` e manter cobertura ≥ 80% (gate no CI);
 > - comportamento novo deve refletir no `README.md` e, quando aplicável, em `docs/`;
-> - sem comentários em código a menos que realmente necessários.
+> - sem comentários em código a menos que realmente necessários;
+> - **uma branch por fase**, com PR para a `main` — ver
+>   [Fluxo de execução](#fluxo-de-execução).
+
+### Fluxo de execução
+
+Cada fase é entregue como uma unidade revisável e isolada:
+
+1. **Branch nova a partir da `main` atual**, nunca a partir de outra branch de
+   fase — assim o PR não carrega implementações anteriores junto.
+   Naming: `feat/<slug>` (`feat/fase1`, `feat/audio`, `feat/transcricao`),
+   `fix/<slug>` ou `chore/<slug>`.
+2. **Commits na branch da fase**, em Conventional Commits e em português, um
+   por unidade lógica de mudança. Cada commit compila e passa nos testes
+   sozinho, o que mantém o histórico legível no `git bisect`.
+3. **Docs no mesmo PR**: esta seção do plano e o `CHANGELOG.md` (`[Unreleased]`)
+   são atualizados junto com o código, para o plano nunca divergir do repo.
+4. **PR para a `main`** aberto como sinal de "fase entregue". Merge direto na
+   `main` e push de branch só acontecem com pedido explícito.
+
+Branch            | Fase | PR
+---|---|---
+`feat/fase1`      | 1 — Configuração persistente | aberto
+`feat/fila`       | 2 — Fila de conversões | pendente
+`feat/estimativa` | 3 — Estimativa de tamanho | pendente
+`feat/hevc`       | 4 — HEVC/x265 + hardware | pendente
+`feat/ajustes`    | 5 — Ajustes por arquivo | pendente
+`feat/audio`      | 6 — Extração de áudio | pendente
+`feat/notificacao`| 7 — Notificação + abrir pasta | pendente
+`feat/updates`    | 8 — Verificação de atualização | pendente
+`feat/presets`    | 9 — Presets personalizados | pendente
+`feat/i18n`       | 10 — i18n pt/en | pendente
+`feat/split-tempo`| 11 — Corte por tempo | pendente
+`feat/transcricao`| 12 — Transcrição de vídeo | pendente
 
 ---
 
@@ -21,12 +54,13 @@ componente `App.svelte`).
 | 3 | Estimativa de tamanho antes do encode | §3 | M |
 | 4 | Codec HEVC/x265 + aceleração de hardware | §4 | G |
 | 5 | Ajustes por arquivo (escala, corte, áudio, FPS, thumbnail) | §5 | G |
-| 6 | Extração de áudio (mp3/opus) | §6 | P |
+| 6 | Extração de áudio com opções (mp3/opus/aac/flac/wav/copiar) | §6 | M |
 | 7 | Notificação ao concluir + abrir pasta | §7 | P |
 | 8 | Verificação de atualização no app | §8 | M |
 | 9 | Presets personalizados pelo usuário | §9 | M |
 | 10 | i18n (pt/en) — opcional | §10 | M |
 | 11 | Corte em segmentos por tempo (split) | §11 | G |
+| 12 | Transcrição de vídeo (legendas srt/vtt + texto) | §12 | G |
 
 Redesign da UI no estilo do Constrict (fila visual, drag&drop, tema adwaita)
 está detalhado em [`plano-ui-constrict.md`](./plano-ui-constrict.md); ele consome
@@ -37,6 +71,10 @@ Ordem por dependência: config (1) libera fila (2, `MaxParallel`), notificaçõe
 si, mas o job enriquecido da fase 4/5 deve ser desenhado junto com a fila (2)
 para o contrato `Job` não quebrar duas vezes.
 
+Áudio derivado (6 extração, 12 transcrição) compartilham a mesma base: extração
+da faixa em PCM com `ffmpeg`, `Task.Kind` na fila (2) e trim `-ss/-to` da fase
+5. As duas fases entram **depois** da fila (2) e da config (1).
+
 ---
 
 ## Fase 1 — Configuração persistente + preset "último usado"
@@ -44,6 +82,10 @@ para o contrato `Job` não quebrar duas vezes.
 **Objetivo:** introduzir a primeira camada de persistência do app e restaurar o
 preset/tamanho/saída no próximo boot. Hoje não existe nenhuma persistência:
 `sizeMB`/`crf` e caminhos vivem só em memória (`App.svelte`).
+
+> **Status: implementado** em `feat/fase1` (PR aberto para a `main`). Os quatro
+> campos sem efeito hoje (`Language`, `MaxParallel`, `NotifyOnDone`,
+> `OpenFolderOnDone`) já são preservados em disco para as fases 2, 7 e 10.
 
 ### Backend
 - Novo pacote `internal/config`:
@@ -127,10 +169,9 @@ ativos para cancelar.
   - Passo 04 vira lista: item mostra nome do arquivo, preset, status
     (`aguardando`/`processando`/`concluído`/`erro`), barra de progresso do item
     ativo, botão cancelar por item, botão "limpar fila".
-  - "Adicionar vídeo(s)" multipick: Wails v2 expõe
-    `OpenMultipleFilesDialog` (hoje `OpenInputDialog` é single, app.go:80-92).
-    Substituir por `OpenMultipleFilesDialog` com os mesmos filtros e inserir
-    cada arquivo na fila.
+  - "Adicionar vídeo(s)" multipick já existe como `OpenMultipleDialog`
+    (app.go:179) e devolve `[]string`; a fase 2 só precisa consumir o slice e
+    criar um item de fila por arquivo.
 - Garantir que a UI desabilite "adicionar" apenas se `!ffmpegOk`, nunca por
   `running` (multi-job).
 
@@ -272,29 +313,109 @@ com detecção de disponibilidade.
 
 ---
 
-## Fase 6 — Extração de áudio (mp3/opus)
+## Fase 6 — Extração de áudio com opções (mp3/opus/aac/flac/wav/copiar)
 
-**Objetivo:** extrair trilha de áudio sem reencodar o vídeo.
+**Objetivo:** tirar a trilha de áudio do vídeo sem reencodar o vídeo, com
+escolhas explícitas de formato, qualidade, canais e normalização. Hoje o app
+só comprime vídeo; extração é um botão novo no card do arquivo.
+
+> Depende da fase 2 (`Task.Kind="audio"` na fila) e da fase 1 (preferências:
+> caminho de saída, sufixo). O trim reaproveita `-ss/-to` da fase 5.
+
+### Modelo
+
+- Novo pacote `internal/audio`, espelhando o builder de encoders da fase 4
+  (mesmo padrão `Spec` + tabela `formato → args` coberta por testes):
+  ```go
+  type Spec struct {
+      Codec       string  `json:"codec"`         // "mp3"|"opus"|"aac"|"flac"|"wav"|"copy"
+      BitrateKbps int     `json:"bitrateKbps"`   // 0 = default do formato
+      SampleRate  int     `json:"sampleRate"`    // 0 = manter do fonte
+      Channels    int     `json:"channels"`      // 0 = manter, 1 = mono, 2 = estéreo
+      TrimStartSec float64 `json:"trimStartSec"` // janela reaproveitada da fase 5
+      TrimEndSec   float64 `json:"trimEndSec"`
+      Normalize   bool    `json:"normalize"`     // loudnorm EBU R128
+      OutputPath  string  `json:"outputPath"`
+  }
+  ```
+
+### Formatos e argumentos
+
+| Formato | Encoder | Flag de taxa | Default | Observação |
+|---|---|---|---|---|
+| `mp3` | `libmp3lame` | `-b:a <k>` ou `-q:a 2` | 192 kbps | padrão da UI |
+| `opus` | `libopus` | `-b:a <k>` | 128 kbps | melhor voz |
+| `aac` | `aac` | `-b:a <k>` | 160 kbps | sem encoder extra |
+| `flac` | `flac` | — | — | lossless, sem `-b:a` |
+| `wav` | `pcm_s16le` | — | — | master/edição |
+| `copy` | `copy` | — | — | só remux, sem recodificar |
+
+- Comando base: `ffmpeg [-ss start -to end] -i in -vn -map 0:a:0 <codec args>
+  out` via `cmdutil.Command` (mesmo wrapper de `internal/compress`), com o
+  contexto cancelável do job.
+- `-ss/-to` **antes** do `-i` (seek rápido), igual ao trim da fase 5.
+- `-ac` só quando `Channels > 0`; `-ar` só quando `SampleRate > 0`.
+- `Normalize`: `-af loudnorm=I=-16:LRA=11:TP=-1.5` (single-pass, aproximado).
+  O 2-pass medido fica como *stretch goal* — a UI não deve depender dele.
+
+### Validações (erro claro, nunca ajuste silencioso)
+
+- `Codec` desconhecido → erro listando os válidos.
+- `BitrateKbps > 0` com `flac`/`wav`/`copy` → erro "bitrate não se aplica a
+  X" (mesma política da fase 11 com parte < 1 min).
+- `BitrateKbps` fora de `[32, 320]` para lossy → erro.
+- `Channels` fora de `{0,1,2}` → erro.
+- `TrimEndSec <= TrimStartSec` quando ambos vêm preenchidos → erro.
+- `info.HasAudio == false` → erro "o vídeo não tem faixa de áudio" (usando
+  `media.Info`, que já expõe `HasAudio`).
 
 ### Backend
-- `internal/audio` (ou função no `compress`): `Extract(ctx, Job)` com
-  `{InputPath, OutputPath, Codec ("mp3"|"opus"|"aac")}`; comando
-  `ffmpeg -i in -vn -c:a <libmp3lame|libopus|aac> -b:a 192k out` via
-  `cmdutil.Command`.
-- Eventos: reutilizar `compress:done` com `Stage:"audio"` (payload já carrega
-  `OutputPath`); sem barra de progresso (varredura quase instantânea).
-- `OpenOutputDialog` já filtra `.mp4` (app.go:96-109) — generalizar filtro por
-  extensão (`.mp3`, `.opus`, `.m4a`).
+
+- `internal/audio`: `Extract(ctx, inputPath, Spec) (sizeBytes int64, err error)`
+  e `SuggestOutput(path, codec, suffix)` montando `<nome>-<sufixo>.<ext>` com a
+  extensão coerente com o formato.
+- `internal/events`: `DoneEvent` e `ProgressEvent` ganham
+  `Kind string \`json:"kind"\`` (`"compress"|"audio"`) — **definir junto com a
+  fase 2**, senão o frontend não distingue quem concluiu.
+- `app.go`: `ExtractAudio(req audio.Spec) (string, error)` enfileira
+  (`Task.Kind="audio"`) e devolve o `jobID`; `OpenOutputDialog` passa a filtrar
+  pela extensão do formato escolhido (hoje filtra só `.mp4`, app.go:138-153).
+- Preferências (fase 1): sufixo de saída do áudio, default `-audio` (o
+  `-compressed` existente é para vídeo; `PreferencesModal.svelte` já tem o campo
+  de sufixo, ganha um por tipo).
 
 ### Frontend
-- Card do arquivo no passo 01: botão "extrair áudio…" com escolha de codec;
-  resultado mostra como um item "concluído" com `OpenFolder`.
+
+- `VideoRow.svelte`: item novo no `KebabMenu` ("extrair áudio…") ao lado de
+  "trocar arquivo"/"limpar" — ou card de ação no `StatusPage` quando não há
+  vídeo ainda.
+- Modal novo `AudioModal.svelte` reaproveitando o design system (`Modal`,
+  `RadioCardGroup`, `Stepper`, `Toggle` já existentes em `frontend/src/lib/`):
+  - formato: `RadioCardGroup` (MP3/Opus/AAC/FLAC/WAV/copiar);
+  - qualidade: `Stepper`/select de kbps, **oculto** para `flac`/`wav`/`copy`;
+  - canais: `RadioCardGroup` manter/mono/estéreo;
+  - normalizar: `Toggle` com `InfoTip` explicando o EBU R128;
+  - janela: dois `Stepper` `mm:ss` reaproveitando o do split (fase 11);
+  - prévia do nome de saída (`SuggestOutput`) e botão "EXTRAIR ÁUDIO".
+- Ao concluir, o item da fila mostra formato + tamanho + `OpenFolder` (mesmo
+  card de resultado da compressão).
 
 ### Testes
-- Builder do comando por codec; integração fake; defaults de `-b:a`.
+
+- `internal/audio`: tabela `Spec → argv` por formato (6 casos), incluindo
+  `-b:a` ausente em lossless, `-ac`/`-ar` condicionais, ordem de `-ss/-to`
+  antes do `-i`; tabela de erros de validação.
+- Integração: `Extract` com fake `ffmpeg` (script sh, `skipOnWindows` como nos
+  testes existentes de `internal/compress`) capturando `argv`; `SuggestOutput`
+  por extensão.
+- `app_test.go`: `ExtractAudio` com diretório temporário e video sem áudio.
+- Eventos: `Kind` preenchido em `done`/`progress`.
 
 ### Docs
-- README: seção "Extrair áudio".
+
+- README: seção "Extrair áudio" com a tabela de formatos × opções, o que cada
+  preset de taxa faz e o aviso de que `flac`/`wav` não aceitam bitrate.
+- CHANGELOG: entrada na feature.
 
 ---
 
@@ -402,77 +523,158 @@ modo offline atual).
 
 ---
 
-## Fase 11 — Corte em segmentos por tempo (split em N partes)
+## Fase 11 — Corte em segmentos por tempo (split)
 
-**Objetivo:** dividir um vídeo em N partes de duração fixa ou em N partes
-iguais. Ex. que o usuário descreveu: um vídeo de 30 minutos com a opção de
-cortar em 6 partes de 5 min cada — com mínimo de **1 min por parte**.
+**Objetivo:** cortar o vídeo em partes, seja por número de partes ou por
+minutos por parte, reaproveitando o mesmo encode.
 
-### Regras de negócio
+> **Status: entregue** em `internal/split` + `App.svelte` (v2.1.0, junto do
+> redesign de UI). Registrada aqui para não sumir do plano.
 
-- O usuário informa o **número de partes** (N) **ou a duração por parte**
-  (minutos); o campo que não foi informado é calculado a partir da duração do
-  vídeo (`media.Info.DurationSec`).
-- **Mínimo de 1 min por parte**: qualquer parte calculada < 60 s é rejeitada na
-  validação (não arredondar silenciosamente).
-- A **última parte pode ser menor** que a duração target quando a duração total
-  não é divisível (30 min / 6 = 5 min exatos; 32 min / 6 → cinco de 5 min + uma
-  de 2 min), desde que ≥ 1 min.
-- Limite de N (sugestão: ≤ 60 partes) para evitar acidente com vídeos muito
-  longos; validar no backend e no frontend.
+### Backend
+- `internal/split/split.go`: `Spec` (`Parts` **ou** `MinutesEach`), `Segment`
+  (`Index`, `StartSec`, `EndSec`), `Plan(durationSec, spec)` e
+  `Filename(path, index, total)`.
+  - `Parts`: fatias iguais de `duration/Parts`.
+  - `MinutesEach`: fatias de comprimento fixo; o resto vira parte própria, a não
+    ser que fique abaixo de `MinPartSec` — nesse caso é unido à última fatia,
+    para nenhuma parte sair com menos de 1 minuto.
+  - Limites: `MinPartSec`, `MaxParts` e `MaxMinutesEach`.
+  - `Filename` insere `-partN` antes da extensão e preenche com zero quando o
+    total passa de 9 dígitos, para os arquivos ordenarem corretamente.
+- `compress.Job.Split *split.Spec` (`omitempty`): ausente ou inválido, o job
+  roda como encode único — é o que mantém a fase 2 (`Task`) compatível.
+- `encodeSegment` faz `-ss`/`-to` por segmento e reporta progresso pela
+  posição do segmento dentro do total.
+
+### Frontend
+- Toggle "dividir" com dois modos (`RadioCardGroup`): **N partes** (Stepper
+  inteiro) e **minutos por parte** (Stepper fracionário, ex.: 2,5 min).
+- Prévia do plano antes de comprimir, com a contagem de partes e o aviso de
+  bloqueio quando o plano é inválido.
+
+### Testes
+- `Plan` por partes, por minutos, resto absorvido, limites (`MinPartSec`,
+  `MaxParts`), duração zero/negativa, `Spec` vazio.
+- `Filename` com 1, 9 e 10+ partes (zero-padding).
+- `compress`: `-ss`/`-to` por segmento e output `-partN` (90,8% no pacote).
+
+### Docs
+- README: corte em N partes / X minutos.
+
+---
+
+## Fase 12 — Transcrição de vídeo (legendas srt/vtt + texto)
+
+**Objetivo:** gerar transcrição automática do áudio (legendas e texto plano)
+usando o próprio ffmpeg ou um backend de speech-to-text local/privado. O foco
+inicial é viável com ferramentas presentes (`ffmpeg` + whisper.cpp opcional) e
+sem telemetria obrigatória.
+
+> Reutiliza `audio.Extract`/PCM (fase 6), trim `-ss/-to` (fase 5) e fila
+`Task.Kind="transcribe"` (fase 2). Gera arquivos `.srt`, `.vtt` e `.txt` com
+timestamp opcional.
+
+### Modelo
+
+- Novo pacote `internal/transcribe`:
+  ```go
+  type Spec struct {
+      InputPath    string  `json:"inputPath"`
+      OutputBase   string  `json:"outputBase"`   // sem extensão
+      Engine       string  `json:"engine"`        // "whispercpp"|"vosk"|"auto"
+      Language     string  `json:"language"`      // "pt"|"en"|"auto"
+      ModelPath    string  `json:"modelPath"`     // caminho para modelo local
+      Format       string  `json:"format"`        // "srt"|"vtt"|"txt"|"all"
+      WordTimestamps bool  `json:"wordTimestamps"`
+      TrimStartSec float64 `json:"trimStartSec"`
+      TrimEndSec   float64 `json:"trimEndSec"`
+  }
+  type Result struct {
+      Files []string `json:"files"`
+      Text  string   `json:"text"`
+  }
+  ```
+
+### Estratégias de engine (preferência por local)
+
+| Engine | Status | Requer | Saída | Observação |
+|---|---|---|---|---|
+| `whispercpp` (ggml) | recomendado | binário `whisper-cpp`/`whisper-cli` no PATH | SRT/VTT/TXT | off-line, privado, roda bem CPU. Modelo `.bin` pequeno/médio. |
+| `vosk` | recomendado 2 | binário/CLI `vosk-transcriber` ou API local | SRT/VTT/TXT | leve, modelos por idioma. |
+| `ffmpeg+speech` | fallback | só ffmpeg (limitado) | TXT/SRT (parcial) | alguns builds trazem; não confiável p/ pt-BR. Default `auto` tenta na ordem acima e cai para o disponível. |
+
+- **Fallback robusto:** se nenhum engine local estiver disponível, o backend
+  devolve `ErrNoTranscriber` com lista de engines suportados + link para docs
+  (sem sugestão de nuvem). **Nunca** sugerir API externa por padrão.
 
 ### Backend
 
-- `compress.Job` ganha `Split *SplitSpec` (`json:"split,omitempty"`):
-  ```go
-  type SplitSpec struct {
-      Parts       int `json:"parts"`       // 0 = derivar da duração
-      MinutesEach float64 `json:"minutesEach"` // 0 = derivar das partes; aceita frações (1.5 = 1m30s)
-  }
-  ```
-  Só um dos campos deve ser preenchido (frontend envia um; o outro fica 0).
-- Novo pacote `internal/split` (testável de forma pura):
-  - `Plan(durationSec float64, spec SplitSpec) ([]Segment, error)` —
-    calcula `[]Segment{StartSec, EndSec}` aplicando as regras acima; devolve
-    erro claro para "nenhum campo informado", "ambos informados",
-    "parte < 1 min", "N fora do limite".
-  - `Filename(path string, index, total int) string` —
-    `meu_video-part3.mp4` (ex. parte 3 de 6).
-- `compress.go`: quando `Job.Split != nil`, `Run` (compress.go:246) executa o
-  pipeline uma vez por segmento (job físico por parte, mesmo `JobID` pai):
-  - comando por parte = comandos atuais (fases 4/5 buildam args via builder)
-    com `-ss <Start>` `-to <End>` posicionados **antes** do `-i` (seek rápido,
-    igual ao trim da fase 5) e `OutputPath` substituído por `Filename(...)`.
-  - eventos `compress:progress` continuam por `JobID`; “parte X/N” entra no
-    `stage` (ex. `encoding 3/6`) para o pie/row mostrar progresso agregado.
-- Alternativa rápida (stream copy, sem reencodar): quando `Split` está ativo
-  e o preset é `title`-only/`crf` derivado sem redimensionamento, permitir
-  `-c copy` por parte. Default da fase: **reencodar** (consistente com o resto);
-  `stream copy` entra como opção depois (decisão aberta #6).
+- `internal/transcribe/detect.go`: `AvailableEngines() []string` verifica
+  binários no PATH (`which whisper-cli whisper-cpp vosk-transcriber`) + modelos
+  configurados. Cache em memória por sessão.
+- `internal/transcribe/extract_audio.go`: extrai WAV/PCM 16kHz mono
+  temporário via `ffmpeg -ss/-to -i in -vn -ac 1 -ar 16000 -c:a pcm_s16le
+  tmp.wav` (reaproveita lógica da fase 6). Arquivo temporário removido com
+  `defer os.Remove`.
+- `internal/transcribe/whispercpp.go`, `vosk.go`: wrappers CLI com `cmdutil.Command`
+  (contexto cancelável). Parse de saída SRT/VTT quando o CLI já gera, senão
+  converte JSON → SRT/VTT (`internal/transcribe/convert.go`).
+- `app.go`: `TranscribeVideo(spec transcribe.Spec) (transcribe.Result, error)`
+  enfileira `Task.Kind="transcribe"` (fase 2); devolve lista de arquivos gerados
+  + texto completo.
+- Preferências (fase 1): `TranscribeEngine`, `TranscribeModelPath`,
+  `TranscribeLanguage`, `TranscribeWordTimestamps`, `TranscribeFormat`.
+
+### Eventos e progresso
+
+- Eventos `compress:progress/done/error` recebem `Kind="transcribe"`. Progresso
+  percentual: 0–20% extração PCM, 20–100% inferência (quando o CLI emite % ou
+  estimado por duração). Se o CLI não reporta %, usar `Stage="transcribing"` +
+  percentual baseado em tempo (heurística não-bloqueante).
 
 ### Frontend
 
-- `App.svelte`, no grupo "Destino" (sidebar): subseção **"Cortar em partes"**
-  com stepper `N partes` **ou** `minutos por parte` (toggle entre os dois),
-  preview calculado "30:00 → 6 × 5:00" usando `info.durationSec`, e aviso em
-  vermelho se alguma parte der < 1 min.
-- Botão de comprimir ganha o rótulo dinâmico: `COMPRIMIR → 6 PARTES`.
-- A fila (fase 2) lista um item por parte concluída (mesma fonte de `Filename`).
+- `VideoRow.svelte`/menu: "transcrever vídeo…" abre `TranscribeModal.svelte`
+  (design system):
+  - Engine: dropdown com disponíveis (`auto` + detectados). Desabilita inválidos
+    com `InfoTip` "instale X e defina modelo".
+  - Idioma: `pt`, `en`, `auto`.
+  - Formato: `all` / `srt` / `vtt` / `txt`.
+  - Word timestamps: toggle (só SRT/VTT).
+  - Janela `mm:ss` (trim) reaproveitando fase 5/11.
+  - Prévia de `OutputBase` (sufixo default `-transcript`).
+- Resultado da fila: mostra arquivos gerados (links para abrir pasta) + botão
+  "copiar texto" (txt completo). Legendas `.srt/.vtt` abrem no player externo
+  (não é escopo editar no app).
 
 ### Testes
 
-- `internal/split`: tabela com 30 min/6 → 6×5 min; 32 min/6 → 5×5 + 2 min;
-  “só partes” e “só duração”; dur total < 1 min → erro; parte < 1 min → erro;
-  N > limite → erro; `Filename("a.mp4",3,6) == "a-part3.mp4"`.
-- `compress`: `Run` com `Split` gera N outputs (fakes sh, `skipOnWindows`) e
-  N eventos `compress:done`; `stage` carrega “x/N”.
-- Validação de `SplitSpec` (campos conflitantes).
+- `internal/transcribe/detect`: PATH vazio → engines vazios; PATH fake com
+  binários → detectados.
+- `internal/transcribe/convert`: JSON→SRT, JSON→VTT, blocos com word timestamps.
+- `internal/transcribe`: Spec → args CLI por engine (mock), remoção de tmp.wav
+  (`t.TempDir`), trim `-ss/-to` antes do `-i`.
+- `app_test.go`: `TranscribeVideo` com job enfileirado, `Kind="transcribe"`.
+- Eventos: `Kind` correto em done/progress/error.
 
 ### Docs
 
-- README: seção "Cortar em partes" com exemplos (30 min → 6 × 5 min) e regra
-  do mínimo de 1 min.
+- README: seção "Transcrição (legendas SRT/VTT + texto)" — tabela de engines,
+  requisitos (modelos locais), privacidade ("tudo roda localmente"), formatos
+  gerados e como instalar `whisper-cli`/`vosk` (links).
 - CHANGELOG: entrada na feature.
+- `docs/instalacao.md`: opcional, instruções de modelos leves.
+
+### Decisões
+
+- **Privacidade por padrão:** só engines locais. Sem fallback para nuvem nesta
+  fase. Se nenhum disponível, UI mostra instruções claras (não quebra o fluxo
+  de compressão).
+- **Formato base:** extrair PCM 16kHz mono (universal p/ STT). Gera todos os
+  formatos solicitados em uma única execução quando `Format="all"`.
+- **Modelos:** não baixar automático — caminho configurável (evita peso/decisão
+  de licença). Sugestões de tamanhos no modal (`tiny/base/small`).
 
 ---
 
@@ -481,7 +683,7 @@ cortar em 6 partes de 5 min cada — com mínimo de **1 min por parte**.
 - **Fila + Job + eventos**: o contrato `Job` muda nas fases 4/5 — definir os
   campos novos **junto** da fase 2 para o `Task` da fila já nascer estável
   (evitar refator duplo).
-- **`OpenMultipleFilesDialog`** (fase 2) e **filtro de extensão dinâmico**
+- **`OpenMultipleDialog`** já pronto (app.go:179) e **filtro de extensão dinâmico**
   (fase 6) tocam `app.go:80-109` — agrupar o ajuste desses dois helpers na fase 2.
 - **Versão embutida** (fase 8): plugar `-ldflags -X` no Makefile (Makefile:10 já
   calcula `VERSION`) e no release.yml; sem isso `CheckUpdate` não tem com o que
@@ -492,6 +694,9 @@ cortar em 6 partes de 5 min cada — com mínimo de **1 min por parte**.
 - **Regressão de versão**: as fases 2 e 4/5 mudam o payload de `Job` — atualizar
   `frontend/wailsjs/go/models.ts` via `wails generate module` e as guardas de
   eventos no frontend.
+- **`Kind` nos eventos** (fases 6 e 12): `ProgressEvent`/`DoneEvent`/
+  `ErrorEvent` ganham `Kind` (`"compress"|"audio"|"transcribe"`) para o
+  frontend rotear sem adivinhação. Definir com a fase 2.
 
 ---
 
@@ -513,28 +718,40 @@ cortar em 6 partes de 5 min cada — com mínimo de **1 min por parte**.
 5. **Extração de áudio na fila (fase 6)**: integrar como `Task.Kind=audio` na
    fila (recomendado, uniformiza o modelo da fase 2) ou manter botão isolado do
    passo 01 na primeira entrega.
-6. **Split com stream copy (fase 11)**: na primeira entrega, partes sempre são
-   reencodadas (padrão consistente com preset). Adicionar depois um toggle
-   "copiar sem reencodar" (`-c copy`) quando a resolução/codec não muda — vale
-   validar com usuário se a velocidade do split importa mais que a qualidade.
+ 6. **Split com stream copy (fase 11)**: na primeira entrega, partes sempre são
+    reencodadas (padrão consistente com preset). Adicionar depois um toggle
+    "copiar sem reencodar" (`-c copy`) quando a resolução/codec não muda — vale
+    validar com usuário se a velocidade do split importa mais que a qualidade.
+ 7. **Transcrição (fase 12)**: engines locais apenas (privacidade). Se nenhum
+    disponível, UI mostra instruções claras e não sugere nuvem. Modelos não
+    são baixados automaticamente (caminho configurável).
 
 ---
 
 ## Ordem sugerida de execução
 
+Uma fase por versão, na ordem de dependência. A coluna da branch segue o
+[fluxo de execução](#fluxo-de-execução).
+
 ```
-v2.0.0  → Fase 11 (cortado em partes) [entregue fora de ordem, junto do redesign de UI]
-v2.1.0  → Fase 1 (config)            [base p/ tudo]
-v2.2.0  → Fase 2 (fila)              [maior; define Task+Job de vez; usa OpenMultipleDialog já pronto]
-v2.3.0  → Fase 3 (estimativa)
-v2.4.0  → Fase 4 (codec/hw)
-v2.5.0  → Fase 5 (ajustes)           [inclui trim -ss/-to reaproveitado da fase 11]
-v2.6.0  → Fase 6 (extrair áudio)
-v2.7.0  → Fase 7 (notificações)      [depende de config]
-v2.8.0  → Fase 8 (check update)      [usa a API de releases por tag + fluxo de publish novo]
-v2.9.0  → Fase 9 (presets custom)    [depende de config]
-v2.10.0 → Fase 10 (i18n, opcional)
+v2.1.0  → Fase 11 (cortado em partes) [entregue fora de ordem, junto do redesign de UI]
+v2.2.0  → Fase 1 (config)            [base p/ tudo]
+v2.3.0  → Fase 2 (fila)              [maior; define Task+Job de vez; usa OpenMultipleDialog já pronto]
+v2.4.0  → Fase 3 (estimativa)
+v2.5.0  → Fase 4 (codec/hw)
+v2.6.0  → Fase 5 (ajustes)           [inclui trim -ss/-to reaproveitado da fase 11]
+v2.7.0  → Fase 6 (extrair áudio + opções)
+v2.8.0  → Fase 7 (notificações)      [depende de config]
+v2.9.0  → Fase 8 (check update)      [usa a API de releases por tag + fluxo de publish novo]
+v2.10.0 → Fase 9 (presets custom)    [depende de config]
+v2.11.0 → Fase 10 (i18n, opcional)
+v2.12.0 → Fase 12 (transcrição srt/vtt/txt)
 ```
 
 Cada versão deve passar por `make check` (vet + test + gofmt + svelte-check) e
 pelo gate de cobertura do CI antes do merge/push.
+
+> A Fase 1 já está implementada em `feat/fase1` (ver o
+> [fluxo de execução](#fluxo-de-execução)); ao abrir o PR, marcar a linha da
+> branch correspondente como `aberto` e, no merge, renomear a versão prevista
+> para o número que o release realmente levar.

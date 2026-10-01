@@ -73,7 +73,10 @@ func (m *Manager) Remove(id string) {
 }
 
 func ffmpegPath() (string, error) {
-	p, err := cmdutil.LookPath("ffmpeg")
+	p, err := cmdutil.Resolve("ffmpeg")
+	if errors.Is(err, cmdutil.ErrNotConfigured) {
+		return "", err
+	}
 	if err != nil {
 		return "", errors.New("ffmpeg não encontrado. Instale o ffmpeg para usar o vidctl.")
 	}

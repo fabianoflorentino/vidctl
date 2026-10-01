@@ -1,12 +1,15 @@
 package media
 
 import (
+	"errors"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
 	"testing"
+
+	"github.com/fabianoflorentino/vidctl/internal/cmdutil"
 )
 
 func skipOnWindows(t *testing.T) {
@@ -94,6 +97,52 @@ func TestProbeFFprobeMissing(t *testing.T) {
 	t.Setenv("PATH", t.TempDir())
 	if _, err := Probe("/tmp/x.mp4"); err == nil {
 		t.Fatal("expected error, got nil")
+	}
+}
+
+func TestProbeUsesConfiguredFFprobe(t *testing.T) {
+	skipOnWindows(t)
+	t.Cleanup(cmdutil.ClearOverrides)
+
+	// ffprobe não está no PATH; só o caminho configurado responde.
+	t.Setenv("PATH", t.TempDir())
+	custom := filepath.Join(t.TempDir(), "ffprobe")
+	script := probeScript(
+		`{"streams":[{"codec_type":"video","codec_name":"h264","width":640,"height":360,"duration":7.0}],"format":{"duration":7.0}}`)
+	if err := os.WriteFile(custom, []byte(script), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	cmdutil.SetOverride("ffprobe", custom)
+
+	info, err := Probe(probeInput(t))
+	if err != nil {
+		t.Fatalf("Probe com ffprobe configurado: %v", err)
+	}
+	if info.Width != 640 || info.Height != 360 {
+		t.Errorf("size = %dx%d; want 640x360", info.Width, info.Height)
+	}
+}
+
+func TestProbeRejectsBrokenFFprobePath(t *testing.T) {
+	skipOnWindows(t)
+	t.Cleanup(cmdutil.ClearOverrides)
+
+	// O ffprobe do PATH funciona, mas o configurado aponta para arquivo nenhum:
+	// o app precisa avisar em vez de usar o do PATH.
+	pathDir := fakeBin(t, "ffprobe", probeScript(
+		`{"streams":[{"codec_type":"video","codec_name":"h264","width":1,"height":1,"duration":1.0}],"format":{"duration":1.0}}`))
+	t.Setenv("PATH", pathDir)
+	cmdutil.SetOverride("ffprobe", filepath.Join(t.TempDir(), "nao-existe"))
+
+	_, err := Probe(probeInput(t))
+	if err == nil {
+		t.Fatal("Probe deveria falhar com ffprobe configurado inválido")
+	}
+	if !errors.Is(err, cmdutil.ErrNotConfigured) {
+		t.Errorf("erro %v não é ErrNotConfigured", err)
+	}
+	if !strings.Contains(err.Error(), "nao-existe") {
+		t.Errorf("mensagem %q deveria citar o caminho configurado", err)
 	}
 }
 

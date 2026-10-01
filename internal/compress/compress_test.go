@@ -2,6 +2,7 @@ package compress
 
 import (
 	"context"
+	"errors"
 	"math"
 	"os"
 	"os/exec"
@@ -10,6 +11,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/fabianoflorentino/vidctl/internal/cmdutil"
 	"github.com/fabianoflorentino/vidctl/internal/events"
 	"github.com/fabianoflorentino/vidctl/internal/media"
 	"github.com/fabianoflorentino/vidctl/internal/presets"
@@ -176,6 +178,116 @@ func TestFFmpegPathMissing(t *testing.T) {
 	t.Setenv("PATH", t.TempDir())
 	if _, err := ffmpegPath(); err == nil {
 		t.Fatal("expected error, got nil")
+	}
+}
+
+func TestFFmpegPathUsesOverride(t *testing.T) {
+	t.Cleanup(cmdutil.ClearOverrides)
+	t.Setenv("PATH", t.TempDir())
+
+	custom := filepath.Join(t.TempDir(), "ffmpeg")
+	if err := os.WriteFile(custom, []byte("#!/bin/sh\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	cmdutil.SetOverride("ffmpeg", custom)
+
+	got, err := ffmpegPath()
+	if err != nil {
+		t.Fatalf("ffmpegPath com override: %v", err)
+	}
+	if got != custom {
+		t.Errorf("ffmpegPath() = %q, want %q", got, custom)
+	}
+}
+
+func TestFFmpegPathReportsBrokenOverride(t *testing.T) {
+	t.Cleanup(cmdutil.ClearOverrides)
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "ffmpeg"), []byte(fakeFFmpegOK), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("PATH", dir)
+
+	cmdutil.SetOverride("ffmpeg", filepath.Join(dir, "nao-existe"))
+
+	_, err := ffmpegPath()
+	if err == nil {
+		t.Fatal("ffmpegPath deveria falhar com override inválido")
+	}
+	if !errors.Is(err, cmdutil.ErrNotConfigured) {
+		t.Errorf("erro %v não é ErrNotConfigured", err)
+	}
+	if !strings.Contains(err.Error(), "nao-existe") {
+		t.Errorf("mensagem %q deveria citar o caminho configurado", err)
+	}
+}
+
+func TestRunUsesOverrideInsteadOfPath(t *testing.T) {
+	skipOnWindows(t)
+	t.Cleanup(cmdutil.ClearOverrides)
+
+	// O ffmpeg do PATH falha; o configurado funciona. Se o override for
+	// respeitado, o job conclui.
+	pathDir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(pathDir, "ffmpeg"), []byte(fakeFFmpegFail), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(pathDir, "ffprobe"), []byte(fakeFFprobe), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("PATH", pathDir)
+
+	customDir := t.TempDir()
+	custom := filepath.Join(customDir, "ffmpeg")
+	if err := os.WriteFile(custom, []byte(fakeFFmpegOK), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	cmdutil.SetOverride("ffmpeg", custom)
+
+	got := captureCompressEvents(t)
+	out := filepath.Join(t.TempDir(), "out.mp4")
+	Run(t.Context(), "job-override-ok", Job{
+		InputPath:  filepath.Join(customDir, "in.mp4"),
+		OutputPath: out,
+		PresetID:   "whatsapp-status",
+		SizeMB:     5,
+	})
+
+	if msg := findErr(got); msg != "" {
+		t.Fatalf("job falhou apesar do override válido: %s", msg)
+	}
+	if _, err := os.Stat(out); err != nil {
+		t.Errorf("saída não criada: %v", err)
+	}
+}
+
+func TestRunFailsWithBrokenOverride(t *testing.T) {
+	skipOnWindows(t)
+	t.Cleanup(cmdutil.ClearOverrides)
+
+	// O ffmpeg do PATH funciona, mas o override aponta para arquivo nenhum:
+	// o app não pode cair silenciosamente no binário do PATH.
+	pathDir := t.TempDir()
+	for name, script := range map[string]string{"ffmpeg": fakeFFmpegOK, "ffprobe": fakeFFprobe} {
+		if err := os.WriteFile(filepath.Join(pathDir, name), []byte(script), 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	t.Setenv("PATH", pathDir)
+	cmdutil.SetOverride("ffmpeg", filepath.Join(t.TempDir(), "nao-existe"))
+
+	got := captureCompressEvents(t)
+	Run(t.Context(), "job-override-bad", Job{
+		InputPath:  filepath.Join(t.TempDir(), "in.mp4"),
+		OutputPath: filepath.Join(t.TempDir(), "out.mp4"),
+		PresetID:   "whatsapp-status",
+		SizeMB:     5,
+	})
+
+	if msg := findErr(got); msg == "" {
+		t.Fatal("job deveria falhar com override inválido")
+	} else if !strings.Contains(msg, "nao-existe") {
+		t.Errorf("mensagem %q deveria citar o caminho configurado", msg)
 	}
 }
 

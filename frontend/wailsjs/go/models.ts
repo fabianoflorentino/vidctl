@@ -1,3 +1,39 @@
+export namespace config {
+	
+	export class Config {
+	
+	    presetId: string;
+	    sizeMB: number;
+	    crf: number;
+	    outputDir: string;
+	    ffmpegPath: string;
+	    ffprobePath: string;
+	    language: string;
+	    maxParallel: number;
+	    notifyOnDone: boolean;
+	    openFolderOnDone: boolean;
+	
+	    static createFrom(source: any = {}) {
+	        return new Config(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.presetId = source["presetId"];
+	        this.sizeMB = source["sizeMB"];
+	        this.crf = source["crf"];
+	        this.outputDir = source["outputDir"];
+	        this.ffmpegPath = source["ffmpegPath"];
+	        this.ffprobePath = source["ffprobePath"];
+	        this.language = source["language"];
+	        this.maxParallel = source["maxParallel"];
+	        this.notifyOnDone = source["notifyOnDone"];
+	        this.openFolderOnDone = source["openFolderOnDone"];
+	    }
+	}
+
+}
+
 export namespace compress {
 	
 	export class Suggestion {

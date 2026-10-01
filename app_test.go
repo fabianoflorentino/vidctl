@@ -9,7 +9,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/fabianoflorentino/vidctl/internal/cmdutil"
 	"github.com/fabianoflorentino/vidctl/internal/compress"
+	"github.com/fabianoflorentino/vidctl/internal/config"
 	"github.com/fabianoflorentino/vidctl/internal/events"
 	"github.com/fabianoflorentino/vidctl/internal/presets"
 )
@@ -35,13 +37,253 @@ func TestNewApp(t *testing.T) {
 	}
 }
 
-func TestStartup(t *testing.T) {
+func TestNewAppWithoutConfigDir(t *testing.T) {
+	t.Setenv("XDG_CONFIG_HOME", "")
+	t.Setenv("HOME", "")
+	t.Setenv("APPDATA", "")
+
+	// Sem pasta de configuração o app ainda precisa abrir e usar os padrões.
 	a := NewApp()
+	if a == nil {
+		t.Fatal("NewApp() == nil")
+	}
+	if a.store != nil {
+		t.Error("NewApp deveria ficar sem store quando não há pasta de configuração")
+	}
+	if got := a.GetConfig(); got != config.Defaults() {
+		t.Errorf("GetConfig() = %+v, want defaults", got)
+	}
+}
+
+// newTestApp builds an App whose settings live in a temporary directory, and
+// guarantees the process-wide binary overrides are cleared afterwards.
+func newTestApp(t *testing.T) *App {
+	t.Helper()
+	store, err := config.NewStore(t.TempDir())
+	if err != nil {
+		t.Fatalf("config.NewStore: %v", err)
+	}
+	t.Cleanup(cmdutil.ClearOverrides)
+	return newApp(store)
+}
+
+func TestStartup(t *testing.T) {
+	a := newTestApp(t)
 	a.startup(context.Background())
 	if a.ctx == nil {
 		t.Error("startup deve definir o contexto")
 	}
 	events.SetEmitter(nil)
+}
+
+func TestStartupAppliesConfiguredToolPaths(t *testing.T) {
+	binDir := t.TempDir()
+	custom := filepath.Join(binDir, "ffmpeg")
+	if err := os.WriteFile(custom, []byte("#!/bin/sh\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	a := newTestApp(t)
+	cfg := config.Defaults()
+	cfg.FFmpegPath = custom
+	cfg.FFprobePath = filepath.Join(binDir, "ffprobe")
+	if err := a.SaveConfig(cfg); err != nil {
+		t.Fatalf("SaveConfig: %v", err)
+	}
+
+	// Um startup limpo precisa reidratar os overrides a partir do arquivo.
+	cmdutil.ClearOverrides()
+	a2 := newTestApp(t)
+	if err := a2.store.Save(cfg); err != nil {
+		t.Fatal(err)
+	}
+	a2.startup(context.Background())
+	events.SetEmitter(nil)
+
+	got, ok := cmdutil.Override("ffmpeg")
+	if !ok || got != custom {
+		t.Errorf("override de ffmpeg = %q (ok=%v), want %q", got, ok, custom)
+	}
+}
+
+func TestStartupWithoutStoreKeepsDefaults(t *testing.T) {
+	t.Cleanup(cmdutil.ClearOverrides)
+	a := newApp(nil)
+	a.startup(context.Background())
+	events.SetEmitter(nil)
+
+	if _, ok := cmdutil.Override("ffmpeg"); ok {
+		t.Error("startup sem store não deveria configurar override")
+	}
+}
+
+func TestGetConfigDefaults(t *testing.T) {
+	got := newTestApp(t).GetConfig()
+	if got != config.Defaults() {
+		t.Errorf("GetConfig() = %+v, want defaults", got)
+	}
+}
+
+func TestGetConfigWithoutStore(t *testing.T) {
+	got := newApp(nil).GetConfig()
+	if got != config.Defaults() {
+		t.Errorf("GetConfig() = %+v, want defaults", got)
+	}
+}
+
+func TestSaveConfigRoundtrip(t *testing.T) {
+	a := newTestApp(t)
+	want := config.Defaults()
+	want.PresetID = "youtube"
+	want.SizeMB = 42
+	want.CRF = 20
+	want.OutputDir = t.TempDir()
+	want.Language = "en"
+	want.MaxParallel = 2
+	want.NotifyOnDone = true
+	want.OpenFolderOnDone = true
+
+	if err := a.SaveConfig(want); err != nil {
+		t.Fatalf("SaveConfig: %v", err)
+	}
+	got := a.GetConfig()
+	if got != want {
+		t.Errorf("roundtrip = %+v, want %+v", got, want)
+	}
+}
+
+func TestSaveConfigAppliesToolPathsImmediately(t *testing.T) {
+	custom := filepath.Join(t.TempDir(), "ffmpeg")
+	if err := os.WriteFile(custom, []byte("#!/bin/sh\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	a := newTestApp(t)
+	cfg := config.Defaults()
+	cfg.FFmpegPath = custom
+	cfg.FFprobePath = custom
+	if err := a.SaveConfig(cfg); err != nil {
+		t.Fatalf("SaveConfig: %v", err)
+	}
+
+	for _, bin := range []string{"ffmpeg", "ffprobe"} {
+		got, ok := cmdutil.Override(bin)
+		if !ok || got != custom {
+			t.Errorf("override de %s = %q (ok=%v), want %q", bin, got, ok, custom)
+		}
+	}
+}
+
+func TestSaveConfigClearsToolPathsWhenBlank(t *testing.T) {
+	a := newTestApp(t)
+	custom := filepath.Join(t.TempDir(), "ffmpeg")
+	if err := os.WriteFile(custom, []byte("#!/bin/sh\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	cfg := config.Defaults()
+	cfg.FFmpegPath = custom
+	cfg.FFprobePath = custom
+	if err := a.SaveConfig(cfg); err != nil {
+		t.Fatalf("primeiro SaveConfig: %v", err)
+	}
+
+	blank := config.Defaults()
+	if err := a.SaveConfig(blank); err != nil {
+		t.Fatalf("segundo SaveConfig: %v", err)
+	}
+	for _, bin := range []string{"ffmpeg", "ffprobe"} {
+		if _, ok := cmdutil.Override(bin); ok {
+			t.Errorf("override de %s deveria ter sido removido", bin)
+		}
+	}
+}
+
+func TestSaveConfigRejectsInvalidAndKeepsOverride(t *testing.T) {
+	a := newTestApp(t)
+	custom := filepath.Join(t.TempDir(), "ffmpeg")
+	if err := os.WriteFile(custom, []byte("#!/bin/sh\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	valid := config.Defaults()
+	valid.FFmpegPath = custom
+	if err := a.SaveConfig(valid); err != nil {
+		t.Fatalf("SaveConfig válido: %v", err)
+	}
+
+	invalid := valid
+	invalid.CRF = 99
+	if err := a.SaveConfig(invalid); err == nil {
+		t.Fatal("SaveConfig deveria rejeitar crf fora da faixa")
+	}
+	if got, ok := cmdutil.Override("ffmpeg"); !ok || got != custom {
+		t.Errorf("override = %q (ok=%v), want o anterior %q", got, ok, custom)
+	}
+	got := a.GetConfig()
+	if got.CRF != valid.CRF {
+		t.Errorf("config salvo tem crf %v, want %v intacto", got.CRF, valid.CRF)
+	}
+}
+
+func TestSaveConfigWithoutStore(t *testing.T) {
+	err := newApp(nil).SaveConfig(config.Defaults())
+	if err == nil {
+		t.Fatal("SaveConfig sem store deveria falhar")
+	}
+	if !strings.Contains(err.Error(), "configuração") {
+		t.Errorf("mensagem inesperada: %q", err)
+	}
+}
+
+func TestCheckFFmpegUsesConfiguredPath(t *testing.T) {
+	skipOnWindows(t)
+	// O PATH não tem ffmpeg nem ffprobe; só os caminhos configurados servem.
+	t.Setenv("PATH", t.TempDir())
+	binDir := t.TempDir()
+	for _, bin := range []string{"ffmpeg", "ffprobe"} {
+		if err := os.WriteFile(filepath.Join(binDir, bin), []byte("#!/bin/sh\n"), 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	a := newTestApp(t)
+	cfg := config.Defaults()
+	cfg.FFmpegPath = filepath.Join(binDir, "ffmpeg")
+	cfg.FFprobePath = filepath.Join(binDir, "ffprobe")
+	if err := a.SaveConfig(cfg); err != nil {
+		t.Fatalf("SaveConfig: %v", err)
+	}
+
+	st := a.CheckFFmpeg()
+	if !st.FFmpegOK {
+		t.Errorf("esperava OK com os caminhos configurados, got %+v", st)
+	}
+}
+
+func TestCheckFFmpegFailsWithBrokenConfiguredPath(t *testing.T) {
+	skipOnWindows(t)
+	dir := t.TempDir()
+	for _, bin := range []string{"ffmpeg", "ffprobe"} {
+		if err := os.WriteFile(filepath.Join(dir, bin), []byte("#!/bin/sh\n"), 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	t.Setenv("PATH", dir)
+
+	a := newTestApp(t)
+	cfg := config.Defaults()
+	cfg.FFmpegPath = filepath.Join(t.TempDir(), "ffmpeg-que-nao-existe")
+	if err := a.SaveConfig(cfg); err != nil {
+		t.Fatalf("SaveConfig: %v", err)
+	}
+
+	st := a.CheckFFmpeg()
+	if st.FFmpegOK {
+		t.Error("FFmpegOK deveria ser false com um caminho configurado inválido")
+	}
+	if !strings.Contains(st.Message, "ffmpeg") {
+		t.Errorf("mensagem deveria citar o ffmpeg: %q", st.Message)
+	}
 }
 
 func TestCheckFFmpegMissing(t *testing.T) {
