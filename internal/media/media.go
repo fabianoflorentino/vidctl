@@ -54,7 +54,10 @@ type ffprobeOutput struct {
 }
 
 func ffprobePath() (string, error) {
-	p, err := cmdutil.LookPath("ffprobe")
+	p, err := cmdutil.Resolve("ffprobe")
+	if errors.Is(err, cmdutil.ErrNotConfigured) {
+		return "", err
+	}
 	if err != nil {
 		return "", errors.New("ffprobe não encontrado. Instale o ffmpeg para usar o vidctl.")
 	}
