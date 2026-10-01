@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -11,13 +12,13 @@ import (
 func TestResolveWithoutOverrideUsesPath(t *testing.T) {
 	ClearOverrides()
 	dir := t.TempDir()
-	fakeBin(t, dir, "ffmpeg", "#!/bin/sh\n")
+	want := fakeBin(t, dir, "ffmpeg", "#!/bin/sh\n")
 	got, err := Resolve("ffmpeg")
 	if err != nil {
 		t.Fatalf("Resolve: %v", err)
 	}
-	if got != filepath.Join(dir, "ffmpeg") {
-		t.Errorf("Resolve() = %q, want o binário do PATH %q", got, filepath.Join(dir, "ffmpeg"))
+	if got != want {
+		t.Errorf("Resolve() = %q, want o binário do PATH %q", got, want)
 	}
 }
 
@@ -67,13 +68,13 @@ func TestSetOverrideEmptyRemovesPrevious(t *testing.T) {
 	}
 
 	dir := t.TempDir()
-	fakeBin(t, dir, "ffmpeg", "#!/bin/sh\n")
+	want := fakeBin(t, dir, "ffmpeg", "#!/bin/sh\n")
 	got, err := Resolve("ffmpeg")
 	if err != nil {
 		t.Fatalf("Resolve: %v", err)
 	}
-	if got != filepath.Join(dir, "ffmpeg") {
-		t.Errorf("Resolve() = %q, want o binário do PATH", got)
+	if got != want {
+		t.Errorf("Resolve() = %q, want o binário do PATH %q", got, want)
 	}
 }
 
@@ -177,10 +178,18 @@ func TestOverridesAreIndependentPerBinary(t *testing.T) {
 	}
 }
 
-func fakeBin(t *testing.T, dir, name, content string) {
+// fakeBin writes an executable named after name into dir and puts dir first on
+// PATH. On Windows exec.LookPath only finds binaries carrying an extension from
+// PATHEXT, so the fake needs the .exe suffix to be found at all.
+func fakeBin(t *testing.T, dir, name, content string) string {
 	t.Helper()
-	if err := os.WriteFile(filepath.Join(dir, name), []byte(content), 0o755); err != nil {
+	if runtime.GOOS == "windows" {
+		name += ".exe"
+	}
+	path := filepath.Join(dir, name)
+	if err := os.WriteFile(path, []byte(content), 0o755); err != nil {
 		t.Fatal(err)
 	}
 	t.Setenv("PATH", dir)
+	return path
 }

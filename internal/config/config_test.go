@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -54,10 +55,18 @@ func TestDir(t *testing.T) {
 	}
 }
 
-func TestDirWithoutHome(t *testing.T) {
+// clearConfigHome removes every variable os.UserConfigDir looks at, so the
+// "no config directory" case is reproducible on all three OSes instead of only
+// on Linux with XDG_CONFIG_HOME.
+func clearConfigHome(t *testing.T) {
+	t.Helper()
 	t.Setenv("XDG_CONFIG_HOME", "")
 	t.Setenv("HOME", "")
 	t.Setenv("APPDATA", "")
+}
+
+func TestDirWithoutHome(t *testing.T) {
+	clearConfigHome(t)
 
 	if _, err := Dir(); err == nil {
 		t.Error("Dir deveria falhar sem nenhuma pasta de configuração")
@@ -68,15 +77,16 @@ func TestDirWithoutHome(t *testing.T) {
 }
 
 func TestNewStoreUsesDefaultDirWhenEmpty(t *testing.T) {
-	dir := t.TempDir()
-	t.Setenv("XDG_CONFIG_HOME", dir)
 	store, err := NewStore("")
 	if err != nil {
 		t.Fatalf("NewStore(\"\"): %v", err)
 	}
-	want := filepath.Join(dir, DirName, FileName)
-	if store.Path() != want {
-		t.Errorf("Path() = %q, want %q", store.Path(), want)
+	want, err := Dir()
+	if err != nil {
+		t.Fatalf("Dir: %v", err)
+	}
+	if got := store.Path(); got != filepath.Join(want, FileName) {
+		t.Errorf("Path() = %q, want %q", got, filepath.Join(want, FileName))
 	}
 }
 
@@ -167,8 +177,13 @@ func TestSaveCreatesDirectoryAndPrivateFile(t *testing.T) {
 	if _, err := os.Stat(store.Path()); err != nil {
 		t.Fatalf("arquivo não criado: %v", err)
 	}
-	if runtime := fileMode(t, store.Path()); runtime != 0o600 {
-		t.Errorf("permissões = %o, want 600", runtime)
+	// O Windows não tem bit de permissão POSIX: o que o Go reporta lá é um
+	// valor derivado dos atributos do arquivo, então o 0600 só é checável
+	// onde o chmod existe de verdade.
+	if runtime.GOOS != "windows" {
+		if perm := fileMode(t, store.Path()); perm != 0o600 {
+			t.Errorf("permissões = %o, want 600", perm)
+		}
 	}
 }
 
@@ -247,6 +262,9 @@ func TestSaveValidatesBeforeWriting(t *testing.T) {
 }
 
 func TestSaveRejectsUnwritableDir(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("o Windows não respeita o bit de escrita do diretório")
+	}
 	if os.Getuid() == 0 {
 		t.Skip("root ignora as permissões do diretório")
 	}
