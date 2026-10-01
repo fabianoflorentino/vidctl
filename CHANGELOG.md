@@ -9,6 +9,35 @@ As releases por plataforma (`vX.Y.Z-windows`, `vX.Y.Z-linux`, `vX.Y.Z-macos`)
 compartilham este mesmo changelog: a diferença entre elas é apenas o sistema
 operacional dos pacotes.
 
+## [Unreleased]
+
+Primeira camada de persistência do app: as preferências passam a sobreviver ao
+fechamento.
+
+### Adicionado
+
+- **Configuração persistente**: preset, tamanho em MB, CRF e pasta de destino
+  voltam como estavam no próximo boot. Arquivo em
+  `<config-dir>/vidctl/config.json` (Linux `~/.config`, macOS
+  `~/Library/Application Support`, Windows `%AppData%`), escrito de forma
+  atômica para não corromper em caso de queda. Arquivo ausente ou inválido abre
+  o app com os padrões em vez de falhar.
+- **Preferências → Binários**: campos para apontar o `ffmpeg` e o `ffprobe` para
+  fora do PATH. O caminho configurado tem prioridade sobre o PATH, vale na hora
+  (sem reiniciar) e um caminho inválido é reportado como erro em vez de cair
+  silenciosamente no binário do PATH.
+- **Preferências → Saída**: campo de pasta de destino; vazio mantém o
+  comportamento de salvar ao lado do vídeo original.
+
+### Mudado
+
+- `CheckFFmpeg`, `GetMediaInfo` e a miniatura agora respeitam o caminho de
+  binário configurado, com mensagem separada para "não está no PATH" e "o
+  caminho que você configurou não funciona".
+- Campos `language`, `maxParallel`, `notifyOnDone` e `openFolderOnDone` já são
+  preservados no arquivo, mas só passam a ter efeito quando os recursos
+  correspondentes existirem (fases futuras do plano).
+
 ## [2.1.0] — 2026-09-27
 
 Redesign visual no padrão Constrict com drag and drop, miniaturas e ajuste

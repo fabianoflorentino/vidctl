@@ -35,6 +35,9 @@ cortar cena. Alimentado por encode **2-pass** quando há limite de tamanho ou
 - Verifica `ffmpeg`/`ffprobe` na inicialização e avisa se faltarem; o botão
   "verificar de novo" relê o PATH do sistema, então dá para instalar o ffmpeg
   com o app aberto sem reiniciar
+- **Configuração persistente**: preset, tamanho, CRF e pasta de destino voltam
+  como estavam no próximo boot; dá para apontar o ffmpeg/ffprobe para fora do
+  PATH em Preferências
 - No Windows, conversões e sondagens de arquivo não abrem janelas de console
 
 ## Instalação
@@ -116,6 +119,50 @@ Uma **release por plataforma**: uma tag **vX.Y.Z** (ex.: `v2.0.0`) publica três
 releases (`vX.Y.Z-windows`, `vX.Y.Z-linux`, `vX.Y.Z-macos`), cada uma com apenas
 os binários do seu sistema (a Linux leva zip + deb + rpm). A tag `vX.Y.Z` sem
 sufixo é a fonte do tarball usado pelo PKGBUILD (Arch/AUR).
+
+## Configuração
+
+As preferências ficam em `config.json`, dentro da pasta de configuração do
+usuário:
+
+| Sistema | Caminho |
+|---|---|
+| Linux | `~/.config/vidctl/config.json` |
+| macOS | `~/Library/Application Support/vidctl/config.json` |
+| Windows | `%AppData%\vidctl\config.json` |
+
+O arquivo é escrito de forma atômica ( temporário + `rename`), então uma queda
+no meio da gravação não corrompe as preferências. Se o arquivo estiver ausente
+ou inválido, o app abre com os valores padrão em vez de falhar.
+
+| Campo | Padrão | O que faz |
+|---|---|---|
+| `presetId` | `whatsapp-status` | preset selecionado na sidebar |
+| `sizeMB` | `10` | alvo em MB dos presets de tamanho |
+| `crf` | `23` | CRF dos presets de qualidade |
+| `outputDir` | vazio | pasta de destino; vazio = ao lado do vídeo original |
+| `ffmpegPath` | vazio | caminho do ffmpeg; vazio = procurar no PATH |
+| `ffprobePath` | vazio | caminho do ffprobe; vazio = procurar no PATH |
+| `language` | `pt` | idioma da interface (usado a partir da fase de i18n) |
+| `maxParallel` | `1` | quantos vídeos comprimir ao mesmo tempo (fila) |
+| `notifyOnDone` | `false` | notificar ao terminar |
+| `openFolderOnDone` | `false` | abrir a pasta de saída ao terminar |
+
+As quatro últimas chaves já são preservadas no arquivo mas só passam a ter
+efeito quando os recursos correspondentes existirem (fila, notificações e i18n
+estão em fases futuras do [plano](docs/plano-implementacao.md)).
+
+Você também pode editar o arquivo à mão: valores fora da faixa (CRF acima de
+51, `maxParallel` abaixo de 1) são corrigidos na leitura, e o resto é preservado
+inclusive campos de versões futuras.
+
+### Binários fora do PATH
+
+Se o ffmpeg não estiver no PATH — ou você quiser uma build específica — abra
+**Preferências** e preencha `ffmpeg` e/ou `ffprobe`. O caminho configurado tem
+prioridade sobre o PATH e vale imediatamente, sem reiniciar. Um caminho que não
+existe é reportado como erro em vez de cair silenciosamente no binário do PATH,
+e o botão "verificar de novo" confere o resultado.
 
 ## Presets (destino → tamanho/qualidade)
 
@@ -201,17 +248,21 @@ VIDCTL_SMOKE="/caminho/para/video.mp4" go test -run TestSmokeReal -v ./internal/
 ├── main.go                    # entrypoint Wails + opções da janela
 ├── app.go                     # bindings expostos ao frontend (dialogs, compress, cancel)
 ├── internal/
-│   ├── compress/              # pipeline ffmpeg: orçamento de bitrate, 2-pass e CRF, gestão de jobs
-│   ├── events/                # eventos backend → frontend (progress/done/error)
-│   ├── media/                 # leitura de metadados via ffprobe e miniaturas via ffmpeg
-│   └── presets/               # perfis por plataforma (WhatsApp, Instagram, Shorts, YouTube)
-├── frontend/                  # UI Svelte 5 + Vite (bindings em frontend/wailsjs)
+│   ├── cmdutil/                 # criação de subprocessos e busca de binários (com override do PATH)
+│   ├── compress/                # pipeline ffmpeg: orçamento de bitrate, 2-pass e CRF, gestão de jobs
+│   ├── config/                  # preferências persistidas em config.json (leitura/escrita atômica)
+│   ├── events/                  # eventos backend → frontend (progress/done/error)
+│   ├── media/                   # leitura de metadados via ffprobe e miniaturas via ffmpeg
+│   ├── presets/                 # perfis por plataforma (WhatsApp, Instagram, Shorts, YouTube)
+│   ├── split/                   # plano de corte em partes (N partes ou min/parte)
+│   └── sysinfo/                 # uso de CPU/memória/GPU para o painel de progresso
+├── frontend/                    # UI Svelte 5 + Vite (bindings em frontend/wailsjs)
 ├── pkg/
-│   ├── aur/                   # PKGBUILD + scripts (instalação estilo AUR)
-│   ├── arch/                  # pkg/arch/install.sh (makepkg -si)
-│   ├── deb/ · rpm/            # descritores dos pacotes .deb e .rpm
+│   ├── aur/                     # PKGBUILD + scripts (instalação estilo AUR)
+│   ├── arch/                    # pkg/arch/install.sh (makepkg -si)
+│   ├── deb/ · rpm/              # descritores dos pacotes .deb e .rpm
 │   └── icon/ · vidctl.desktop
-├── docs/                      # documentação de instalação
+├── docs/                        # instalação, backlog e planos de implementação
 ├── site/                      # landing page estática (Pages)
 ├── build/                     # recursos de build do Wails (ícone, darwin/windows)
 ├── .github/workflows/         # CI · Release (zips + deb + rpm) · Pages
