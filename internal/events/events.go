@@ -1,6 +1,8 @@
 // Package events centralizes the events emitted by the backend to the frontend.
 package events
 
+import "sync"
+
 // KindCompress identifies compression payloads; audio and transcription join
 // the queue in later phases with their own kinds.
 const KindCompress = "compress"
@@ -8,16 +10,25 @@ const KindCompress = "compress"
 // Emitter is a function that dispatches a named event with a payload.
 type Emitter func(name string, data any)
 
-var current Emitter
+var (
+	mu      sync.RWMutex
+	current Emitter
+)
 
-// SetEmitter registers the emitter function. Called once during app startup.
+// SetEmitter registers the emitter function. Safe to call concurrently with
+// emits: queue workers may still be draining when the app is torn down.
 func SetEmitter(fn Emitter) {
+	mu.Lock()
 	current = fn
+	mu.Unlock()
 }
 
 func emit(name string, data any) {
-	if current != nil {
-		current(name, data)
+	mu.RLock()
+	fn := current
+	mu.RUnlock()
+	if fn != nil {
+		fn(name, data)
 	}
 }
 

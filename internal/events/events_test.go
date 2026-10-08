@@ -1,6 +1,9 @@
 package events
 
-import "testing"
+import (
+	"sync"
+	"testing"
+)
 
 func capture(t *testing.T) (map[string][]any, func()) {
 	t.Helper()
@@ -114,4 +117,29 @@ func TestEmitWithoutEmitterIsNoop(t *testing.T) {
 	EmitError("job-4", KindCompress, "ignorado")
 	EmitQueued("job-4", 1)
 	EmitStart("job-4")
+}
+
+func TestSetEmitterConcurrentWithEmit(t *testing.T) {
+	done := make(chan struct{})
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for {
+			select {
+			case <-done:
+				return
+			default:
+				SetEmitter(func(string, any) {})
+			}
+		}
+	}()
+	for i := 0; i < 500; i++ {
+		EmitQueued("job-r", 1)
+		EmitStart("job-r")
+		EmitProgress("job-r", KindCompress, "encoding", 50)
+	}
+	close(done)
+	wg.Wait()
+	SetEmitter(nil)
 }
