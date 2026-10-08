@@ -32,7 +32,7 @@ Branch            | Fase | PR
 ---|---|---
 `feat/fase1`      | 1 — Configuração persistente | aberto
 `feat/fila`       | 2 — Fila de conversões | aberto
-`feat/estimativa` | 3 — Estimativa de tamanho | pendente
+`feat/estimativa` | 3 — Estimativa de tamanho | aberto
 `feat/hevc`       | 4 — HEVC/x265 + GPU (hardware) | pendente
 `feat/ajustes`    | 5 — Ajustes por arquivo | pendente
 `feat/audio`      | 6 — Extração de áudio | pendente
