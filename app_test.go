@@ -415,15 +415,99 @@ func TestVideoFilterPattern(t *testing.T) {
 	}
 }
 
-func TestCancelRegisteredJob(t *testing.T) {
-	a := NewApp()
-	canceled := false
-	a.jobs.Register("j1", func() { canceled = true })
-	if err := a.Cancel("j1"); err != nil {
-		t.Fatalf("Cancel erro: %v", err)
+func waitTaskTerminal(t *testing.T, a *App, jobID string) compress.TaskStatus {
+	t.Helper()
+	deadline := time.Now().Add(5 * time.Second)
+	var last compress.TaskStatus
+	for time.Now().Before(deadline) {
+		for _, s := range a.GetTasks() {
+			if s.JobID != jobID {
+				continue
+			}
+			last = s
+			if s.State != compress.StateQueued && s.State != compress.StateRunning {
+				return s
+			}
+		}
+		time.Sleep(5 * time.Millisecond)
 	}
-	if !canceled {
-		t.Error("cancel function should have been called")
+	t.Fatalf("job %s não terminou, ficou em %q (%+v)", jobID, last.State, last)
+	return last
+}
+
+func TestCancelRunningJob(t *testing.T) {
+	skipOnWindows(t)
+	dir := t.TempDir()
+	scripts := map[string]string{
+		"ffmpeg": "#!/bin/sh\nsleep 3\nexit 0\n",
+		"ffprobe": `#!/bin/sh
+printf '%s\n' '{"streams":[{"codec_type":"video","codec_name":"h264","width":320,"height":240,"duration":2.0}],"format":{"duration":2.0}}'
+`,
+	}
+	for name, script := range scripts {
+		if err := os.WriteFile(filepath.Join(dir, name), []byte(script), 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	t.Setenv("PATH", dir)
+
+	a := NewApp()
+	jobID, err := a.Compress(compress.Job{
+		InputPath:  "in.mp4",
+		OutputPath: filepath.Join(t.TempDir(), "out.mp4"),
+		PresetID:   "whatsapp-status",
+	})
+	if err != nil {
+		t.Fatalf("Compress: %v", err)
+	}
+
+	if err := a.Cancel(jobID); err != nil {
+		t.Fatalf("Cancel: %v", err)
+	}
+	if s := waitTaskTerminal(t, a, jobID); s.State != compress.StateCanceled {
+		t.Errorf("estado final = %q; queria canceled", s.State)
+	}
+}
+
+func TestCompressMultiple(t *testing.T) {
+	a := NewApp()
+	acks := a.CompressMultiple([]compress.Job{
+		{InputPath: "", PresetID: "whatsapp-status"},
+		{InputPath: "a.mp4", PresetID: ""},
+		{InputPath: "a.mp4", PresetID: "whatsapp-status"},
+		{InputPath: "b.mp4", PresetID: "whatsapp-status"},
+	})
+	if len(acks) != 4 {
+		t.Fatalf("acks = %d; queria 4", len(acks))
+	}
+	if acks[0].JobID != "" || !strings.Contains(acks[0].Error, "Nenhum vídeo") {
+		t.Errorf("ack[0] = %+v; queria erro de vídeo", acks[0])
+	}
+	if acks[1].JobID != "" || !strings.Contains(acks[1].Error, "Nenhum preset") {
+		t.Errorf("ack[1] = %+v; queria erro de preset", acks[1])
+	}
+	if acks[2].JobID == "" || acks[2].Position != 1 {
+		t.Errorf("ack[2] = %+v; queria jobId e posição 1", acks[2])
+	}
+	if acks[3].JobID == "" || acks[3].Position != 2 {
+		t.Errorf("ack[3] = %+v; queria jobId e posição 2", acks[3])
+	}
+	if tasks := a.GetTasks(); len(tasks) != 2 {
+		t.Errorf("GetTasks = %d tarefas; queria 2", len(tasks))
+	}
+
+	for _, id := range []string{acks[2].JobID, acks[3].JobID} {
+		a.Cancel(id)
+		waitTaskTerminal(t, a, id)
+	}
+	if left := a.ClearFinished(); len(left) != 0 {
+		t.Errorf("ClearFinished deixou %d tarefas; queria vazio", len(left))
+	}
+}
+
+func TestGetTasksEmpty(t *testing.T) {
+	if got := NewApp().GetTasks(); len(got) != 0 {
+		t.Errorf("GetTasks = %d tarefas; queria vazio", len(got))
 	}
 }
 

@@ -13,7 +13,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"sync"
 
 	"github.com/fabianoflorentino/vidctl/internal/cmdutil"
 	"github.com/fabianoflorentino/vidctl/internal/events"
@@ -30,46 +29,6 @@ type Job struct {
 	SizeMB     float64     `json:"sizeMB"` // used when preset mode is "size"
 	CRF        float64     `json:"crf"`
 	Split      *split.Spec `json:"split,omitempty"`
-}
-
-type runningJob struct {
-	id     string
-	cancel context.CancelFunc
-}
-
-// Manager tracks running compression jobs and provides cancellation.
-type Manager struct {
-	mu   sync.Mutex
-	jobs map[string]*runningJob
-}
-
-// NewManager creates a job manager.
-func NewManager() *Manager {
-	return &Manager{jobs: make(map[string]*runningJob)}
-}
-
-// Register stores the cancel function for a job.
-func (m *Manager) Register(id string, cancelFn context.CancelFunc) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	m.jobs[id] = &runningJob{id: id, cancel: cancelFn}
-}
-
-// Cancel cancels the given job.
-func (m *Manager) Cancel(id string) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	if j, ok := m.jobs[id]; ok {
-		j.cancel()
-		delete(m.jobs, id)
-	}
-}
-
-// Remove forgets a finished job.
-func (m *Manager) Remove(id string) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	delete(m.jobs, id)
 }
 
 func ffmpegPath() (string, error) {
@@ -267,11 +226,14 @@ func execute(ctx context.Context, cmd *exec.Cmd, jobID, stage string, duration, 
 		if strings.HasPrefix(line, "out_time_us=") {
 			outTimeUS, _ := strconv.ParseFloat(strings.TrimPrefix(line, "out_time_us="), 64)
 			pct := math.Min(outTimeUS/(duration*1_000_000), 0.999)
-			events.EmitProgress(jobID, stage, base+pct*span)
+			events.EmitProgress(jobID, events.KindCompress, stage, base+pct*span)
 		}
 	}
 
 	if err := cmd.Wait(); err != nil {
+		if ctxErr := ctx.Err(); ctxErr != nil {
+			return ctxErr
+		}
 		return err
 	}
 	return nil
@@ -279,47 +241,44 @@ func execute(ctx context.Context, cmd *exec.Cmd, jobID, stage string, duration, 
 
 // Run validates the job and executes the ffmpeg pipeline, emitting events.
 // When job.Split is set, the video is cut into sequential parts, each encoded
-// separately; a compress:done event is emitted per part.
-func Run(ctx context.Context, jobID string, job Job) {
+// separately; a compress:done event is emitted per part. Failures emit
+// compress:error and are returned; cancellation is returned silently.
+func Run(ctx context.Context, jobID string, job Job) error {
+	fail := func(err error) error {
+		events.EmitError(jobID, events.KindCompress, err.Error())
+		return err
+	}
 	if job.InputPath == "" || job.OutputPath == "" {
-		events.EmitError(jobID, "caminho de entrada ou saída não pode ser vazio")
-		return
+		return fail(errors.New("caminho de entrada ou saída não pode ser vazio"))
 	}
 	if job.InputPath == job.OutputPath {
-		events.EmitError(jobID, "o arquivo de saída não pode ser igual ao de entrada")
-		return
+		return fail(errors.New("o arquivo de saída não pode ser igual ao de entrada"))
 	}
 
 	info, err := media.Probe(job.InputPath)
 	if err != nil {
-		events.EmitError(jobID, err.Error())
-		return
+		return fail(err)
 	}
-
 	preset, ok := EffectivePreset(job)
 	if !ok {
-		events.EmitError(jobID, "preset desconhecido: "+job.PresetID)
-		return
+		return fail(errors.New("preset desconhecido: " + job.PresetID))
 	}
 
 	if preset.Mode == "size" && preset.SizeMB <= 0 {
-		events.EmitError(jobID, "tamanho alvo deve ser maior que zero")
-		return
+		return fail(errors.New("tamanho alvo deve ser maior que zero"))
 	}
 
 	segs := []split.Segment{{Index: 1, StartSec: 0, EndSec: info.DurationSec}}
 	if job.Split != nil {
 		planned, err := split.Plan(info.DurationSec, *job.Split)
 		if err != nil {
-			events.EmitError(jobID, err.Error())
-			return
+			return fail(err)
 		}
 		segs = planned
 	}
 
 	if err := os.MkdirAll(filepath.Dir(job.OutputPath), 0o755); err != nil {
-		events.EmitError(jobID, "falha ao criar pasta de saída: "+err.Error())
-		return
+		return fail(fmt.Errorf("falha ao criar pasta de saída: %w", err))
 	}
 
 	total := len(segs)
@@ -335,11 +294,13 @@ func Run(ctx context.Context, jobID string, job Job) {
 		logID := passLogID(jobID, job, seg)
 
 		if err := encodeSegment(ctx, jobID, logID, segJob, preset, info, seg, total, segSpan); err != nil {
-			if errors.Is(err, context.Canceled) {
-				return
+			if ctxErr := ctx.Err(); ctxErr != nil {
+				return ctxErr
 			}
-			events.EmitError(jobID, err.Error())
-			return
+			if errors.Is(err, context.Canceled) {
+				return err
+			}
+			return fail(err)
 		}
 
 		var sizeBytes int64
@@ -348,8 +309,9 @@ func Run(ctx context.Context, jobID string, job Job) {
 			sizeBytes = out.Size()
 			sizeMB = float64(sizeBytes) / (1024 * 1024)
 		}
-		events.EmitDone(jobID, outPath, sizeBytes, sizeMB)
+		events.EmitDone(jobID, events.KindCompress, outPath, sizeBytes, sizeMB)
 	}
+	return nil
 }
 
 func encodeSegment(ctx context.Context, jobID, logID string, job Job, preset presets.Preset, info *media.Info, seg split.Segment, total int, segSpan float64) error {
@@ -374,13 +336,13 @@ func encodeSegment(ctx context.Context, jobID, logID string, job Job, preset pre
 		}
 
 		stage1 := "pass1/2" + suffix
-		events.EmitProgress(jobID, stage1, base1)
+		events.EmitProgress(jobID, events.KindCompress, stage1, base1)
 		if err := execute(ctx, pass1, jobID, stage1, seg.Duration(), base1, span1); err != nil {
 			return wrapStage("pass 1 falhou", suffix, err)
 		}
 
 		stage2 := "pass2/2" + suffix
-		events.EmitProgress(jobID, stage2, base2)
+		events.EmitProgress(jobID, events.KindCompress, stage2, base2)
 		if err := execute(ctx, pass2, jobID, stage2, seg.Duration(), base2, span2); err != nil {
 			return wrapStage("pass 2 falhou", suffix, err)
 		}
@@ -395,7 +357,7 @@ func encodeSegment(ctx context.Context, jobID, logID string, job Job, preset pre
 	}
 	cmd := buildCrfPass(ctx, job, preset, info, seg)
 	stage := "encoding" + suffix
-	events.EmitProgress(jobID, stage, base)
+	events.EmitProgress(jobID, events.KindCompress, stage, base)
 	if err := execute(ctx, cmd, jobID, stage, seg.Duration(), base, span); err != nil {
 		return wrapStage("falha ao comprimir", suffix, err)
 	}
