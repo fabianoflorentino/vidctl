@@ -10,6 +10,8 @@
     OpenOutputDialog,
     Compress as StartCompress,
     CompressMultiple,
+    DebugEnabled,
+    DebugLog,
     GetTasks,
     ClearFinished,
     Cancel as CancelJob,
@@ -153,6 +155,12 @@
 
   let queue = $state<QueueItem[]>([])
   let error = $state('')
+  let debug = false
+
+  function dbg(msg: string) {
+    if (!debug) return
+    DebugLog(msg).catch(() => {})
+  }
   let usage = $state<Awaited<ReturnType<typeof GetUsage>> | null>(null)
   let advice = $state<Awaited<ReturnType<typeof GetAdvice>> | null>(null)
   let adviceSeq = 0
@@ -173,8 +181,12 @@
   }
 
   function applyPatch(item: QueueItem, p: EventPatch) {
-    if (!p.allowed.includes(item.state)) return
+    if (!p.allowed.includes(item.state)) {
+      dbg(`patch rejeitado job=${item.jobId} estado=${item.state} permitido=${p.allowed.join(',')}`)
+      return
+    }
     p.fn(item)
+    dbg(`patch job=${item.jobId} estado=${item.state} percent=${item.percent} stage=${item.stage}`)
     renumber()
   }
 
@@ -184,6 +196,7 @@
       applyPatch(item, { allowed, fn })
       return
     }
+    dbg(`patch aguardando item job=${jobId} permitido=${allowed.join(',')}`)
     const list = bufferedEvents.get(jobId) ?? []
     list.push({ allowed, fn })
     bufferedEvents.set(jobId, list)
@@ -208,6 +221,7 @@
     bufferedEvents.delete(item.jobId)
     for (const p of buffered) applyPatch(item, p)
     renumber()
+    dbg(`item criado job=${item.jobId} estado=${item.state} percent=${item.percent} buffer=${buffered.length}`)
   }
 
   function fromTask(t: bindings.TaskStatus): QueueItem {
@@ -463,15 +477,27 @@
 
   onMount(() => {
     load()
+    DebugEnabled()
+      .then((v) => (debug = v))
+      .catch(() => {})
+    window.addEventListener('error', (ev) => {
+      dbg(`ERRO JS: ${ev.message} em ${ev.filename}:${ev.lineno}:${ev.colno}`)
+    })
+    window.addEventListener('unhandledrejection', (ev) => {
+      dbg(`rejeição JS: ${String(ev.reason)}`)
+    })
     EventsOn('compress:queued', (e: QueuedEv) => {
+      dbg(`evento compress:queued job=${e.jobId} pos=${e.position}`)
       patch(e.jobId, ['queued'], () => {})
     })
     EventsOn('compress:start', (e: StartEv) => {
+      dbg(`evento compress:start job=${e.jobId}`)
       patch(e.jobId, ['queued', 'running'], (i) => {
         i.state = 'running'
       })
     })
     EventsOn('compress:progress', (e: ProgressEv) => {
+      dbg(`evento compress:progress job=${e.jobId} stage=${e.stage} percent=${e.percent}`)
       patch(e.jobId, ['running'], (i) => {
         i.percent = e.percent
         i.stage = e.stage
@@ -480,6 +506,7 @@
       })
     })
     EventsOn('compress:done', (e: DoneEv) => {
+      dbg(`evento compress:done job=${e.jobId} sizeBytes=${e.sizeBytes}`)
       patch(e.jobId, ['running'], (i) => {
         i.outputPath = e.outputPath
         i.sizeBytes += e.sizeBytes
@@ -494,6 +521,7 @@
       })
     })
     EventsOn('compress:error', (e: ErrorEv) => {
+      dbg(`evento compress:error job=${e.jobId} error=${e.error}`)
       patch(e.jobId, ['queued', 'running'], (i) => {
         i.state = 'error'
         i.error = e.error
@@ -529,6 +557,7 @@
   async function refreshQueue() {
     try {
       const tasks = await GetTasks()
+      dbg(`refreshQueue -> ${tasks.length} tarefas`)
       if (tasks.length) queue = tasks.map(fromTask)
     } catch {
       /* fila indisponível: a sessão segue com a fila vazia */
@@ -629,8 +658,10 @@
   async function compress() {
     if (!canRun()) return
     error = ''
+    dbg(`compress() input=${inputPath}`)
     try {
       const jobId = await StartCompress(buildJob(inputPath, outputPath))
+      dbg(`StartCompress ok job=${jobId}`)
       createItem({
         jobId,
         label: fileName(inputPath),
@@ -640,6 +671,7 @@
         partsTotal: jobParts(),
       })
     } catch (err) {
+      dbg(`compress() erro=${String(err)}`)
       error = String(err)
     }
   }
@@ -654,11 +686,14 @@
     const parts = jobParts()
     const jobs = usable.map((p) => buildJob(p, suggestedOutput(p.replace(/\.[^.]+$/, ''))))
     error = ''
+    dbg(`enqueuePaths ${usable.length} vídeos`)
     try {
       const acks = await CompressMultiple(jobs)
+      dbg(`CompressMultiple ok acks=${acks.length}`)
       if (usable[0]) await adoptFile(usable[0])
       acks.forEach((ack, idx) => {
         if (ack.error) {
+          dbg(`ack com erro: ${ack.error}`)
           error = ack.error
           return
         }
@@ -673,6 +708,7 @@
         })
       })
     } catch (err) {
+      dbg(`enqueuePaths erro=${String(err)}`)
       error = String(err)
     }
   }
