@@ -633,6 +633,17 @@ input[type="number"].num {
   color: var(--fg-faint);
 }
 
+.est-badge {
+  display: inline-block;
+  margin: 0 12px 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  color: var(--accent);
+  background: var(--accent-bg);
+  border: 1px solid var(--border);
+}
+
 /* output row */
 .out-row {
   display: flex;

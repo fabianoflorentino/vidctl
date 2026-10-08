@@ -1,39 +1,3 @@
-export namespace config {
-	
-	export class Config {
-	
-	    presetId: string;
-	    sizeMB: number;
-	    crf: number;
-	    outputDir: string;
-	    ffmpegPath: string;
-	    ffprobePath: string;
-	    language: string;
-	    maxParallel: number;
-	    notifyOnDone: boolean;
-	    openFolderOnDone: boolean;
-	
-	    static createFrom(source: any = {}) {
-	        return new Config(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.presetId = source["presetId"];
-	        this.sizeMB = source["sizeMB"];
-	        this.crf = source["crf"];
-	        this.outputDir = source["outputDir"];
-	        this.ffmpegPath = source["ffmpegPath"];
-	        this.ffprobePath = source["ffprobePath"];
-	        this.language = source["language"];
-	        this.maxParallel = source["maxParallel"];
-	        this.notifyOnDone = source["notifyOnDone"];
-	        this.openFolderOnDone = source["openFolderOnDone"];
-	    }
-	}
-
-}
-
 export namespace compress {
 	
 	export class Suggestion {
@@ -130,6 +94,7 @@ export namespace compress {
 		    return a;
 		}
 	}
+	
 	export class TaskStatus {
 	    jobId: string;
 	    kind: string;
@@ -171,22 +136,72 @@ export namespace compress {
 
 }
 
-export namespace main {
+export namespace config {
 	
-	export class SystemStatus {
-	    ffmpegOK: boolean;
-	    message: string;
+	export class Config {
+	    presetId: string;
+	    sizeMB: number;
+	    crf: number;
+	    outputDir: string;
+	    ffmpegPath: string;
+	    ffprobePath: string;
+	    language: string;
+	    maxParallel: number;
+	    notifyOnDone: boolean;
+	    openFolderOnDone: boolean;
 	
 	    static createFrom(source: any = {}) {
-	        return new SystemStatus(source);
+	        return new Config(source);
 	    }
 	
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.ffmpegOK = source["ffmpegOK"];
-	        this.message = source["message"];
+	        this.presetId = source["presetId"];
+	        this.sizeMB = source["sizeMB"];
+	        this.crf = source["crf"];
+	        this.outputDir = source["outputDir"];
+	        this.ffmpegPath = source["ffmpegPath"];
+	        this.ffprobePath = source["ffprobePath"];
+	        this.language = source["language"];
+	        this.maxParallel = source["maxParallel"];
+	        this.notifyOnDone = source["notifyOnDone"];
+	        this.openFolderOnDone = source["openFolderOnDone"];
 	    }
 	}
+
+}
+
+export namespace estimate {
+	
+	export class Result {
+	    mode: string;
+	    available: boolean;
+	    targetSizeMB: number;
+	    currentSizeMB: number;
+	    savedPct: number;
+	    videoKbps: number;
+	    audioKbps: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new Result(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.mode = source["mode"];
+	        this.available = source["available"];
+	        this.targetSizeMB = source["targetSizeMB"];
+	        this.currentSizeMB = source["currentSizeMB"];
+	        this.savedPct = source["savedPct"];
+	        this.videoKbps = source["videoKbps"];
+	        this.audioKbps = source["audioKbps"];
+	    }
+	}
+
+}
+
+export namespace main {
+	
 	export class JobAck {
 	    jobId: string;
 	    position: number;
@@ -201,6 +216,20 @@ export namespace main {
 	        this.jobId = source["jobId"];
 	        this.position = source["position"];
 	        this.error = source["error"];
+	    }
+	}
+	export class SystemStatus {
+	    ffmpegOK: boolean;
+	    message: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new SystemStatus(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.ffmpegOK = source["ffmpegOK"];
+	        this.message = source["message"];
 	    }
 	}
 
