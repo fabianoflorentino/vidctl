@@ -11,11 +11,19 @@ operacional dos pacotes.
 
 ## [Unreleased]
 
-Primeira camada de persistência do app: as preferências passam a sobreviver ao
-fechamento.
+Persistência das preferências e a nova fila de conversões em lote: as
+preferências sobrevivem ao fechamento e dá para comprimir vários vídeos de
+uma vez.
 
 ### Adicionado
 
+- **Fila de conversões (batch)**: "Adicionar vídeos…" enfileira vários
+  arquivos de uma vez (ou solte vários na janela), um trabalho por arquivo com
+  o preset e a saída atuais; a fila aparece no lugar do passo 04 com nome,
+  preset, status, barra de progresso do item em execução, cancelamento por
+  item e "limpar fila". Eventos novos `compress:queued`/`compress:start` e
+  roteamento por `JobID` no frontend: um erro em um item não derruba os
+  demais. Bindings novos: `CompressMultiple`, `GetTasks` e `ClearFinished`.
 - **Configuração persistente**: preset, tamanho em MB, CRF e pasta de destino
   voltam como estavam no próximo boot. Arquivo em
   `<config-dir>/vidctl/config.json` (Linux `~/.config`, macOS
@@ -31,12 +39,17 @@ fechamento.
 
 ### Mudado
 
+- O card de progresso acompanha o item selecionado na fila e o cancelamento
+  passa a ser por item — a ação não para mais o trabalho inteiro.
+- `maxParallel` passa a valer: define quantos vídeos são comprimidos ao mesmo
+  tempo (padrão **1** = sequencial), aplicado na inicialização e ao salvar as
+  Preferências.
 - `CheckFFmpeg`, `GetMediaInfo` e a miniatura agora respeitam o caminho de
   binário configurado, com mensagem separada para "não está no PATH" e "o
   caminho que você configurou não funciona".
-- Campos `language`, `maxParallel`, `notifyOnDone` e `openFolderOnDone` já são
-  preservados no arquivo, mas só passam a ter efeito quando os recursos
-  correspondentes existirem (fases futuras do plano).
+- Campos `language`, `notifyOnDone` e `openFolderOnDone` já são preservados no
+  arquivo, mas só passam a ter efeito quando os recursos correspondentes
+  existirem (fases futuras do plano).
 
 ## [2.1.0] — 2026-09-27
 

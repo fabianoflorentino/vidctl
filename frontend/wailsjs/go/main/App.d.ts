@@ -11,7 +11,11 @@ export function Cancel(arg1:string):Promise<void>;
 
 export function CheckFFmpeg():Promise<main.SystemStatus>;
 
+export function ClearFinished():Promise<Array<compress.TaskStatus>>;
+
 export function Compress(arg1:compress.Job):Promise<string>;
+
+export function CompressMultiple(arg1:Array<compress.Job>):Promise<Array<main.JobAck>>;
 
 export function GetAdvice(arg1:compress.Job):Promise<compress.Advice>;
 
@@ -20,6 +24,8 @@ export function GetConfig():Promise<config.Config>;
 export function GetMediaInfo(arg1:string):Promise<media.Info>;
 
 export function GetPresets():Promise<Array<presets.Preset>>;
+
+export function GetTasks():Promise<Array<compress.TaskStatus>>;
 
 export function GetThumbnail(arg1:string,arg2:number):Promise<string>;
 

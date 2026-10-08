@@ -7,7 +7,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
-	"time"
 
 	"github.com/fabianoflorentino/vidctl/internal/cmdutil"
 	"github.com/fabianoflorentino/vidctl/internal/compress"
@@ -59,9 +58,12 @@ func (a *App) GetUsage() sysinfo.Snapshot {
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 	events.SetEmitter(func(name string, data any) {
+		a.jobs.Observe(name, data)
 		wailsruntime.EventsEmit(ctx, name, data)
 	})
-	a.applyToolPaths(a.loadConfig())
+	cfg := a.loadConfig()
+	a.applyToolPaths(cfg)
+	a.jobs.SetMaxParallel(cfg.MaxParallel)
 }
 
 // loadConfig returns the persisted settings, or the defaults when there is no
@@ -98,6 +100,7 @@ func (a *App) SaveConfig(cfg config.Config) error {
 		return err
 	}
 	a.applyToolPaths(cfg)
+	a.jobs.SetMaxParallel(cfg.MaxParallel)
 	return nil
 }
 
@@ -222,7 +225,8 @@ func (a *App) GetThumbnail(path string, durationSec float64) (string, error) {
 	return media.ThumbDataURL(path, durationSec)
 }
 
-// Compress starts an async compression job and returns its ID.
+// Compress enqueues a compression job and returns its ID. The queue emits
+// compress:queued with the initial position and runs it when a slot frees up.
 func (a *App) Compress(req compress.Job) (string, error) {
 	if req.InputPath == "" {
 		return "", errors.New("Nenhum vídeo selecionado")
@@ -230,18 +234,54 @@ func (a *App) Compress(req compress.Job) (string, error) {
 	if req.PresetID == "" {
 		return "", errors.New("Nenhum preset selecionado")
 	}
-
-	jobID := fmt.Sprintf("%d", time.Now().UnixNano())
-
-	jobCtx, cancel := context.WithCancel(context.Background())
-	a.jobs.Register(jobID, cancel)
-
-	go func() {
-		defer a.jobs.Remove(jobID)
-		compress.Run(jobCtx, jobID, req)
-	}()
-
+	jobID, _ := a.jobs.Enqueue(newTask(req))
 	return jobID, nil
+}
+
+// JobAck reports the outcome of enqueueing one job of a batch.
+type JobAck struct {
+	JobID    string `json:"jobId"`
+	Position int    `json:"position"`
+	Error    string `json:"error"`
+}
+
+// CompressMultiple enqueues every job of a batch in order, validating them
+// individually so one bad entry does not drop the rest of the batch.
+func (a *App) CompressMultiple(reqs []compress.Job) []JobAck {
+	acks := make([]JobAck, 0, len(reqs))
+	for _, req := range reqs {
+		if req.InputPath == "" {
+			acks = append(acks, JobAck{Error: "Nenhum vídeo selecionado"})
+			continue
+		}
+		if req.PresetID == "" {
+			acks = append(acks, JobAck{Error: "Nenhum preset selecionado"})
+			continue
+		}
+		jobID, position := a.jobs.Enqueue(newTask(req))
+		acks = append(acks, JobAck{JobID: jobID, Position: position})
+	}
+	return acks
+}
+
+func newTask(job compress.Job) compress.Task {
+	return compress.Task{
+		Kind:  events.KindCompress,
+		Label: filepath.Base(job.InputPath),
+		Job:   job,
+	}
+}
+
+// GetTasks returns the status snapshot of every task in the queue.
+func (a *App) GetTasks() []compress.TaskStatus {
+	return a.jobs.List()
+}
+
+// ClearFinished drops finished, failed and canceled tasks from the queue,
+// keeping the pending ones, and returns what is left.
+func (a *App) ClearFinished() []compress.TaskStatus {
+	a.jobs.ClearFinished()
+	return a.jobs.List()
 }
 
 // Cancel aborts a running compression job.

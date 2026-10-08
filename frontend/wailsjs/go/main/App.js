@@ -10,8 +10,16 @@ export function CheckFFmpeg() {
   return window['go']['main']['App']['CheckFFmpeg']();
 }
 
+export function ClearFinished() {
+  return window['go']['main']['App']['ClearFinished']();
+}
+
 export function Compress(arg1) {
   return window['go']['main']['App']['Compress'](arg1);
+}
+
+export function CompressMultiple(arg1) {
+  return window['go']['main']['App']['CompressMultiple'](arg1);
 }
 
 export function GetAdvice(arg1) {
@@ -28,6 +36,10 @@ export function GetMediaInfo(arg1) {
 
 export function GetPresets() {
   return window['go']['main']['App']['GetPresets']();
+}
+
+export function GetTasks() {
+  return window['go']['main']['App']['GetTasks']();
 }
 
 export function GetThumbnail(arg1, arg2) {
