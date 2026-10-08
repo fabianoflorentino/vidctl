@@ -130,6 +130,44 @@ export namespace compress {
 		    return a;
 		}
 	}
+	export class TaskStatus {
+	    jobId: string;
+	    kind: string;
+	    label: string;
+	    inputPath: string;
+	    presetId: string;
+	    state: string;
+	    position: number;
+	    percent: number;
+	    stage: string;
+	    outputPath: string;
+	    sizeBytes: number;
+	    partsTotal: number;
+	    partsDone: number;
+	    error: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new TaskStatus(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.jobId = source["jobId"];
+	        this.kind = source["kind"];
+	        this.label = source["label"];
+	        this.inputPath = source["inputPath"];
+	        this.presetId = source["presetId"];
+	        this.state = source["state"];
+	        this.position = source["position"];
+	        this.percent = source["percent"];
+	        this.stage = source["stage"];
+	        this.outputPath = source["outputPath"];
+	        this.sizeBytes = source["sizeBytes"];
+	        this.partsTotal = source["partsTotal"];
+	        this.partsDone = source["partsDone"];
+	        this.error = source["error"];
+	    }
+	}
 
 }
 
@@ -147,6 +185,22 @@ export namespace main {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.ffmpegOK = source["ffmpegOK"];
 	        this.message = source["message"];
+	    }
+	}
+	export class JobAck {
+	    jobId: string;
+	    position: number;
+	    error: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new JobAck(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.jobId = source["jobId"];
+	        this.position = source["position"];
+	        this.error = source["error"];
 	    }
 	}
 

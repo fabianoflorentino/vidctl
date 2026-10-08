@@ -4,10 +4,14 @@
     CheckFFmpeg,
     GetPresets,
     OpenInputDialog,
+    OpenMultipleDialog,
     GetMediaInfo,
     GetThumbnail,
     OpenOutputDialog,
     Compress as StartCompress,
+    CompressMultiple,
+    GetTasks,
+    ClearFinished,
     Cancel as CancelJob,
     OpenFolder,
     GetUsage,
@@ -29,6 +33,24 @@
   type ProgressEv = { jobId: string; stage: string; percent: number }
   type DoneEv = { jobId: string; outputPath: string; sizeMB: number; sizeBytes: number }
   type ErrorEv = { jobId: string; error: string }
+  type QueuedEv = { jobId: string; position: number }
+  type StartEv = { jobId: string }
+  type QueueState = 'queued' | 'running' | 'done' | 'error' | 'canceled'
+  type QueueItem = {
+    jobId: string
+    label: string
+    inputPath: string
+    outputPath: string
+    presetId: string
+    state: QueueState
+    position: number
+    stage: string
+    percent: number
+    sizeBytes: number
+    partsTotal: number
+    partsDone: number
+    error: string
+  }
   type ThemeChoice = 'system' | 'light' | 'dark'
 
   let presetList = $state<presets.Preset[]>([])
@@ -129,17 +151,112 @@
     return outputDir.replace(/[\\/]+$/, '') + sep + name
   }
 
-  let running = $state(false)
-  let stage = $state('')
-  let percent = $state(0)
+  let queue = $state<QueueItem[]>([])
   let error = $state('')
-  let currentJobId = $state('')
-  let done = $state<DoneEv | null>(null)
-  let partsDone = $state<DoneEv[]>([])
-  let jobTotalParts = $state(1)
   let usage = $state<Awaited<ReturnType<typeof GetUsage>> | null>(null)
   let advice = $state<Awaited<ReturnType<typeof GetAdvice>> | null>(null)
   let adviceSeq = 0
+
+  type EventPatch = { allowed: QueueState[]; fn: (item: QueueItem) => void }
+  const bufferedEvents = new Map<string, EventPatch[]>()
+
+  function renumber() {
+    let pos = 0
+    for (const item of queue) {
+      if (item.state === 'queued' || item.state === 'running') {
+        pos++
+        item.position = pos
+      } else {
+        item.position = 0
+      }
+    }
+  }
+
+  function applyPatch(item: QueueItem, p: EventPatch) {
+    if (!p.allowed.includes(item.state)) return
+    p.fn(item)
+    renumber()
+  }
+
+  function patch(jobId: string, allowed: QueueState[], fn: (item: QueueItem) => void) {
+    const item = queue.find((i) => i.jobId === jobId)
+    if (item) {
+      applyPatch(item, { allowed, fn })
+      return
+    }
+    const list = bufferedEvents.get(jobId) ?? []
+    list.push({ allowed, fn })
+    bufferedEvents.set(jobId, list)
+  }
+
+  function createItem(fields: Partial<QueueItem> & { jobId: string; inputPath: string; presetId: string }) {
+    const item: QueueItem = {
+      label: '',
+      outputPath: '',
+      state: 'queued',
+      position: 0,
+      stage: 'queue',
+      percent: 0,
+      sizeBytes: 0,
+      partsTotal: 1,
+      partsDone: 0,
+      error: '',
+      ...fields,
+    }
+    queue.push(item)
+    const buffered = bufferedEvents.get(item.jobId) ?? []
+    bufferedEvents.delete(item.jobId)
+    for (const p of buffered) applyPatch(item, p)
+    renumber()
+  }
+
+  function fromTask(t: bindings.TaskStatus): QueueItem {
+    return {
+      jobId: t.jobId,
+      label: t.label,
+      inputPath: t.inputPath,
+      outputPath: t.outputPath,
+      presetId: t.presetId,
+      state: t.state as QueueState,
+      position: t.position,
+      stage: t.stage,
+      percent: t.percent,
+      sizeBytes: t.sizeBytes,
+      partsTotal: t.partsTotal,
+      partsDone: t.partsDone,
+      error: t.error,
+    }
+  }
+
+  function fileName(path: string): string {
+    return path.split(/[\\/]/).pop() || path
+  }
+
+  function presetName(id: string): string {
+    return presetList.find((p) => p.id === id)?.name ?? id
+  }
+
+  function stateLabel(item: QueueItem): string {
+    switch (item.state) {
+      case 'queued':
+        return item.position > 1 ? `aguardando · ${item.position}º da fila` : 'aguardando'
+      case 'running':
+        return `processando · ${item.percent.toFixed(0)}%`
+      case 'done':
+        return 'concluído'
+      case 'error':
+        return 'erro'
+      case 'canceled':
+        return 'cancelado'
+    }
+  }
+
+  const previewItem = $derived(queue.filter((i) => i.inputPath === inputPath).at(-1) ?? null)
+  const previewState = $derived(previewItem?.state ?? 'idle')
+  const previewBusy = $derived(previewState === 'queued' || previewState === 'running')
+  const previewDone = $derived(previewState === 'done')
+  const anyBusy = $derived(queue.some((i) => i.state === 'queued' || i.state === 'running'))
+  const hasFinished = $derived(queue.some((i) => i.state !== 'queued' && i.state !== 'running'))
 
   let prefsOpen = $state(false)
   let dragging = $state(false)
@@ -152,19 +269,12 @@
   }
 
   async function adoptFile(path: string) {
-    if (running) {
-      error = 'aguarde o job atual terminar antes de trocar o vídeo'
-      return
-    }
     if (!isVideoPath(path)) {
       error = `extensão não suportada: ${path.split('.').pop() || path}`
       return
     }
     inputPath = path
     outputPath = ''
-    done = null
-    partsDone = []
-    jobTotalParts = 1
     error = ''
     thumb = ''
     try {
@@ -185,7 +295,12 @@
   }
 
   function handleDrop(paths: string[]) {
-    const first = paths.find(isVideoPath) ?? paths[0]
+    const videos = paths.filter(isVideoPath)
+    if (videos.length > 1) {
+      void enqueuePaths(videos)
+      return
+    }
+    const first = videos[0] ?? paths[0]
     if (first) adoptFile(first)
   }
 
@@ -207,7 +322,7 @@
     const targetMB = sizeMB
     const qualityCRF = crf
     const split = splitPayload()
-    const busy = running
+    const busy = previewBusy
     if (!path || !info || busy) {
       advice = null
       return
@@ -245,7 +360,7 @@
   }
 
   $effect(() => {
-    if (!running) {
+    if (!anyBusy) {
       usage = null
       return
     }
@@ -340,41 +455,57 @@
   const appView = $derived(info ? 'queue' : 'empty')
 
   const originalMB = $derived(info ? info.sizeMB : 0)
-  const savedPct = $derived(done && info && info.sizeMB > 0 ? (1 - done.sizeMB / info.sizeMB) * 100 : 0)
+  const savedPct = $derived(
+    previewDone && previewItem && info && info.sizeMB > 0
+      ? (1 - previewItem.sizeBytes / (1024 * 1024) / info.sizeMB) * 100
+      : 0,
+  )
 
   onMount(() => {
     load()
+    EventsOn('compress:queued', (e: QueuedEv) => {
+      patch(e.jobId, ['queued'], () => {})
+    })
+    EventsOn('compress:start', (e: StartEv) => {
+      patch(e.jobId, ['queued', 'running'], (i) => {
+        i.state = 'running'
+      })
+    })
     EventsOn('compress:progress', (e: ProgressEv) => {
-      if (e.jobId !== currentJobId) return
-      percent = e.percent
-      stage = e.stage
+      patch(e.jobId, ['running'], (i) => {
+        i.percent = e.percent
+        i.stage = e.stage
+        const part = /parte (\d+)\/(\d+)/.exec(e.stage)
+        if (part) i.partsTotal = Number(part[2])
+      })
     })
     EventsOn('compress:done', (e: DoneEv) => {
-      if (e.jobId !== currentJobId) return
-      partsDone = [...partsDone, e]
-      if (partsDone.length < jobTotalParts) {
-        percent = (partsDone.length / jobTotalParts) * 100
-        return
-      }
-      running = false
-      percent = 100
-      stage = 'done'
-      done = { jobId: e.jobId, outputPath: partsDone[0].outputPath, sizeMB: 0, sizeBytes: 0 }
-      const total = partsDone.reduce((acc, p) => acc + p.sizeBytes, 0)
-      done.sizeBytes = total
-      done.sizeMB = total / (1024 * 1024)
-      currentJobId = ''
+      patch(e.jobId, ['running'], (i) => {
+        i.outputPath = e.outputPath
+        i.sizeBytes += e.sizeBytes
+        i.partsDone++
+        if (i.partsDone < i.partsTotal) {
+          i.percent = (i.partsDone / i.partsTotal) * 100
+          return
+        }
+        i.state = 'done'
+        i.percent = 100
+        i.stage = 'done'
+      })
     })
     EventsOn('compress:error', (e: ErrorEv) => {
-      if (e.jobId !== currentJobId) return
-      running = false
-      error = e.error
-      currentJobId = ''
+      patch(e.jobId, ['queued', 'running'], (i) => {
+        i.state = 'error'
+        i.error = e.error
+        i.stage = ''
+      })
     })
     EventsOn('wails:file-drop', (_x: number, _y: number, paths: string[]) => {
       handleDrop(paths)
     })
     return () => {
+      EventsOff('compress:queued')
+      EventsOff('compress:start')
       EventsOff('compress:progress')
       EventsOff('compress:done')
       EventsOff('compress:error')
@@ -392,6 +523,16 @@
 
     await loadConfig()
     await checkFFmpeg()
+    await refreshQueue()
+  }
+
+  async function refreshQueue() {
+    try {
+      const tasks = await GetTasks()
+      if (tasks.length) queue = tasks.map(fromTask)
+    } catch {
+      /* fila indisponível: a sessão segue com a fila vazia */
+    }
   }
 
   async function checkFFmpeg() {
@@ -457,8 +598,9 @@
   }
 
   function canRun(): boolean {
-    return (
-      !running && !!inputPath && !!outputPath && !!selectedPreset && ffmpegOk && !splitBlocked
+    if (!ffmpegOk || !inputPath || !outputPath || !selectedPreset || splitBlocked) return false
+    return !queue.some(
+      (i) => i.inputPath === inputPath && (i.state === 'queued' || i.state === 'running'),
     )
   }
 
@@ -469,36 +611,99 @@
       : { parts: 0, minutesEach: splitMinutes }
   }
 
+  function jobParts(): number {
+    return splitPayload() && activeSplit ? activeSplit.count : 1
+  }
+
+  function buildJob(input: string, output: string): bindings.Job {
+    return new bindings.Job({
+      inputPath: input,
+      outputPath: output,
+      presetId: selectedPresetId,
+      sizeMB: sizeMB > 0 ? sizeMB : 10,
+      crf,
+      split: splitPayload() ?? undefined,
+    })
+  }
+
   async function compress() {
     if (!canRun()) return
     error = ''
-    done = null
-    partsDone = []
-    jobTotalParts = activeSplit && !splitBlocked ? activeSplit.count : 1
-    percent = 0
-    stage = 'queue'
-    running = true
     try {
-      const jobId = await StartCompress(new bindings.Job({
+      const jobId = await StartCompress(buildJob(inputPath, outputPath))
+      createItem({
+        jobId,
+        label: fileName(inputPath),
         inputPath,
         outputPath,
         presetId: selectedPresetId,
-        sizeMB: sizeMB > 0 ? sizeMB : 10,
-        crf,
-        split: splitPayload() ?? undefined,
-      }))
-      currentJobId = jobId
+        partsTotal: jobParts(),
+      })
     } catch (err) {
-      running = false
       error = String(err)
     }
   }
 
-  async function cancel() {
-    if (currentJobId) await CancelJob(currentJobId)
-    currentJobId = ''
-    running = false
-    error = 'cancelado pelo usuário'
+  async function enqueuePaths(paths: string[]) {
+    const active = new Set(
+      queue.filter((i) => i.state === 'queued' || i.state === 'running').map((i) => i.inputPath),
+    )
+    const usable = paths.filter(isVideoPath).filter((p) => !active.has(p))
+    if (!usable.length) return
+
+    const parts = jobParts()
+    const jobs = usable.map((p) => buildJob(p, suggestedOutput(p.replace(/\.[^.]+$/, ''))))
+    error = ''
+    try {
+      const acks = await CompressMultiple(jobs)
+      if (usable[0]) await adoptFile(usable[0])
+      acks.forEach((ack, idx) => {
+        if (ack.error) {
+          error = ack.error
+          return
+        }
+        const job = jobs[idx]
+        createItem({
+          jobId: ack.jobId,
+          label: fileName(job.inputPath),
+          inputPath: job.inputPath,
+          outputPath: job.outputPath,
+          presetId: job.presetId,
+          partsTotal: parts,
+        })
+      })
+    } catch (err) {
+      error = String(err)
+    }
+  }
+
+  async function addVideos() {
+    const paths = await OpenMultipleDialog()
+    if (!paths?.length) return
+    await enqueuePaths(paths)
+  }
+
+  async function cancelItem(jobId: string) {
+    try {
+      await CancelJob(jobId)
+    } catch (err) {
+      error = 'falha ao cancelar: ' + err
+      return
+    }
+    patch(jobId, ['queued', 'running'], (i) => {
+      i.state = 'canceled'
+      i.stage = ''
+    })
+  }
+
+  async function clearFinished() {
+    try {
+      const remaining = await ClearFinished()
+      queue = remaining.map(fromTask)
+    } catch (err) {
+      queue = queue.filter((i) => i.state === 'queued' || i.state === 'running')
+      error = 'falha ao limpar a fila: ' + err
+    }
   }
 
   function reset() {
@@ -506,12 +711,7 @@
     info = null
     thumb = ''
     outputPath = ''
-    done = null
-    partsDone = []
-    jobTotalParts = 1
     error = ''
-    percent = 0
-    stage = ''
   }
 </script>
 
@@ -669,9 +869,9 @@
       {#if info}
         <VideoRow
           {info}
-          status={running ? 'progress' : done ? 'done' : error ? 'error' : 'idle'}
-          {stage}
-          {percent}
+          status={previewBusy ? 'progress' : previewState === 'done' ? 'done' : previewState === 'error' ? 'error' : 'idle'}
+          stage={previewItem?.stage ?? ''}
+          percent={previewItem?.percent ?? 0}
           {savedPct}
           {thumb}
           onSwitch={pickInput}
@@ -679,15 +879,19 @@
         />
       {/if}
 
-      {#if running}
+      {#if previewItem && previewBusy}
         <div class="progress-card">
           <div class="progress-head">
-            <span class="mono">{stageLabel(stage) || 'PROCESSANDO'}</span>
-            <span class="progress-pct mono">{percent.toFixed(1)}%</span>
+            <span class="mono">
+              {previewItem.state === 'queued' && previewItem.position > 1
+                ? `AGUARDANDO · ${previewItem.position}º DA FILA`
+                : stageLabel(previewItem.stage) || 'PROCESSANDO'}
+            </span>
+            <span class="progress-pct mono">{previewItem.percent.toFixed(1)}%</span>
           </div>
-          <div class="track"><div class="fill" style="width:{percent}%"></div></div>
+          <div class="track"><div class="fill" style="width:{previewItem.percent}%"></div></div>
           <div class="progress-foot">
-            <button class="btn small" onclick={cancel}>cancelar</button>
+            <button class="btn small" onclick={() => cancelItem(previewItem.jobId)}>cancelar</button>
             <div class="usage mono" aria-live="polite">
               {#if usage}
                 CPU {Math.round(usage.cpu)}% · RAM {(usage.memUsedMB / 1024).toFixed(1)}/{(usage.memTotalMB / 1024).toFixed(1)} GB
@@ -699,23 +903,58 @@
             </div>
           </div>
         </div>
-      {:else if done}
+      {:else if previewItem && previewDone}
         <div class="result">
           <div class="result-big">
             <span class="result-pct mono">−{savedPct.toFixed(0)}%</span>
             <span class="result-size mono">
-              {done.sizeMB.toFixed(1)} MB{#if jobTotalParts > 1} · {jobTotalParts} partes{/if}
+              {(previewItem.sizeBytes / (1024 * 1024)).toFixed(1)} MB{#if previewItem.partsTotal > 1} · {previewItem.partsTotal} partes{/if}
             </span>
             <span class="result-from mono">de {originalMB.toFixed(1)} MB</span>
           </div>
           <div class="result-actions">
-            <button class="btn solid" onclick={() => OpenFolder(done!.outputPath)}>abrir pasta</button>
+            <button class="btn solid" onclick={() => OpenFolder(previewItem.outputPath)}>abrir pasta</button>
             <button class="btn" onclick={reset}>novo vídeo</button>
           </div>
         </div>
       {/if}
 
-      {#if info && !running && !done}
+      {#if queue.length > 0}
+        <div class="queue-card">
+          <div class="queue-head">
+            <span class="group-card-title">Fila de conversões</span>
+            <span class="queue-count mono">{queue.length} {queue.length === 1 ? 'vídeo' : 'vídeos'}</span>
+            {#if hasFinished}
+              <button class="btn subtle small" onclick={clearFinished}>limpar fila</button>
+            {/if}
+          </div>
+          <ul class="queue-list">
+            {#each queue as item (item.jobId)}
+              <li class="queue-item" class:active={item.state === 'running'} class:muted={item.state === 'canceled'}>
+                <span class="qi-dot" data-state={item.state}></span>
+                <div class="qi-body">
+                  <div class="qi-line">
+                    <span class="qi-label" title={item.inputPath}>{item.label}</span>
+                    <span class="qi-preset mono">{presetName(item.presetId)}</span>
+                    <span class="qi-state mono">{stateLabel(item)}</span>
+                  </div>
+                  {#if item.state === 'running'}
+                    <div class="track thin"><div class="fill" style="width:{item.percent}%"></div></div>
+                  {/if}
+                  {#if item.error}
+                    <div class="qi-error mono">{item.error}</div>
+                  {/if}
+                </div>
+                {#if item.state === 'queued' || item.state === 'running'}
+                  <button class="btn subtle small" onclick={() => cancelItem(item.jobId)}>cancelar</button>
+                {/if}
+              </li>
+            {/each}
+          </ul>
+        </div>
+      {/if}
+
+      {#if info && !previewBusy && !previewDone}
         <div class="summary-card">
           <div class="sum-row">
             <span class="meta-k">destino</span>
@@ -754,11 +993,10 @@
         </div>
       {/if}
 
-      {#if !running && !done}
-        <div class="actionbar">
-          <button class="pill-btn" onclick={compress} disabled={!canRun()}>Comprimir…</button>
-        </div>
-      {/if}
+      <div class="actionbar">
+        <button class="pill-btn" onclick={compress} disabled={!canRun()}>Comprimir…</button>
+        <button class="btn" onclick={addVideos} disabled={!ffmpegOk}>Adicionar vídeos…</button>
+      </div>
     </main>
   </div>
 {/if}
