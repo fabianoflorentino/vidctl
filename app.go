@@ -11,6 +11,7 @@ import (
 	"github.com/fabianoflorentino/vidctl/internal/cmdutil"
 	"github.com/fabianoflorentino/vidctl/internal/compress"
 	"github.com/fabianoflorentino/vidctl/internal/config"
+	"github.com/fabianoflorentino/vidctl/internal/estimate"
 	"github.com/fabianoflorentino/vidctl/internal/events"
 	"github.com/fabianoflorentino/vidctl/internal/media"
 	"github.com/fabianoflorentino/vidctl/internal/presets"
@@ -125,6 +126,24 @@ func (a *App) GetAdvice(job compress.Job) (compress.Advice, error) {
 		return compress.Advice{}, err
 	}
 	return compress.Advise(info, preset, job), nil
+}
+
+// EstimateSize forecasts the output size of the current settings before
+// encoding, using the exact budget the 2-pass encoder will spend. CRF mode
+// has no deterministic forecast yet.
+func (a *App) EstimateSize(job compress.Job) (estimate.Result, error) {
+	if job.InputPath == "" {
+		return estimate.Result{}, errors.New("escolha um vídeo primeiro")
+	}
+	preset, ok := compress.EffectivePreset(job)
+	if !ok {
+		return estimate.Result{}, fmt.Errorf("preset desconhecido: %s", job.PresetID)
+	}
+	info, err := media.Probe(job.InputPath)
+	if err != nil {
+		return estimate.Result{}, err
+	}
+	return estimate.Size(info, preset, job.Split)
 }
 
 // CheckFFmpeg verifies that ffmpeg and ffprobe are available, honouring the
