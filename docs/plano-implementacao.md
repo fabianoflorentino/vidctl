@@ -31,7 +31,7 @@ Cada fase é entregue como uma unidade revisável e isolada:
 Branch            | Fase | PR
 ---|---|---
 `feat/fase1`      | 1 — Configuração persistente | aberto
-`feat/fila`       | 2 — Fila de conversões | pendente
+`feat/fila`       | 2 — Fila de conversões | em andamento
 `feat/estimativa` | 3 — Estimativa de tamanho | pendente
 `feat/hevc`       | 4 — HEVC/x265 + GPU (hardware) | pendente
 `feat/ajustes`    | 5 — Ajustes por arquivo | pendente
@@ -135,6 +135,16 @@ sequência (e depois, opcionalmente, em paralelo). Hoje o modelo é de **um job
 ativo** em todo o stack: `currentJobId` guarda todos os eventos
 (App.svelte:46,51,59) e o `Manager` (compress.go:39-42) guarda somente jobs
 ativos para cancelar.
+
+> **Status: implementado** em `feat/fila` (PR pendente de abertura). O
+> `compress.Manager` virou uma fila (`Enqueue`/`Cancel`/`Remove`/
+> `ClearFinished`/`List`/`SetMaxParallel`, estados `queued/running/done/error/
+> canceled`), `maxParallel` vem do `config.MaxParallel` no boot e ao salvar as
+> Preferências; eventos novos `compress:queued`/`compress:start` com
+> `JobID`; `app.go` expõe `CompressMultiple`, `GetTasks`, `ClearFinished` e
+> `JobAck`; o frontend roteia eventos por `JobID` (buffer para eventos que
+> chegam antes do ack) e o passo 04 virou a lista de fila com cancelar por
+> item e limpar fila.
 
 ### Modelo de tarefas
 - Um item da fila é uma `Task` genérica para acomodar compressão (só esta fase)

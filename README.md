@@ -17,6 +17,10 @@ cortar cena. Alimentado por encode **2-pass** quando há limite de tamanho ou
   parte é comprimida de forma independente e sai como `nome-part1.mp4`, …
   O `min/parte` aceita fração (ex.: `1.5` = 1 m 30 s) e os contadores têm
   campo editável + setas com **Shift** para ajuste fino
+- **Fila de conversões**: adicione vários vídeos de uma vez ("Adicionar
+  vídeos…" ou arrastando vários arquivos) e o app comprime em sequência; a
+  fila mostra status, progresso e cancelamento por item, com "limpar fila"
+  para os concluídos
 - **Drag and drop**: arraste um vídeo para a janela (ou use "Abrir…"); a área
   de seleção vazia vira um alvo destacado quando você passa por cima
 - Encode ffmpeg **2-pass** para atingir o tamanho máximo sem estourar o limite
@@ -63,11 +67,11 @@ Guia passo a passo, com verificação de integridade e o ffmpeg por sistema:
 flowchart LR
   UI["Frontend Svelte 5<br/>Vite · dialogs · status · progresso"]
   W["Wails v2<br/>bridge JS ↔ Go (bindings + asset server)"]
-  APP["app.go<br/>CheckFFmpeg · GetPresets<br/>Compress · Cancel · OpenFolder"]
+  APP["app.go<br/>CheckFFmpeg · GetPresets<br/>Compress · fila · Cancel"]
   P["internal/presets<br/>perfis por plataforma"]
   M["internal/media<br/>ffprobe → metadados"]
-  C["internal/compress<br/>bitrate 2-pass / CRF<br/>gerência de jobs"]
-  E["internal/events<br/>compress:progress / done / error"]
+  C["internal/compress<br/>bitrate 2-pass / CRF<br/>fila de conversões"]
+  E["internal/events<br/>compress:queued / start / progress / done / error"]
   F["ffmpeg (subprocesso)"]
 
   UI <--> W <--> APP
@@ -148,9 +152,10 @@ ou inválido, o app abre com os valores padrão em vez de falhar.
 | `notifyOnDone` | `false` | notificar ao terminar |
 | `openFolderOnDone` | `false` | abrir a pasta de saída ao terminar |
 
-As quatro últimas chaves já são preservadas no arquivo mas só passam a ter
-efeito quando os recursos correspondentes existirem (fila, notificações e i18n
-estão em fases futuras do [plano](docs/plano-implementacao.md)).
+`maxParallel` já vale para a fila de conversões (aplicado na inicialização e ao
+salvar as Preferências); `notifyOnDone`, `openFolderOnDone` e `language` ficam
+preservados no arquivo mas só passam a ter efeito com as fases de notificação e
+i18n do [plano](docs/plano-implementacao.md).
 
 Você também pode editar o arquivo à mão: valores fora da faixa (CRF acima de
 51, `maxParallel` abaixo de 1) são corrigidos na leitura, e o resto é preservado
@@ -192,6 +197,24 @@ Cada parte passa pelo pipeline de compressão escolhido (preset/tamanho/CRF) e
 gera um arquivo `saída-partN.mp4` (índice com zero à esquerda quando são 10+
 partes). O progresso mostra `parte X/N` e, ao final, o app resume a economia
 total sobre o arquivo original.
+
+## Fila de conversões
+
+O botão **"Adicionar vídeos…"** (ou arrastar vários arquivos de uma vez para a
+janela) enfileira um trabalho por arquivo — cada um com o preset/tamanho
+atuais e a saída sugerida ao lado do original. A fila aparece abaixo do vídeo
+com nome, preset, status e barra de progresso do item em execução, e permite
+cancelar item a item ou **limpar fila** (remove concluídos, erros e
+cancelados).
+
+- A quantidade de vídeos processando ao mesmo tempo vem de `maxParallel` na
+  `config.json` (padrão **1** = sequencial); edite o arquivo e reabra o app
+  para valer.
+- "Comprimir…" continua enfileirando o vídeo selecionado na sidebar, e a barra
+  de ações fica sempre disponível — só "Adicionar vídeos…" depende do ffmpeg.
+- O progresso é por trabalho (`compress:queued`, `compress:start`,
+  `compress:progress`, `compress:done`, `compress:error`), então um erro em um
+  item não derruba os demais.
 
 ## Stack
 
