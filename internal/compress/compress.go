@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	"github.com/fabianoflorentino/vidctl/internal/cmdutil"
+	"github.com/fabianoflorentino/vidctl/internal/estimate"
 	"github.com/fabianoflorentino/vidctl/internal/events"
 	"github.com/fabianoflorentino/vidctl/internal/media"
 	"github.com/fabianoflorentino/vidctl/internal/presets"
@@ -40,58 +41,6 @@ func ffmpegPath() (string, error) {
 		return "", errors.New("ffmpeg não encontrado. Instale o ffmpeg para usar o vidctl.")
 	}
 	return p, nil
-}
-
-func bitrateToBits(br string) float64 {
-	br = strings.TrimSpace(strings.ToLower(br))
-	if strings.HasSuffix(br, "k") {
-		v, _ := strconv.ParseFloat(strings.TrimSuffix(br, "k"), 64)
-		return v * 1000
-	}
-	if strings.HasSuffix(br, "m") {
-		v, _ := strconv.ParseFloat(strings.TrimSuffix(br, "m"), 64)
-		return v * 1_000_000
-	}
-	v, _ := strconv.ParseFloat(br, 64)
-	return v
-}
-
-// sizeLines represents the bitrate budget computation for size-limited encoding.
-type sizeLines struct {
-	videoBitrate int
-	maxRate      int
-	bufSize      int
-}
-
-// computeSizeBudget derives video bitrate from the target size and duration.
-func computeSizeBudget(job Job, preset presets.Preset, info *media.Info, durationSec float64) (*sizeLines, error) {
-	targetBits := preset.SizeMB * 8 * 1024 * 1024
-	audioBitsPerSec := bitrateToBits(preset.AudioBitrate)
-	if !info.HasAudio {
-		audioBitsPerSec = 0
-	}
-	if durationSec <= 0 {
-		return nil, errors.New("duração do vídeo inválida")
-	}
-
-	// 5% headroom for container/muxing overhead.
-	videoBits := math.Floor(targetBits*0.95 - audioBitsPerSec*durationSec)
-	if videoBits <= 0 {
-		return nil, fmt.Errorf(
-			"tamanho alvo (%.0f MB) pequeno demais para %.0fs de vídeo. Aumente o alvo.",
-			preset.SizeMB, durationSec)
-	}
-
-	vbr := int(math.Floor(videoBits / durationSec))
-	if vbr < 50_000 {
-		vbr = 50_000
-	}
-
-	return &sizeLines{
-		videoBitrate: vbr,
-		maxRate:      int(float64(vbr) * 1.5),
-		bufSize:      vbr * 2,
-	}, nil
 }
 
 func passLogFile(jobID string) string {
@@ -129,12 +78,12 @@ func buildSizePasses(ctx context.Context, jobID string, job Job, preset presets.
 		return nil, nil, err
 	}
 
-	lines, err := computeSizeBudget(job, preset, info, seg.Duration())
+	lines, err := estimate.BudgetFor(preset, info, seg.Duration())
 	if err != nil {
 		return nil, nil, err
 	}
 
-	vbr := strconv.Itoa(lines.videoBitrate)
+	vbr := strconv.Itoa(lines.VideoBitrate)
 	passLog := passLogFile(jobID)
 	seek := seekArgs(job, seg)
 
@@ -164,8 +113,8 @@ func buildSizePasses(ctx context.Context, jobID string, job Job, preset presets.
 		"-i", job.InputPath,
 		"-vf", filter,
 		"-c:v", "libx264", "-b:v", vbr,
-		"-maxrate", strconv.Itoa(lines.maxRate),
-		"-bufsize", strconv.Itoa(lines.bufSize),
+		"-maxrate", strconv.Itoa(lines.MaxRate),
+		"-bufsize", strconv.Itoa(lines.BufSize),
 		"-preset", "medium",
 		"-pix_fmt", "yuv420p",
 		"-c:a", "aac",
