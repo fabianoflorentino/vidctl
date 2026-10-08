@@ -33,7 +33,7 @@ Branch            | Fase | PR
 `feat/fase1`      | 1 — Configuração persistente | aberto
 `feat/fila`       | 2 — Fila de conversões | pendente
 `feat/estimativa` | 3 — Estimativa de tamanho | pendente
-`feat/hevc`       | 4 — HEVC/x265 + hardware | pendente
+`feat/hevc`       | 4 — HEVC/x265 + GPU (hardware) | pendente
 `feat/ajustes`    | 5 — Ajustes por arquivo | pendente
 `feat/audio`      | 6 — Extração de áudio | pendente
 `feat/notificacao`| 7 — Notificação + abrir pasta | pendente
@@ -52,7 +52,7 @@ Branch            | Fase | PR
 | 1 | Configuração persistente + preset "último usado" | §1 | M |
 | 2 | Fila de conversões (batch) | §2 | G |
 | 3 | Estimativa de tamanho antes do encode | §3 | M |
-| 4 | Codec HEVC/x265 + aceleração de hardware | §4 | G |
+| 4 | Codec HEVC/x265 + aceleração de GPU (NVENC/AMF/QSV/VideoToolbox) | §4 | G |
 | 5 | Ajustes por arquivo (escala, corte, áudio, FPS, thumbnail) | §5 | G |
 | 6 | Extração de áudio com opções (mp3/opus/aac/flac/wav/copiar) | §6 | M |
 | 7 | Notificação ao concluir + abrir pasta | §7 | P |
@@ -227,15 +227,21 @@ Hoje a única estimativa é uma fórmula duplicada no frontend
 
 ---
 
-## Fase 4 — Codec HEVC/x265 + aceleração de hardware
+## Fase 4 — Codec HEVC/x265 + aceleração de hardware (GPU)
 
 **Objetivo:** além do libx264 atual (fixo em `buildSizePasses`/`buildCrfPass`,
-compress.go:145-213), permitir x265 e encoders de GPU (NVENC/QuickSync/AMF)
-com detecção de disponibilidade.
+compress.go:192,207 e 234), permitir x265 e encoders de GPU (NVENC/AMF/QSV/
+VideoToolbox) com detecção de disponibilidade e fallback para software.
 
-### Backend
+> **Por que vale:** trocar `libx264 -preset medium` pelo encoder de GPU dá
+> tipicamente 2–10× de velocidade de encode e libera a CPU — o que também
+> desengasga a fila (fase 2) quando `MaxParallel > 1`. O contraponto está em
+> *Decisões abertas* §2 e §8: qualidade por bit e precisão do modo tamanho.
+
+### O que muda no encoder
+
 - `presets.Preset`: novos campos `Codec string` (`"h264"|"h265"`) e
-  `Hardware string` (`""|"nvenc"|"qsv"|"amf"`).
+  `Hardware string` (`""|"nvenc"|"qsv"|"amf"|"videotoolbox"|"auto"`).
 - Novo `internal/encode` (ou evolução de `compress`): construtor de argumentos
   por encoder, substituindo o if-else fixo:
   - software: `libx264` / `libx265` (2-pass igual ao atual — `-pass 1/2`
@@ -243,29 +249,62 @@ com detecção de disponibilidade.
   - `h264_nvenc` / `hevc_nvenc`: qualidade via `-cq`; tamanho via `-rc vbr`
     `-b:v` `-maxrate` `-bufsize` (1-pass VBR aproxima o alvo — **sem** precisão
     do 2-pass; documentar o trade-off e manter default software);
-  - `qsv`: 2-pass e `-global_quality`; `amf`: `-quality`/`-rc vbr`.
-  - Tabela `encoder → args` cobertos por testes.
-- Detecção de disponibilidade: rodar `ffmpeg -hide_banner -encoders` uma vez e
-  extrair nomes; novo método `GetEncoders() ([]string, error)` (cache em
-  memória, invalida em "verificar de novo"). Encoders inexistentes ficam
-  desabilitados na UI.
+  - `qsv`: 2-pass e `-global_quality`; `amf`: `-quality`/`-rc vbr`;
+    `videotoolbox`: `-q:v` (qualidade) / `-b:v` (tamanho), sem 2-pass;
+    `vaapi` (Linux): exige cadeia `-vaapi_device` + `format=vaapi,hwupload`,
+    fora do escopo inicial — listar como indisponível até estender.
+  - Tabela `encoder → args` coberta por testes.
+- **Trade-off de qualidade:** NVENC entrega qualidade equivalente ao x264 só
+  com ~20–30% mais bitrate (AMF/QSV ainda atrás do NVENC); no modo `size` o
+  arquivo sai pior no mesmo MB. A UI avisa quando o encoder é de GPU — nunca
+  muda o default silencioso. O conselho de bitrate do `quality.go` assume
+  x264 e passa a valer só para o modo software.
+- **Codec ≠ velocidade:** o maior ganho é hardware vs. software; H.265 por si
+  só é *mais lento* que H.264 com melhor qualidade. Não empacotar os dois
+  como se fosse a mesma escolha.
+
+### Detecção de disponibilidade
+
+- Rodar `ffmpeg -hide_banner -encoders` uma vez e extrair nomes; novo método
+  `GetEncoders() ([]string, error)` (cache em memória, invalida em
+  "verificar de novo"). Encoders inexistentes ficam desabilitados na UI.
+- A listagem só diz que o **build** do ffmpeg tem o encoder; o driver da GPU
+  pode ainda faltar (ex.: NVENC compilado sem driver NVIDIA). Probe real: um
+  encode de 1 frame em arquivo temporário; falha → encoder sai da lista com o
+  motivo. Testável com fake `ffmpeg`.
 - Fase 5 (ajustes) será plugada no mesmo builder (`-vf`, `-ss/-to`, `-r`).
 
 ### Frontend
+
 - Passo 02: expansor "avançado" com codec (H.264/H.265) e hardware
   (auto/nenhuma/com GPU) vindo de `GetEncoders()`; agrupado por preset mas
   alterável por job.
+- Aviso visível quando hardware ativo: "GPU: mais rápido, qualidade um pouco
+  menor" (e, no modo tamanho, "+/− ~5–10% no tamanho final"). Preferência
+  persistida na config (fase 1) se o usuário quiser manter GPU sempre.
+
+### Interação com a fila (fase 2)
+
+- GPUs de consumo limitam sessões de encode simultâneas; a fila não deve
+  disparar mais jobs de GPU em paralelo que a fila permite de CPU. Quando
+  `Hardware != ""`, o worker usa slot próprio (cap `min(maxParallel, 1..2)`)
+  — detalhar o número ao implementar, medindo na máquina real.
 
 ### Testes
-- `internal/encode`: tabela de argumentos por encoder; flags `-pass` só no modo
-  tamanho; `-crf`/`-cq` só no modo qualidade; `-an`/áudio conforme
-  `HasAudio`.
-- Detecção com fake `ffmpeg` (script sh, `skipOnWindows`).
+
+- `internal/encode`: tabela de argumentos por encoder (software/nvenc/qsv/
+  amf/videotoolbox); flags `-pass` só no modo tamanho; `-crf`/`-cq` só no modo
+  qualidade; `-an`/áudio conforme `HasAudio`.
+- Detecção com fake `ffmpeg` (script sh, `skipOnWindows`), inclusive o caso
+  "encoder listado mas probe falha".
 - Integração: `Run` com fake que valida o binário invocado.
 
 ### Docs
-- README: seção "Codecs e aceleração de hardware" (tabela encoders × recursos,
-  limitações de precisão de tamanho em hardware).
+
+- README: seção "Codecs e aceleração de GPU" — tabela encoders × recursos
+  (2-pass, controle de tamanho), por que software continua sendo o default,
+  como ver se a GPU suporta NVENC/AMF/QSV/VideoToolbox no próprio app.
+- CHANGELOG: entrada na feature.
 
 ---
 
@@ -723,8 +762,14 @@ timestamp opcional.
     "copiar sem reencodar" (`-c copy`) quando a resolução/codec não muda — vale
     validar com usuário se a velocidade do split importa mais que a qualidade.
  7. **Transcrição (fase 12)**: engines locais apenas (privacidade). Se nenhum
-    disponível, UI mostra instruções claras e não sugere nuvem. Modelos não
-    são baixados automaticamente (caminho configurável).
+     disponível, UI mostra instruções claras e não sugere nuvem. Modelos não
+     são baixados automaticamente (caminho configurável).
+ 8. **GPU como default (fase 4)**: ativar hardware automaticamente quando
+     disponível (mais rápido, pior qualidade por bit) ou deixar opt-in por job
+     com aviso explícito? Recomendado: **opt-in**, mantendo software como
+     default — preserva o comportamento atual e a confiança no tamanho final
+     do modo `size`; o custo (20–30% mais bitrate no mesmo resultado) só vale
+     quando a velocidade importa mais. Validar com usuário.
 
 ---
 
@@ -738,7 +783,7 @@ v2.1.0  → Fase 11 (cortado em partes) [entregue fora de ordem, junto do redesi
 v2.2.0  → Fase 1 (config)            [base p/ tudo]
 v2.3.0  → Fase 2 (fila)              [maior; define Task+Job de vez; usa OpenMultipleDialog já pronto]
 v2.4.0  → Fase 3 (estimativa)
-v2.5.0  → Fase 4 (codec/hw)
+v2.5.0  → Fase 4 (codec/hw: HEVC + GPU)  [default segue software; GPU opt-in]
 v2.6.0  → Fase 5 (ajustes)           [inclui trim -ss/-to reaproveitado da fase 11]
 v2.7.0  → Fase 6 (extrair áudio + opções)
 v2.8.0  → Fase 7 (notificações)      [depende de config]
