@@ -217,11 +217,12 @@
       ...fields,
     }
     queue.push(item)
-    const buffered = bufferedEvents.get(item.jobId) ?? []
-    bufferedEvents.delete(item.jobId)
-    for (const p of buffered) applyPatch(item, p)
+    const created = queue[queue.length - 1]
+    const buffered = bufferedEvents.get(created.jobId) ?? []
+    bufferedEvents.delete(created.jobId)
+    for (const p of buffered) applyPatch(created, p)
     renumber()
-    dbg(`item criado job=${item.jobId} estado=${item.state} percent=${item.percent} buffer=${buffered.length}`)
+    dbg(`item criado job=${created.jobId} estado=${created.state} percent=${created.percent} buffer=${buffered.length}`)
   }
 
   function fromTask(t: bindings.TaskStatus): QueueItem {
