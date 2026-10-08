@@ -407,6 +407,23 @@ func TestCancelUnknownJob(t *testing.T) {
 	}
 }
 
+func TestDebugEnabled(t *testing.T) {
+	app := NewApp()
+	t.Setenv("VIDCTL_DEBUG", "1")
+	if !app.DebugEnabled() {
+		t.Fatal("DebugEnabled deveria ser true com VIDCTL_DEBUG=1")
+	}
+	t.Setenv("VIDCTL_DEBUG", "")
+	if app.DebugEnabled() {
+		t.Fatal("DebugEnabled deveria ser false com VIDCTL_DEBUG vazio")
+	}
+}
+
+func TestDebugLogSemSaidaQuandoDesabilitado(t *testing.T) {
+	t.Setenv("VIDCTL_DEBUG", "")
+	NewApp().DebugLog("linha silenciosa")
+}
+
 func TestVideoFilterPattern(t *testing.T) {
 	for _, ext := range []string{"mp4", "mkv", "mov", "avi", "webm", "m4v", "ts", "flv"} {
 		if !strings.Contains(videoFilterPattern, "*."+ext) {

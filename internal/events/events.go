@@ -1,7 +1,11 @@
 // Package events centralizes the events emitted by the backend to the frontend.
 package events
 
-import "sync"
+import (
+	"sync"
+
+	"github.com/fabianoflorentino/vidctl/internal/dlog"
+)
 
 // KindCompress identifies compression payloads; audio and transcription join
 // the queue in later phases with their own kinds.
@@ -27,6 +31,7 @@ func emit(name string, data any) {
 	mu.RLock()
 	fn := current
 	mu.RUnlock()
+	dlog.Printf("[eventos] emit %s emitter=%t payload=%+v", name, fn != nil, data)
 	if fn != nil {
 		fn(name, data)
 	}

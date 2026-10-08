@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/fabianoflorentino/vidctl/internal/dlog"
 	"github.com/fabianoflorentino/vidctl/internal/events"
 )
 
@@ -102,6 +103,7 @@ func (m *Manager) Enqueue(task Task) (string, int) {
 	}
 	m.mu.Unlock()
 
+	dlog.Printf("[fila] enfileirado job=%s pos=%d input=%q", e.task.JobID, position, task.Job.InputPath)
 	events.EmitQueued(e.task.JobID, position)
 	m.pump()
 	return e.task.JobID, position
@@ -110,6 +112,7 @@ func (m *Manager) Enqueue(task Task) (string, int) {
 // Cancel aborts a task: queued tasks leave the execution line, running tasks
 // have their context canceled. Finished tasks are left untouched.
 func (m *Manager) Cancel(id string) {
+	dlog.Printf("[fila] cancelar pedido job=%s", id)
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	e := m.find(id)
@@ -190,6 +193,7 @@ func (m *Manager) SetMaxParallel(n int) {
 	if n < 1 {
 		n = 1
 	}
+	dlog.Printf("[fila] maxParallel=%d", n)
 	m.mu.Lock()
 	m.maxParallel = n
 	m.mu.Unlock()
@@ -264,6 +268,7 @@ func (m *Manager) pump() {
 	m.mu.Unlock()
 
 	for _, s := range starts {
+		dlog.Printf("[fila] iniciando job=%s", s.entry.task.JobID)
 		events.EmitStart(s.entry.task.JobID)
 		go m.worker(s.ctx, s.entry)
 	}
@@ -292,8 +297,10 @@ func (m *Manager) worker(ctx context.Context, e *taskEntry) {
 		e.errMsg = err.Error()
 	}
 	m.running--
+	final := e.state
 	m.mu.Unlock()
 
+	dlog.Printf("[fila] worker fim job=%s estado=%s err=%v", e.task.JobID, final, err)
 	m.pump()
 }
 
