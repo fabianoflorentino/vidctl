@@ -471,6 +471,21 @@ printf '%s\n' '{"streams":[{"codec_type":"video","codec_name":"h264","width":320
 }
 
 func TestCompressMultiple(t *testing.T) {
+	skipOnWindows(t)
+	dir := t.TempDir()
+	scripts := map[string]string{
+		"ffmpeg": "#!/bin/sh\nsleep 3\nexit 0\n",
+		"ffprobe": `#!/bin/sh
+printf '%s\n' '{"streams":[{"codec_type":"video","codec_name":"h264","width":320,"height":240,"duration":2.0}],"format":{"duration":2.0}}'
+`,
+	}
+	for name, script := range scripts {
+		if err := os.WriteFile(filepath.Join(dir, name), []byte(script), 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	t.Setenv("PATH", dir)
+
 	a := NewApp()
 	acks := a.CompressMultiple([]compress.Job{
 		{InputPath: "", PresetID: "whatsapp-status"},
