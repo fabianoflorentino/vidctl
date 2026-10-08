@@ -31,7 +31,7 @@ Cada fase é entregue como uma unidade revisável e isolada:
 Branch            | Fase | PR
 ---|---|---
 `feat/fase1`      | 1 — Configuração persistente | aberto
-`feat/fila`       | 2 — Fila de conversões | em andamento
+`feat/fila`       | 2 — Fila de conversões | aberto
 `feat/estimativa` | 3 — Estimativa de tamanho | pendente
 `feat/hevc`       | 4 — HEVC/x265 + GPU (hardware) | pendente
 `feat/ajustes`    | 5 — Ajustes por arquivo | pendente
@@ -136,7 +136,7 @@ ativo** em todo o stack: `currentJobId` guarda todos os eventos
 (App.svelte:46,51,59) e o `Manager` (compress.go:39-42) guarda somente jobs
 ativos para cancelar.
 
-> **Status: implementado** em `feat/fila` (PR pendente de abertura). O
+> **Status: implementado** em `feat/fila` (PR aberto para a `main`). O
 > `compress.Manager` virou uma fila (`Enqueue`/`Cancel`/`Remove`/
 > `ClearFinished`/`List`/`SetMaxParallel`, estados `queued/running/done/error/
 > canceled`), `maxParallel` vem do `config.MaxParallel` no boot e ao salvar as
