@@ -11,6 +11,7 @@ import (
 	"github.com/fabianoflorentino/vidctl/internal/cmdutil"
 	"github.com/fabianoflorentino/vidctl/internal/compress"
 	"github.com/fabianoflorentino/vidctl/internal/config"
+	"github.com/fabianoflorentino/vidctl/internal/dlog"
 	"github.com/fabianoflorentino/vidctl/internal/events"
 	"github.com/fabianoflorentino/vidctl/internal/media"
 	"github.com/fabianoflorentino/vidctl/internal/presets"
@@ -64,6 +65,7 @@ func (a *App) startup(ctx context.Context) {
 	cfg := a.loadConfig()
 	a.applyToolPaths(cfg)
 	a.jobs.SetMaxParallel(cfg.MaxParallel)
+	dlog.Printf("[app] startup concluido; maxParallel=%d ffmpeg=%q ffprobe=%q", cfg.MaxParallel, cfg.FFmpegPath, cfg.FFprobePath)
 }
 
 // loadConfig returns the persisted settings, or the defaults when there is no
@@ -235,6 +237,7 @@ func (a *App) Compress(req compress.Job) (string, error) {
 		return "", errors.New("Nenhum preset selecionado")
 	}
 	jobID, _ := a.jobs.Enqueue(newTask(req))
+	dlog.Printf("[app] Compress input=%q preset=%q job=%s", req.InputPath, req.PresetID, jobID)
 	return jobID, nil
 }
 
@@ -248,6 +251,7 @@ type JobAck struct {
 // CompressMultiple enqueues every job of a batch in order, validating them
 // individually so one bad entry does not drop the rest of the batch.
 func (a *App) CompressMultiple(reqs []compress.Job) []JobAck {
+	dlog.Printf("[app] CompressMultiple recebidos=%d", len(reqs))
 	acks := make([]JobAck, 0, len(reqs))
 	for _, req := range reqs {
 		if req.InputPath == "" {
@@ -274,7 +278,9 @@ func newTask(job compress.Job) compress.Task {
 
 // GetTasks returns the status snapshot of every task in the queue.
 func (a *App) GetTasks() []compress.TaskStatus {
-	return a.jobs.List()
+	tasks := a.jobs.List()
+	dlog.Printf("[app] GetTasks -> %d tarefas", len(tasks))
+	return tasks
 }
 
 // ClearFinished drops finished, failed and canceled tasks from the queue,
@@ -288,6 +294,16 @@ func (a *App) ClearFinished() []compress.TaskStatus {
 func (a *App) Cancel(jobID string) error {
 	a.jobs.Cancel(jobID)
 	return nil
+}
+
+// DebugEnabled tells the frontend whether local tracing (VIDCTL_DEBUG) is on.
+func (a *App) DebugEnabled() bool {
+	return dlog.Enabled()
+}
+
+// DebugLog records one frontend trace line in the local debug log.
+func (a *App) DebugLog(msg string) {
+	dlog.Printf("[frontend] %s", msg)
 }
 
 // OpenFolder reveals the given file's folder in the file manager.

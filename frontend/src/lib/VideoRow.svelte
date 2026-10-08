@@ -12,7 +12,7 @@
     status?: RowStatus
     stage?: string
     percent?: number
-    savedPct?: number
+    savedLabel?: string
     thumb?: string
     onSwitch?: () => void
     onClear?: () => void
@@ -23,7 +23,7 @@
     status = 'idle',
     stage = '',
     percent = 0,
-    savedPct = 0,
+    savedLabel = '',
     thumb = '',
     onSwitch = () => {},
     onClear = () => {},
@@ -68,7 +68,7 @@
     <div class="video-sub mono">
       {orientation} · {fmtDuration(info.durationSec)} · {fmtMB(info.sizeMB)} · {info.videoCodec || '—'}
       {#if status === 'done'}
-        → <span class="sub-saved">−{savedPct.toFixed(0)}%</span>
+        → <span class="sub-saved">{savedLabel}</span>
       {/if}
     </div>
   </div>

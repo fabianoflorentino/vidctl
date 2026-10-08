@@ -3,6 +3,7 @@ package main
 import (
 	"embed"
 
+	"github.com/fabianoflorentino/vidctl/internal/dlog"
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
@@ -14,6 +15,8 @@ var assets embed.FS
 func main() {
 	// Create an instance of the app structure
 	app := NewApp()
+
+	dlog.Printf("[main] vidctl iniciado com VIDCTL_DEBUG ativo")
 
 	// Create application with options
 	err := wails.Run(&options.App{
