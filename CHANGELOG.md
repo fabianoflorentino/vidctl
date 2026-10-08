@@ -11,12 +11,17 @@ operacional dos pacotes.
 
 ## [Unreleased]
 
-Persistência das preferências e a nova fila de conversões em lote: as
-preferências sobrevivem ao fechamento e dá para comprimir vários vídeos de
-uma vez.
+Persistência das preferências, fila de conversões em lote e estimativa de
+tamanho: as preferências sobrevivem ao fechamento, dá para comprimir vários
+vídeos de uma vez e o tamanho esperado aparece antes de comprimir.
 
 ### Adicionado
 
+- **Estimativa de tamanho**: no modo tamanho, o painel "Tamanho alvo" mostra
+  um badge com o tamanho esperado da saída — calculado com o mesmo orçamento
+  de bits do encode 2-pass (agora único, em `internal/estimate`) — e a
+  economia em relação ao arquivo original quando o alvo é menor. Novo binding
+  `EstimateSize`; no modo CRF ainda não há previsão e o badge não aparece.
 - **Fila de conversões (batch)**: "Adicionar vídeos…" enfileira vários
   arquivos de uma vez (ou solte vários na janela), um trabalho por arquivo com
   o preset e a saída atuais; a fila aparece no lugar do passo 04 com nome,

@@ -199,6 +199,13 @@ ativos para cancelar.
 
 ## Fase 3 — Estimativa de tamanho antes do encode
 
+> **Status: ✅ implementada** — ver `feat/estimativa`. Decisão: a assinatura
+> final do binding é `EstimateSize(job compress.Job)`, reutilizando o mesmo
+> objeto do `GetAdvice` (preset efetivo + override de tamanho + probe), em vez
+> da assinatura `EstimateSize(inputPath, presetID, sizeMB float64)` descrita
+> abaixo. O orçamento de bits vive agora em `internal/estimate` e é a fonte
+> única do encode 2-pass e da previsão.
+
 **Objetivo:** prever o tamanho final (e a economia) antes de rodar o 2-pass.
 Hoje a única estimativa é uma fórmula duplicada no frontend
 (App.svelte:296-304 — hint de bitrate) que repete `computeSizeBudget`

@@ -180,6 +180,16 @@ e o botão "verificar de novo" confere o resultado.
 | YouTube (vídeo normal) | CRF 23 | sem limite |
 | Tamanho personalizado | 2-pass | definido pelo usuário |
 
+## Estimativa de tamanho
+
+Antes de comprimir, o vidctl mostra no painel "Tamanho alvo" o tamanho que a
+saída deve ter (badge "esperado ≈ X MB") e a economia em relação ao arquivo
+original, quando o alvo é menor. No modo `size` a previsão é exata: ela usa o
+mesmo orçamento de bits do encode 2-pass (alvo × 0,95 de overhead − áudio,
+com um orçamento por parte em cortes), então o resultado real fica a poucos
+pontos percentuais do esperado em conteúdo que preenche o orçamento. Em modo
+CRF ainda não há previsão determinística e o badge não aparece.
+
 ## Corte em partes (split por tempo)
 
 Na barra lateral, o grupo **"Cortar em partes"** divide o vídeo antes de
