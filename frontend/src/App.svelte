@@ -475,6 +475,13 @@
       ? (1 - previewItem.sizeBytes / (1024 * 1024) / info.sizeMB) * 100
       : 0,
   )
+  const savedLabel = $derived(
+    Math.abs(savedPct) < 0.5
+      ? '0%'
+      : savedPct > 0
+        ? `−${Math.round(savedPct)}%`
+        : `+${Math.round(-savedPct)}%`,
+  )
 
   onMount(() => {
     load()
@@ -909,7 +916,7 @@
           status={previewBusy ? 'progress' : previewState === 'done' ? 'done' : previewState === 'error' ? 'error' : 'idle'}
           stage={previewItem?.stage ?? ''}
           percent={previewItem?.percent ?? 0}
-          {savedPct}
+          {savedLabel}
           {thumb}
           onSwitch={pickInput}
           onClear={reset}
@@ -943,7 +950,7 @@
       {:else if previewItem && previewDone}
         <div class="result">
           <div class="result-big">
-            <span class="result-pct mono">−{savedPct.toFixed(0)}%</span>
+            <span class="result-pct mono">{savedLabel}</span>
             <span class="result-size mono">
               {(previewItem.sizeBytes / (1024 * 1024)).toFixed(1)} MB{#if previewItem.partsTotal > 1} · {previewItem.partsTotal} partes{/if}
             </span>
@@ -967,7 +974,7 @@
           </div>
           <ul class="queue-list">
             {#each queue as item (item.jobId)}
-              <li class="queue-item" class:active={item.state === 'running'} class:muted={item.state === 'canceled'}>
+              <li class="queue-item" class:muted={item.state === 'canceled'}>
                 <span class="qi-dot" data-state={item.state}></span>
                 <div class="qi-body">
                   <div class="qi-line">
@@ -975,7 +982,7 @@
                     <span class="qi-preset mono">{presetName(item.presetId)}</span>
                     <span class="qi-state mono">{stateLabel(item)}</span>
                   </div>
-                  {#if item.state === 'running'}
+                  {#if item.state === 'running' && item.jobId !== previewItem?.jobId}
                     <div class="track thin"><div class="fill" style="width:{item.percent}%"></div></div>
                   {/if}
                   {#if item.error}

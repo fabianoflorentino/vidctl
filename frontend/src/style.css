@@ -929,10 +929,6 @@ input[type="number"].num {
   padding: 8px 10px;
 }
 
-.queue-item.active {
-  box-shadow: inset 2px 0 0 var(--accent);
-}
-
 .queue-item.muted {
   opacity: 0.6;
 }
