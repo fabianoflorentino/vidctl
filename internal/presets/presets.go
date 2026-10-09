@@ -11,6 +11,8 @@ type Preset struct {
 	SizeMB       float64 `json:"sizeMB"`       // used when Mode == "size"
 	CRF          float64 `json:"crf"`          // used when Mode == "crf"
 	AudioBitrate string  `json:"audioBitrate"` // e.g. "96k"
+	Codec        string  `json:"codec"`        // "h264" | "h265"; empty means h264
+	Hardware     string  `json:"hardware"`     // "" | "nvenc" | "amf" | "qsv" | "videotoolbox"; empty means software
 }
 
 var presets = []Preset{
