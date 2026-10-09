@@ -30,6 +30,10 @@ export function DebugLog(arg1) {
   return window['go']['main']['App']['DebugLog'](arg1);
 }
 
+export function EstimateSize(arg1) {
+  return window['go']['main']['App']['EstimateSize'](arg1);
+}
+
 export function GetAdvice(arg1) {
   return window['go']['main']['App']['GetAdvice'](arg1);
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"math"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -487,6 +488,21 @@ printf '%s\n' '{"streams":[{"codec_type":"video","codec_name":"h264","width":320
 }
 
 func TestCompressMultiple(t *testing.T) {
+	skipOnWindows(t)
+	dir := t.TempDir()
+	scripts := map[string]string{
+		"ffmpeg": "#!/bin/sh\nsleep 3\nexit 0\n",
+		"ffprobe": `#!/bin/sh
+printf '%s\n' '{"streams":[{"codec_type":"video","codec_name":"h264","width":320,"height":240,"duration":2.0}],"format":{"duration":2.0}}'
+`,
+	}
+	for name, script := range scripts {
+		if err := os.WriteFile(filepath.Join(dir, name), []byte(script), 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	t.Setenv("PATH", dir)
+
 	a := NewApp()
 	acks := a.CompressMultiple([]compress.Job{
 		{InputPath: "", PresetID: "whatsapp-status"},
@@ -636,5 +652,53 @@ printf '%s\n' '{"streams":[
 	}
 	if !adv.OK {
 		t.Errorf("clipe curto deveria estar ok: %+v", adv)
+	}
+}
+
+func TestEstimateSize(t *testing.T) {
+	skipOnWindows(t)
+	dir := t.TempDir()
+	scripts := map[string]string{
+		"ffprobe": `#!/bin/sh
+printf '%s\n' '{"streams":[
+	{"codec_type":"video","codec_name":"h264","width":320,"height":240,"duration":2.0},
+	{"codec_type":"audio","codec_name":"aac"}
+],"format":{"duration":2.0}}'
+`,
+	}
+	for name, script := range scripts {
+		if err := os.WriteFile(filepath.Join(dir, name), []byte(script), 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	t.Setenv("PATH", dir)
+	a := NewApp()
+
+	if _, err := a.EstimateSize(compress.Job{}); err == nil {
+		t.Error("esperava erro sem inputPath")
+	}
+	if _, err := a.EstimateSize(compress.Job{InputPath: "in.mp4", PresetID: "nope"}); err == nil {
+		t.Error("esperava erro de preset desconhecido")
+	}
+
+	// modo size: o alvo carrega o headroom de 5% → ≈ 0.95 * 100 MB.
+	res, err := a.EstimateSize(compress.Job{InputPath: "in.mp4", PresetID: "whatsapp-status", SizeMB: 100})
+	if err != nil {
+		t.Fatalf("EstimateSize (size): %v", err)
+	}
+	if !res.Available {
+		t.Error("modo size deveria ter estimativa disponível")
+	}
+	if math.Abs(res.TargetSizeMB-95) > 0.1 {
+		t.Errorf("TargetSizeMB = %.3f; queria ~95", res.TargetSizeMB)
+	}
+
+	// modo crf: previsão determinística ainda não existe → Available=false.
+	crf, err := a.EstimateSize(compress.Job{InputPath: "in.mp4", PresetID: "youtube"})
+	if err != nil {
+		t.Fatalf("EstimateSize (crf): %v", err)
+	}
+	if crf.Available {
+		t.Error("modo crf não deveria ter estimativa determinística")
 	}
 }

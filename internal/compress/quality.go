@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 
+	"github.com/fabianoflorentino/vidctl/internal/estimate"
 	"github.com/fabianoflorentino/vidctl/internal/media"
 	"github.com/fabianoflorentino/vidctl/internal/presets"
 	"github.com/fabianoflorentino/vidctl/internal/split"
@@ -62,16 +63,16 @@ func Advise(info *media.Info, preset presets.Preset, job Job) Advice {
 	}
 
 	minKbps := minKbpsForHeight(info.Height)
-	audioBits := bitrateToBits(preset.AudioBitrate)
+	audioBits := estimate.BitrateToBits(preset.AudioBitrate)
 	if !info.HasAudio {
 		audioBits = 0
 	}
 
-	lines, err := computeSizeBudget(job, preset, info, segSec)
+	budget, err := estimate.BudgetFor(preset, info, segSec)
 	if err != nil {
 		return lowAdvice(0, minKbps, segSec, info, preset, job, audioBits)
 	}
-	kbps := lines.videoBitrate / 1000
+	kbps := budget.VideoBitrate / 1000
 	if kbps >= minKbps {
 		return Advice{OK: true, Kbps: kbps, MinKbps: minKbps}
 	}

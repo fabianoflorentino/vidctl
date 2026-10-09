@@ -18,6 +18,7 @@
     OpenFolder,
     GetUsage,
     GetAdvice,
+    EstimateSize,
     GetConfig,
     SaveConfig,
   } from '../wailsjs/go/main/App.js'
@@ -163,6 +164,7 @@
   }
   let usage = $state<Awaited<ReturnType<typeof GetUsage>> | null>(null)
   let advice = $state<Awaited<ReturnType<typeof GetAdvice>> | null>(null)
+  let sizeEstimate = $state<Awaited<ReturnType<typeof EstimateSize>> | null>(null)
   let adviceSeq = 0
 
   type EventPatch = { allowed: QueueState[]; fn: (item: QueueItem) => void }
@@ -340,23 +342,23 @@
     const busy = previewBusy
     if (!path || !info || busy) {
       advice = null
+      sizeEstimate = null
       return
     }
     const seq = ++adviceSeq
     const timer = setTimeout(async () => {
-      try {
-        const ad = await GetAdvice(new bindings.Job({
-          inputPath: path,
-          outputPath: 'advice://placeholder',
-          presetId,
-          sizeMB: targetMB > 0 ? targetMB : 10,
-          crf: qualityCRF,
-          split: split ?? undefined,
-        }))
-        if (seq === adviceSeq) advice = ad
-      } catch {
-        if (seq === adviceSeq) advice = null
-      }
+      const job = new bindings.Job({
+        inputPath: path,
+        outputPath: 'advice://placeholder',
+        presetId,
+        sizeMB: targetMB > 0 ? targetMB : 10,
+        crf: qualityCRF,
+        split: split ?? undefined,
+      })
+      const [got, estimated] = await Promise.allSettled([GetAdvice(job), EstimateSize(job)])
+      if (seq !== adviceSeq) return
+      advice = got.status === 'fulfilled' ? got.value : null
+      sizeEstimate = estimated.status === 'fulfilled' ? estimated.value : null
     }, 250)
     return () => clearTimeout(timer)
   })
@@ -805,9 +807,17 @@
               <span class="meta-k">tamanho (MB)</span>
               <Stepper value={sizeMB} min={2} max={100} digits={1} ariaLabel="tamanho alvo" onchange={(v) => (sizeMB = v)} />
             </div>
+            {#if sizeEstimate?.available}
+              <span class="est-badge mono">
+                esperado ≈ {sizeEstimate.targetSizeMB.toFixed(1)} MB{#if sizeEstimate.audioKbps > 0} · áudio {sizeEstimate.audioKbps}k{/if}
+                {#if sizeEstimate.savedPct >= 0.5}· economia ~{Math.round(sizeEstimate.savedPct)}%{/if}
+              </span>
+            {/if}
             <div class="hint mono">
               {#if info}
-                {#if advice && advice.kbps > 0}
+                {#if sizeEstimate?.available}
+                  ≈ video {sizeEstimate.videoKbps} kbps{#if sizeEstimate.audioKbps > 0} · áudio {sizeEstimate.audioKbps}k{/if}{#if splitOn} · por parte{/if}
+                {:else if advice && advice.kbps > 0}
                   ≈ video {advice.kbps} kbps · áudio 96k{#if splitOn} · por parte{/if}
                 {:else}
                   ≈ video {Math.max(1, Math.round(((sizeMB * 8 * 1024 * 1024 * 0.95) / info.durationSec - 96000) / 1000))} kbps · áudio 96k
