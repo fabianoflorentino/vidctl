@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	"github.com/fabianoflorentino/vidctl/internal/cmdutil"
+	"github.com/fabianoflorentino/vidctl/internal/encode"
 	"github.com/fabianoflorentino/vidctl/internal/estimate"
 	"github.com/fabianoflorentino/vidctl/internal/events"
 	"github.com/fabianoflorentino/vidctl/internal/media"
@@ -30,6 +31,8 @@ type Job struct {
 	SizeMB     float64     `json:"sizeMB"` // used when preset mode is "size"
 	CRF        float64     `json:"crf"`
 	Split      *split.Spec `json:"split,omitempty"`
+	Codec      string      `json:"codec,omitempty"`    // overrides the preset codec when set
+	Hardware   string      `json:"hardware,omitempty"` // overrides the preset hardware when set
 }
 
 func ffmpegPath() (string, error) {
@@ -83,40 +86,40 @@ func buildSizePasses(ctx context.Context, jobID string, job Job, preset presets.
 		return nil, nil, err
 	}
 
-	vbr := strconv.Itoa(lines.VideoBitrate)
 	passLog := passLogFile(jobID)
 	seek := seekArgs(job, seg)
+	h265 := h265Flag(preset.Codec)
 
-	filter := "scale='min(1280,iw)':'min(1280,ih)':force_original_aspect_ratio=decrease"
-
-	pass1Args := []string{
-		"-y",
-	}
+	pass1Args := []string{"-y"}
 	pass1Args = append(pass1Args, seek...)
 	pass1Args = append(pass1Args,
 		"-i", job.InputPath,
 		"-an",
-		"-vf", filter,
-		"-c:v", "libx264", "-b:v", vbr,
-		"-preset", "medium",
+		"-vf", scaleFilter(),
+	)
+	pass1Args = append(pass1Args, encode.Pass1Args(preset.Codec, preset.Hardware, lines.VideoBitrate)...)
+	if h265 != nil {
+		pass1Args = append(pass1Args, h265...)
+	}
+	pass1Args = append(pass1Args,
 		"-passlogfile", passLog,
 		"-pass", "1",
 		"-progress", "pipe:1", "-nostats",
 		"-f", "null", os.DevNull,
 	)
 
-	pass2Args := []string{
-		"-y",
-	}
+	pass2Args := []string{"-y"}
 	pass2Args = append(pass2Args, seek...)
 	pass2Args = append(pass2Args,
 		"-i", job.InputPath,
-		"-vf", filter,
-		"-c:v", "libx264", "-b:v", vbr,
-		"-maxrate", strconv.Itoa(lines.MaxRate),
-		"-bufsize", strconv.Itoa(lines.BufSize),
-		"-preset", "medium",
-		"-pix_fmt", "yuv420p",
+		"-vf", scaleFilter(),
+	)
+	pass2Args = append(pass2Args, encode.SizeArgs(preset.Codec, preset.Hardware, lines.VideoBitrate, lines.MaxRate, lines.BufSize)...)
+	pass2Args = append(pass2Args, "-pix_fmt", "yuv420p")
+	if h265 != nil {
+		pass2Args = append(pass2Args, h265...)
+	}
+	pass2Args = append(pass2Args,
 		"-c:a", "aac",
 		"-b:a", preset.AudioBitrate,
 		"-movflags", "+faststart",
@@ -131,26 +134,66 @@ func buildSizePasses(ctx context.Context, jobID string, job Job, preset presets.
 		nil
 }
 
+// buildSizeCmd creates the single-pass ffmpeg command for size-limited encoding
+// on hardware backends that do not support two-pass (NVENC, AMF, VideoToolbox).
+func buildSizeCmd(ctx context.Context, job Job, preset presets.Preset, info *media.Info, seg split.Segment) (*exec.Cmd, error) {
+	if _, err := ffmpegPath(); err != nil {
+		return nil, err
+	}
+	lines, err := estimate.BudgetFor(preset, info, seg.Duration())
+	if err != nil {
+		return nil, err
+	}
+	v := encode.SizeArgs(preset.Codec, preset.Hardware, lines.VideoBitrate, lines.MaxRate, lines.BufSize)
+	return buildSingle(ctx, job, preset, info, seg, v), nil
+}
+
 // buildCrfPass creates the single-pass ffmpeg command for quality-based encoding.
 func buildCrfPass(ctx context.Context, job Job, preset presets.Preset, info *media.Info, seg split.Segment) *exec.Cmd {
-	bin, _ := ffmpegPath()
+	v := encode.QualityArgs(preset.Codec, preset.Hardware, preset.CRF)
+	return buildSingle(ctx, job, preset, info, seg, v)
+}
+
+// buildSingle assembles a single-pass ffmpeg command around the given -c:v
+// section. The ffmpeg binary is resolved anew; a missing binary yields a
+// command with an empty path so the error surfaces when ffmpegPath reports it.
+func buildSingle(ctx context.Context, job Job, preset presets.Preset, info *media.Info, seg split.Segment, videoArgs []string) *exec.Cmd {
+	bin, err := ffmpegPath()
+	if err != nil {
+		bin = ""
+	}
 	args := []string{"-y"}
 	args = append(args, seekArgs(job, seg)...)
 	args = append(args,
 		"-i", job.InputPath,
-		"-vf", "scale='min(1280,iw)':'min(1280,ih)':force_original_aspect_ratio=decrease",
-		"-c:v", "libx264",
-		"-crf", fmt.Sprintf("%d", int(preset.CRF)),
-		"-preset", "medium",
+		"-vf", scaleFilter(),
+	)
+	args = append(args, videoArgs...)
+	args = append(args,
 		"-pix_fmt", "yuv420p",
 	)
 	if info.HasAudio {
 		args = append(args, "-c:a", "aac", "-b:a", preset.AudioBitrate)
 	}
+	if h := h265Flag(preset.Codec); h != nil {
+		args = append(args, h...)
+	}
 	args = append(args, "-movflags", "+faststart",
 		"-progress", "pipe:1", "-nostats",
 		job.OutputPath)
 	return cmdutil.CommandContext(ctx, bin, args...)
+}
+
+func scaleFilter() string {
+	return "scale='min(1280,iw)':'min(1280,ih)':force_original_aspect_ratio=decrease"
+}
+
+// h265Flag silences the per-frame stats libx265 writes to stderr.
+func h265Flag(codec string) []string {
+	if codec != encode.CodecH265 {
+		return nil
+	}
+	return []string{"-x265-params", "log-level=error"}
 }
 
 // execute runs a command, scanning `-progress pipe:1` and emitting progress events.
@@ -212,6 +255,12 @@ func Run(ctx context.Context, jobID string, job Job) error {
 	if !ok {
 		return fail(errors.New("preset desconhecido: " + job.PresetID))
 	}
+	if !encode.ValidCodec(preset.Codec) {
+		return fail(errors.New("codec desconhecido: " + preset.Codec))
+	}
+	if !encode.ValidHardware(preset.Hardware) {
+		return fail(errors.New("codificador de hardware desconhecido: " + preset.Hardware))
+	}
 
 	if preset.Mode == "size" && preset.SizeMB <= 0 {
 		return fail(errors.New("tamanho alvo deve ser maior que zero"))
@@ -271,31 +320,49 @@ func encodeSegment(ctx context.Context, jobID, logID string, job Job, preset pre
 
 	if preset.Mode == "size" {
 		removePassLogs(logID)
-		pass1, pass2, err := buildSizePasses(ctx, logID, job, preset, info, seg)
+		if encode.TwoPass(preset.Hardware) {
+			pass1, pass2, err := buildSizePasses(ctx, logID, job, preset, info, seg)
+			if err != nil {
+				return err
+			}
+
+			base1, span1 := 0.0, 100.0
+			base2, span2 := 0.0, 100.0
+			if job.Split != nil {
+				base := float64(seg.Index-1) * segSpan
+				base1, span1 = base, segSpan/2
+				base2, span2 = base+segSpan/2, segSpan/2
+			}
+
+			stage1 := "pass1/2" + suffix
+			events.EmitProgress(jobID, events.KindCompress, stage1, base1)
+			if err := execute(ctx, pass1, jobID, stage1, seg.Duration(), base1, span1); err != nil {
+				return wrapStage("pass 1 falhou", suffix, err)
+			}
+
+			stage2 := "pass2/2" + suffix
+			events.EmitProgress(jobID, events.KindCompress, stage2, base2)
+			if err := execute(ctx, pass2, jobID, stage2, seg.Duration(), base2, span2); err != nil {
+				return wrapStage("pass 2 falhou", suffix, err)
+			}
+			removePassLogs(logID)
+			return nil
+		}
+
+		cmd, err := buildSizeCmd(ctx, job, preset, info, seg)
 		if err != nil {
 			return err
 		}
-
-		base1, span1 := 0.0, 100.0
-		base2, span2 := 0.0, 100.0
+		base, span := 0.0, 100.0
 		if job.Split != nil {
-			base := float64(seg.Index-1) * segSpan
-			base1, span1 = base, segSpan/2
-			base2, span2 = base+segSpan/2, segSpan/2
+			base = float64(seg.Index-1) * segSpan
+			span = segSpan
 		}
-
-		stage1 := "pass1/2" + suffix
-		events.EmitProgress(jobID, events.KindCompress, stage1, base1)
-		if err := execute(ctx, pass1, jobID, stage1, seg.Duration(), base1, span1); err != nil {
-			return wrapStage("pass 1 falhou", suffix, err)
+		stage := "encoding" + suffix
+		events.EmitProgress(jobID, events.KindCompress, stage, base)
+		if err := execute(ctx, cmd, jobID, stage, seg.Duration(), base, span); err != nil {
+			return wrapStage("falha ao comprimir", suffix, err)
 		}
-
-		stage2 := "pass2/2" + suffix
-		events.EmitProgress(jobID, events.KindCompress, stage2, base2)
-		if err := execute(ctx, pass2, jobID, stage2, seg.Duration(), base2, span2); err != nil {
-			return wrapStage("pass 2 falhou", suffix, err)
-		}
-		removePassLogs(logID)
 		return nil
 	}
 
@@ -328,6 +395,12 @@ func EffectivePreset(job Job) (presets.Preset, bool) {
 	}
 	if preset.Mode == "size" && job.SizeMB > 0 {
 		preset.SizeMB = job.SizeMB
+	}
+	if job.Codec != "" {
+		preset.Codec = job.Codec
+	}
+	if job.Hardware != "" {
+		preset.Hardware = job.Hardware
 	}
 	return preset, true
 }
