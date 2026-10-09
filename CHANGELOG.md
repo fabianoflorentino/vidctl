@@ -11,9 +11,11 @@ operacional dos pacotes.
 
 ## [Unreleased]
 
-Persistência das preferências, fila de conversões em lote e estimativa de
-tamanho: as preferências sobrevivem ao fechamento, dá para comprimir vários
-vídeos de uma vez e o tamanho esperado aparece antes de comprimir.
+Persistência das preferências, fila de conversões em lote, estimativa de
+tamanho e codecs de vídeo com aceleração de GPU: as preferências sobrevivem ao
+fechamento, dá para comprimir vários vídeos de uma vez, o tamanho esperado
+aparece antes de comprimir e o cartão **Avançado** troca para H.265 ou para
+encoders de hardware (NVENC/QSV/AMF/VideoToolbox).
 
 ### Adicionado
 
@@ -22,6 +24,17 @@ vídeos de uma vez e o tamanho esperado aparece antes de comprimir.
   de bits do encode 2-pass (agora único, em `internal/estimate`) — e a
   economia em relação ao arquivo original quando o alvo é menor. Novo binding
   `EstimateSize`; no modo CRF ainda não há previsão e o badge não aparece.
+- **Codec H.265/x265**: o cartão "Avançado" do passo 02 permite escolher
+  H.264 ou H.265 por trabalho; o preset continua com o codec padrão. Juntando
+  a isso o 2-pass existente, o modo tamanho usa `libx265` com a mesma precisão
+  do x264 (agora o builder de argumentos por encoder vive em
+  `internal/encode`).
+- **Aceleração de GPU (NVENC/QSV/AMF/VideoToolbox)**: hardware é opcional por
+  trabalho, opt-in, e aparecem desabilitados os backends que o `ffmpeg` deste
+  computador não tem ou cujo driver falhou no probe de 1 frame — novo binding
+  `GetEncoders` com cache e re-detecção ("verificar de novo"). GPUs do modo
+  tamanho usam VBR 1-pass (destino aproximado, ±5–10%), e a UI avisa quando o
+  encoder de hardware está ativo; software continua o default.
 - **Modo de depuração local**: `VIDCTL_DEBUG=1 ./build/bin/vidctl` liga um log
   no terminal com as transições da fila, os eventos emitidos/recebidos (e os
   patches descartados por estado), as chamadas `Compress`/`GetTasks` e as
