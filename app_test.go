@@ -702,3 +702,125 @@ printf '%s\n' '{"streams":[
 		t.Error("modo crf não deveria ter estimativa determinística")
 	}
 }
+
+const encodersListApp = ` V....D libx264              libx264 H.264 / AVC / MPEG-4 AVC codec
+ V..... h264_nvenc           NVIDIA NVENC H.264 encoder (codec h264)
+ V..... hevc_nvenc           NVIDIA NVENC HEVC encoder (codec hevc)
+ V..... h264_qsv             Intel Quick Sync H.264 encoder (codec h264)
+ V..... hevc_qsv             Intel Quick Sync HEVC encoder (codec hevc)
+`
+
+// fakeDetectFFmpeg installs a scripted ffmpeg that lists encoders via
+// FAKE_ENC_LIST and fails the probe of FAKE_PROBE_FAIL, returning the path.
+func fakeDetectFFmpeg(t *testing.T, list, probeFail string) string {
+	t.Helper()
+	path := filepath.Join(t.TempDir(), "ffmpeg")
+	script := `#!/bin/sh
+if [ "$2" = "-encoders" ]; then
+	printf '%s' "$FAKE_ENC_LIST"
+	exit 0
+fi
+if [ -n "$FAKE_PROBE_FAIL" ] && case "$*" in *"$FAKE_PROBE_FAIL"*) true ;; *) false ;; esac; then
+	echo "probe falhou" >&2
+	exit 1
+fi
+exit 0
+`
+	if err := os.WriteFile(path, []byte(script), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("FAKE_ENC_LIST", list)
+	t.Setenv("FAKE_PROBE_FAIL", probeFail)
+	cmdutil.SetOverride("ffmpeg", path)
+	return path
+}
+
+func TestGetEncoders(t *testing.T) {
+	fakeDetectFFmpeg(t, encodersListApp, "")
+	a := newTestApp(t)
+
+	avail, err := a.GetEncoders()
+	if err != nil {
+		t.Fatalf("GetEncoders: %v", err)
+	}
+	var found int
+	for _, info := range avail.Hardware {
+		if info.ID == "nvenc" || info.ID == "qsv" {
+			found++
+		}
+	}
+	if found != 2 {
+		t.Errorf("esperava nvenc e qsv disponíveis, got %+v", avail.Hardware)
+	}
+	// segunda chamada vem do cache (sem erro)
+	if _, err := a.GetEncoders(); err != nil {
+		t.Errorf("cache deveria estar disponível: %v", err)
+	}
+}
+
+func TestRefreshEncodersReDetects(t *testing.T) {
+	path := fakeDetectFFmpeg(t, encodersListApp, "")
+	a := newTestApp(t)
+	if _, err := a.GetEncoders(); err != nil {
+		t.Fatalf("GetEncoders: %v", err)
+	}
+
+	if err := os.WriteFile(path, []byte("#!/bin/sh\nexit 0\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	after, err := a.RefreshEncoders()
+	if err != nil {
+		t.Fatalf("RefreshEncoders: %v", err)
+	}
+	if len(after.Hardware) != 0 {
+		t.Errorf("após refresh esperava nenhum backend, got %+v", after.Hardware)
+	}
+}
+
+func TestResolveEncoder(t *testing.T) {
+	fakeDetectFFmpeg(t, encodersListApp, "")
+	a := newTestApp(t)
+
+	auto, err := a.resolveEncoder(compress.Job{Codec: "h265", Hardware: "auto"})
+	if err != nil {
+		t.Fatalf("resolveEncoder(auto): %v", err)
+	}
+	if auto.Hardware != "nvenc" {
+		t.Errorf("auto deveria resolver para nvenc, got %q", auto.Hardware)
+	}
+
+	concrete, err := a.resolveEncoder(compress.Job{Hardware: "qsv"})
+	if err != nil {
+		t.Fatalf("resolveEncoder(qsv): %v", err)
+	}
+	if concrete.Hardware != "qsv" {
+		t.Errorf("hardware concreto não deve mudar, got %q", concrete.Hardware)
+	}
+
+	if _, err := a.resolveEncoder(compress.Job{Codec: "av1"}); err == nil || !strings.Contains(err.Error(), "codec desconhecido") {
+		t.Errorf("codec inválido deveria dar erro, got %v", err)
+	}
+	if _, err := a.resolveEncoder(compress.Job{Hardware: "cuda"}); err == nil || !strings.Contains(err.Error(), "codificador de hardware desconhecido") {
+		t.Errorf("hardware inválido deveria dar erro, got %v", err)
+	}
+
+	cmdutil.SetOverride("ffmpeg", filepath.Join(t.TempDir(), "inexistente"))
+	b := newApp(nil)
+	fallback, err := b.resolveEncoder(compress.Job{Hardware: "auto"})
+	if err != nil {
+		t.Fatalf("resolveEncoder(auto sem ffmpeg): %v", err)
+	}
+	if fallback.Hardware != "" {
+		t.Errorf("auto sem encoders deveria virar software, got %q", fallback.Hardware)
+	}
+}
+
+func TestCompressRejectsInvalidEncoder(t *testing.T) {
+	a := newTestApp(t)
+	if _, err := a.Compress(compress.Job{InputPath: "in.mp4", PresetID: "youtube", Codec: "av1"}); err == nil {
+		t.Error("esperava erro de codec inválido no enqueue")
+	}
+	if _, err := a.Compress(compress.Job{InputPath: "in.mp4", PresetID: "youtube", Hardware: "cuda"}); err == nil {
+		t.Error("esperava erro de hardware inválido no enqueue")
+	}
+}

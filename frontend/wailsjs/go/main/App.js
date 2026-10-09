@@ -42,6 +42,10 @@ export function GetConfig() {
   return window['go']['main']['App']['GetConfig']();
 }
 
+export function GetEncoders() {
+  return window['go']['main']['App']['GetEncoders']();
+}
+
 export function GetMediaInfo(arg1) {
   return window['go']['main']['App']['GetMediaInfo'](arg1);
 }
@@ -76,6 +80,10 @@ export function OpenMultipleDialog() {
 
 export function OpenOutputDialog(arg1) {
   return window['go']['main']['App']['OpenOutputDialog'](arg1);
+}
+
+export function RefreshEncoders() {
+  return window['go']['main']['App']['RefreshEncoders']();
 }
 
 export function SaveConfig(arg1) {

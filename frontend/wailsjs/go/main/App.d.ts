@@ -4,6 +4,7 @@ import {main} from '../models';
 import {compress} from '../models';
 import {estimate} from '../models';
 import {config} from '../models';
+import {encode} from '../models';
 import {media} from '../models';
 import {presets} from '../models';
 import {sysinfo} from '../models';
@@ -28,6 +29,8 @@ export function GetAdvice(arg1:compress.Job):Promise<compress.Advice>;
 
 export function GetConfig():Promise<config.Config>;
 
+export function GetEncoders():Promise<encode.Availability>;
+
 export function GetMediaInfo(arg1:string):Promise<media.Info>;
 
 export function GetPresets():Promise<Array<presets.Preset>>;
@@ -45,5 +48,7 @@ export function OpenInputDialog():Promise<string>;
 export function OpenMultipleDialog():Promise<Array<string>>;
 
 export function OpenOutputDialog(arg1:string):Promise<string>;
+
+export function RefreshEncoders():Promise<encode.Availability>;
 
 export function SaveConfig(arg1:config.Config):Promise<void>;

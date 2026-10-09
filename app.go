@@ -12,6 +12,7 @@ import (
 	"github.com/fabianoflorentino/vidctl/internal/compress"
 	"github.com/fabianoflorentino/vidctl/internal/config"
 	"github.com/fabianoflorentino/vidctl/internal/dlog"
+	"github.com/fabianoflorentino/vidctl/internal/encode"
 	"github.com/fabianoflorentino/vidctl/internal/estimate"
 	"github.com/fabianoflorentino/vidctl/internal/events"
 	"github.com/fabianoflorentino/vidctl/internal/media"
@@ -26,6 +27,7 @@ type App struct {
 	jobs  *compress.Manager
 	sys   *sysinfo.Collector
 	store *config.Store
+	enc   *encode.Detector
 }
 
 const videoFilterPattern = "*.mp4;*.mkv;*.mov;*.avi;*.webm;*.m4v;*.ts;*.flv"
@@ -48,6 +50,7 @@ func newApp(store *config.Store) *App {
 		jobs:  compress.NewManager(),
 		sys:   sysinfo.NewCollector(),
 		store: store,
+		enc:   &encode.Detector{},
 	}
 }
 
@@ -119,6 +122,10 @@ func (a *App) GetAdvice(job compress.Job) (compress.Advice, error) {
 	if job.InputPath == "" {
 		return compress.Advice{}, errors.New("escolha um vídeo primeiro")
 	}
+	job, err := a.resolveEncoder(job)
+	if err != nil {
+		return compress.Advice{}, err
+	}
 	preset, ok := compress.EffectivePreset(job)
 	if !ok {
 		return compress.Advice{}, fmt.Errorf("preset desconhecido: %s", job.PresetID)
@@ -136,6 +143,10 @@ func (a *App) GetAdvice(job compress.Job) (compress.Advice, error) {
 func (a *App) EstimateSize(job compress.Job) (estimate.Result, error) {
 	if job.InputPath == "" {
 		return estimate.Result{}, errors.New("escolha um vídeo primeiro")
+	}
+	job, err := a.resolveEncoder(job)
+	if err != nil {
+		return estimate.Result{}, err
 	}
 	preset, ok := compress.EffectivePreset(job)
 	if !ok {
@@ -180,6 +191,54 @@ func joinNames(names []string) string {
 // GetPresets returns the platform presets available for compression.
 func (a *App) GetPresets() []presets.Preset {
 	return presets.List()
+}
+
+// GetEncoders probes which hardware encoders this machine can actually use and
+// returns them for the frontend selectors. The result is cached until
+// RefreshEncoders resets it ("verificar de novo").
+func (a *App) GetEncoders() (encode.Availability, error) {
+	return a.enc.Availability()
+}
+
+// RefreshEncoders drops the cached detection and re-probes the encoders.
+func (a *App) RefreshEncoders() (encode.Availability, error) {
+	a.enc.Refresh()
+	return a.enc.Availability()
+}
+
+// resolveEncoder validates the job's codec/hardware overrides and turns the
+// "auto" hardware sentinel into the first detected backend, falling back to
+// software when nothing is probed.
+func (a *App) resolveEncoder(job compress.Job) (compress.Job, error) {
+	if !encode.ValidCodec(job.Codec) {
+		return job, fmt.Errorf("codec desconhecido: %s", job.Codec)
+	}
+	if job.Hardware == "" {
+		return job, nil
+	}
+	if !encode.ValidHardware(job.Hardware) {
+		return job, fmt.Errorf("codificador de hardware desconhecido: %s", job.Hardware)
+	}
+	if job.Hardware != encode.Auto {
+		return job, nil
+	}
+	avail, err := a.enc.Availability()
+	if err != nil {
+		job.Hardware = ""
+		return job, nil
+	}
+	job.Hardware = encode.ResolveAuto(encoderIDs(avail))
+	return job, nil
+}
+
+func encoderIDs(avail encode.Availability) []string {
+	ids := make([]string, 0, len(avail.Hardware))
+	for _, info := range avail.Hardware {
+		if len(info.Codecs) > 0 {
+			ids = append(ids, info.ID)
+		}
+	}
+	return ids
 }
 
 // OpenInputDialog opens the native dialog to pick a source video.
@@ -255,8 +314,12 @@ func (a *App) Compress(req compress.Job) (string, error) {
 	if req.PresetID == "" {
 		return "", errors.New("Nenhum preset selecionado")
 	}
+	req, err := a.resolveEncoder(req)
+	if err != nil {
+		return "", err
+	}
 	jobID, _ := a.jobs.Enqueue(newTask(req))
-	dlog.Printf("[app] Compress input=%q preset=%q job=%s", req.InputPath, req.PresetID, jobID)
+	dlog.Printf("[app] Compress input=%q preset=%q codec=%q hardware=%q job=%s", req.InputPath, req.PresetID, req.Codec, req.Hardware, jobID)
 	return jobID, nil
 }
 
@@ -279,6 +342,11 @@ func (a *App) CompressMultiple(reqs []compress.Job) []JobAck {
 		}
 		if req.PresetID == "" {
 			acks = append(acks, JobAck{Error: "Nenhum preset selecionado"})
+			continue
+		}
+		req, err := a.resolveEncoder(req)
+		if err != nil {
+			acks = append(acks, JobAck{Error: err.Error()})
 			continue
 		}
 		jobID, position := a.jobs.Enqueue(newTask(req))
