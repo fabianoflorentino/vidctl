@@ -21,9 +21,11 @@
     EstimateSize,
     GetConfig,
     SaveConfig,
+    GetEncoders,
+    RefreshEncoders,
   } from '../wailsjs/go/main/App.js'
   import { EventsOn, EventsOff } from '../wailsjs/runtime/runtime.js'
-  import type { main, presets, media, config } from '../wailsjs/go/models.js'
+  import type { main, presets, media, config, encode } from '../wailsjs/go/models.js'
   import { compress as bindings, config as configBindings } from '../wailsjs/go/models.js'
   import StatusPage from './lib/StatusPage.svelte'
   import VideoRow from './lib/VideoRow.svelte'
@@ -90,6 +92,10 @@
   let selectedPresetId = $state('whatsapp-status')
   let sizeMB = $state(10)
   let crf = $state(23)
+  let codec = $state<'h264' | 'h265'>('h264')
+  let hardware = $state('')
+  let encoders = $state<encode.Availability | null>(null)
+  let encodersError = $state('')
 
   let outputDir = $state('')
   let ffmpegPath = $state('')
@@ -354,6 +360,8 @@
         sizeMB: targetMB > 0 ? targetMB : 10,
         crf: qualityCRF,
         split: split ?? undefined,
+        codec,
+        hardware,
       })
       const [got, estimated] = await Promise.allSettled([GetAdvice(job), EstimateSize(job)])
       if (seq !== adviceSeq) return
@@ -469,6 +477,37 @@
     })),
   )
 
+  type HardwareOption = { id: string; title: string; description: string; disabled: boolean }
+
+  const hardwareOptions = $derived.by<HardwareOption[]>(() => {
+    const opts: HardwareOption[] = [
+      { id: '', title: 'Software (CPU)', description: 'libx264/libx265 · 2-pass no modo tamanho', disabled: false },
+    ]
+    opts.push({ id: 'auto', title: 'Automático', description: 'usa o primeiro backend de hardware detectado', disabled: false })
+    for (const info of encoders?.hardware ?? []) {
+      const labels = info.codecs.map((c) => c.toUpperCase())
+      const desc = labels.length
+        ? `suporta ${labels.join(' e ')}`
+        : info.error
+          ? 'detectado, mas não conseguiu rodar (verificar de novo)'
+          : 'sem codecs disponíveis'
+      opts.push({
+        id: info.id,
+        title: info.label,
+        description: desc,
+        disabled: !info.codecs.includes(codec),
+      })
+    }
+    return opts
+  })
+
+  const gpuActive = $derived(hardware !== '')
+
+  const codecOptions: { id: 'h264' | 'h265'; title: string; description: string }[] = [
+    { id: 'h264', title: 'H.264', description: 'Compatível com tudo (x264 / hardware)' },
+    { id: 'h265', title: 'H.265 / HEVC', description: 'Menor arquivo na mesma qualidade, menos compatível' },
+  ]
+
   const appView = $derived(info ? 'queue' : 'empty')
 
   const originalMB = $derived(info ? info.sizeMB : 0)
@@ -561,7 +600,28 @@
 
     await loadConfig()
     await checkFFmpeg()
+    await loadEncoders()
     await refreshQueue()
+  }
+
+  async function loadEncoders() {
+    try {
+      encoders = await GetEncoders()
+      encodersError = ''
+    } catch (err) {
+      encoders = null
+      encodersError = String(err)
+    }
+  }
+
+  async function refreshEncoders() {
+    try {
+      encoders = await RefreshEncoders()
+      encodersError = ''
+    } catch (err) {
+      encoders = null
+      encodersError = String(err)
+    }
   }
 
   async function refreshQueue() {
@@ -634,6 +694,8 @@
     selectedPresetId = p.id
     if (p.mode === 'size') sizeMB = p.sizeMB
     else crf = p.crf
+    codec = p.codec === 'h265' ? 'h265' : 'h264'
+    hardware = p.hardware ?? ''
   }
 
   function canRun(): boolean {
@@ -662,6 +724,8 @@
       sizeMB: sizeMB > 0 ? sizeMB : 10,
       crf,
       split: splitPayload() ?? undefined,
+      codec,
+      hardware,
     })
   }
 
@@ -848,6 +912,48 @@
           </div>
         </section>
       {/if}
+
+      <section class="group-card">
+        <div class="group-card-head">
+          <span class="group-card-title">Avançado</span>
+          <InfoTip text="Altera o codec de vídeo e o codificador para este trabalho (não altera o preset salvo). Aceleração de hardware é mais rápida, mas costuma exigir um pouco mais de bitrate para a mesma qualidade; no modo tamanho o arquivo pode variar em ±5–10%." />
+        </div>
+        <div class="group-card-body">
+          <div class="meta-k">codec de vídeo</div>
+          <div class="codec-row">
+            {#each codecOptions as opt (opt.id)}
+              <label class="codec-chip" class:selected={codec === opt.id}>
+                <input type="radio" name="codec" value={opt.id} checked={codec === opt.id} onchange={() => (codec = opt.id)} />
+                <span class="codec-chip-title">{opt.title}</span>
+                <span class="codec-chip-desc">{opt.description}</span>
+              </label>
+            {/each}
+          </div>
+
+          <div class="meta-k spacer">codificador</div>
+          <RadioCardGroup options={hardwareOptions} selected={hardware} name="hardware" onchange={(v) => (hardware = v)} />
+
+          {#if gpuActive}
+            <div class="advice">
+              <p class="advice-msg">
+                Codificador de GPU ativo: mais rápido, porém qualidade e tamanho podem variar em relação ao software
+                (±5–10% no modo tamanho).
+              </p>
+            </div>
+          {/if}
+
+          {#if encodersError}
+            <div class="hint">
+              falha ao detectar encoders: {encodersError}
+              <button class="btn subtle small" onclick={refreshEncoders}>verificar de novo</button>
+            </div>
+          {:else}
+            <div class="hint">
+              {encoders ? `${encoders.hardware.length} backend(s) de hardware detectado(s)` : 'verificando encoders…'}
+            </div>
+          {/if}
+        </div>
+      </section>
 
       <section class="group-card">
         <div class="group-card-head">
