@@ -3,11 +3,18 @@ package encode
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
 	"github.com/fabianoflorentino/vidctl/internal/cmdutil"
 )
+
+func skipOnWindows(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("fake shell bins não executam no Windows")
+	}
+}
 
 func fakeFFmpeg(t *testing.T, encoders, probeFail string) string {
 	t.Helper()
@@ -45,6 +52,7 @@ const encodersList = ` V....D libx264              libx264 H.264 / AVC / MPEG-4 
 `
 
 func TestDetectorAvailability(t *testing.T) {
+	skipOnWindows(t)
 	fakeFFmpeg(t, encodersList, "hevc_videotoolbox")
 
 	d := &Detector{}
@@ -71,6 +79,7 @@ func TestDetectorAvailability(t *testing.T) {
 }
 
 func TestDetectorCachesAndRefreshes(t *testing.T) {
+	skipOnWindows(t)
 	path := fakeFFmpeg(t, encodersList, "hevc_videotoolbox")
 
 	d := &Detector{}
@@ -114,6 +123,7 @@ func TestDetectorFFmpegMissing(t *testing.T) {
 }
 
 func TestDetectorListParsesOnlyVideo(t *testing.T) {
+	skipOnWindows(t)
 	fakeFFmpeg(t, encodersList, "")
 	names, err := listEncoders(mustResolve(t))
 	if err != nil {
@@ -128,6 +138,7 @@ func TestDetectorListParsesOnlyVideo(t *testing.T) {
 }
 
 func TestProbeEncoderFailure(t *testing.T) {
+	skipOnWindows(t)
 	fakeFFmpeg(t, encodersList, "h264_qsv")
 	err := probeEncoder(mustResolve(t), "h264_qsv")
 	if err == nil {

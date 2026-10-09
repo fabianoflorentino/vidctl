@@ -736,6 +736,7 @@ exit 0
 }
 
 func TestGetEncoders(t *testing.T) {
+	skipOnWindows(t)
 	fakeDetectFFmpeg(t, encodersListApp, "")
 	a := newTestApp(t)
 
@@ -759,6 +760,7 @@ func TestGetEncoders(t *testing.T) {
 }
 
 func TestRefreshEncodersReDetects(t *testing.T) {
+	skipOnWindows(t)
 	path := fakeDetectFFmpeg(t, encodersListApp, "")
 	a := newTestApp(t)
 	if _, err := a.GetEncoders(); err != nil {
@@ -778,6 +780,7 @@ func TestRefreshEncodersReDetects(t *testing.T) {
 }
 
 func TestResolveEncoder(t *testing.T) {
+	skipOnWindows(t)
 	fakeDetectFFmpeg(t, encodersListApp, "")
 	a := newTestApp(t)
 
