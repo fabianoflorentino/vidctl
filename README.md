@@ -250,6 +250,21 @@ wails dev -tags webkit2_41
 A tag `webkit2_41` é necessária no Linux quando o sistema tem só WebKitGTK 4.1.
 Em macOS/Windows ela pode ser omitida.
 
+### Depuração local
+
+Para rastrear o pipeline no binário compilado (fila, eventos de progresso e
+erros de JS), ligue o modo de diagnóstico:
+
+```bash
+make build
+VIDCTL_DEBUG=1 ./build/bin/vidctl
+```
+
+O terminal recebe, com timestamp, cada transição da fila (enfileirar,
+iniciar, fim de worker), cada evento emitido para a UI e cada evento
+recebido no frontend — incluindo patches descartados por estado — além das
+exceções de JavaScript. Sem `VIDCTL_DEBUG` o log fica desligado, sem custo.
+
 ## Build de produção
 
 ```bash

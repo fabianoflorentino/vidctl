@@ -22,6 +22,11 @@ vídeos de uma vez e o tamanho esperado aparece antes de comprimir.
   de bits do encode 2-pass (agora único, em `internal/estimate`) — e a
   economia em relação ao arquivo original quando o alvo é menor. Novo binding
   `EstimateSize`; no modo CRF ainda não há previsão e o badge não aparece.
+- **Modo de depuração local**: `VIDCTL_DEBUG=1 ./build/bin/vidctl` liga um log
+  no terminal com as transições da fila, os eventos emitidos/recebidos (e os
+  patches descartados por estado), as chamadas `Compress`/`GetTasks` e as
+  exceções de JS do frontend — para diagnosticar a UI de progresso sem
+  afetar a execução normal (desligado por padrão).
 - **Fila de conversões (batch)**: "Adicionar vídeos…" enfileira vários
   arquivos de uma vez (ou solte vários na janela), um trabalho por arquivo com
   o preset e a saída atuais; a fila aparece no lugar do passo 04 com nome,

@@ -18,6 +18,10 @@ export function Compress(arg1:compress.Job):Promise<string>;
 
 export function CompressMultiple(arg1:Array<compress.Job>):Promise<Array<main.JobAck>>;
 
+export function DebugEnabled():Promise<boolean>;
+
+export function DebugLog(arg1:string):Promise<void>;
+
 export function EstimateSize(arg1:compress.Job):Promise<estimate.Result>;
 
 export function GetAdvice(arg1:compress.Job):Promise<compress.Advice>;

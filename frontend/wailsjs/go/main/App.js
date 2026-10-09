@@ -22,6 +22,14 @@ export function CompressMultiple(arg1) {
   return window['go']['main']['App']['CompressMultiple'](arg1);
 }
 
+export function DebugEnabled() {
+  return window['go']['main']['App']['DebugEnabled']();
+}
+
+export function DebugLog(arg1) {
+  return window['go']['main']['App']['DebugLog'](arg1);
+}
+
 export function EstimateSize(arg1) {
   return window['go']['main']['App']['EstimateSize'](arg1);
 }
