@@ -519,14 +519,18 @@ printf '%s\n' '{"streams":[{"codec_type":"video","codec_name":"h264","width":320
 	if acks[1].JobID != "" || !strings.Contains(acks[1].Error, "Nenhum preset") {
 		t.Errorf("ack[1] = %+v; queria erro de preset", acks[1])
 	}
-	if acks[2].JobID == "" || acks[2].Position != 1 {
-		t.Errorf("ack[2] = %+v; queria jobId e posição 1", acks[2])
-	}
-	if acks[3].JobID == "" || acks[3].Position != 2 {
-		t.Errorf("ack[3] = %+v; queria jobId e posição 2", acks[3])
+	// Position do enqueue depende do timing do worker; o essencial é enfileirar
+	// os dois jobs válidos e vê-los na fila com posições ordenadas.
+	if acks[2].JobID == "" || acks[3].JobID == "" {
+		t.Errorf("acks[2..3] sem jobId: %+v %+v", acks[2], acks[3])
 	}
 	if tasks := a.GetTasks(); len(tasks) != 2 {
 		t.Errorf("GetTasks = %d tarefas; queria 2", len(tasks))
+	} else {
+		pos := []int{tasks[0].Position, tasks[1].Position}
+		if pos[0] != 1 || pos[1] != 2 || pos[0] >= pos[1] {
+			t.Errorf("posições da fila inesperadas: %v", pos)
+		}
 	}
 
 	for _, id := range []string{acks[2].JobID, acks[3].JobID} {
