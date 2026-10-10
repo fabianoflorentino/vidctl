@@ -1262,20 +1262,6 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
               <div class="split-error mono">{adjustError}</div>
             {/if}
           </Section>
-
-      <section class="group-card">
-        <div class="group-card-head">
-          <span class="group-card-title">Saída</span>
-        </div>
-        <div class="group-card-body">
-          <div class="out-row">
-            <span class="out-path mono" class:empty={!outputPath}>
-              {outputPath || 'escolha o vídeo para gerar o caminho de saída'}
-            </span>
-            <button class="btn subtle small" onclick={pickOutput} disabled={!inputPath}>salvar como…</button>
-          </div>
-        </div>
-      </section>
     </aside>
 
     <main class="content dropzone" class:hot={dragging}>
@@ -1298,6 +1284,16 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
           onSwitch={pickInput}
           onClear={reset}
         />
+        <div class="out-card group-card">
+          <div class="group-card-body">
+            <div class="out-row">
+              <span class="out-path mono" class:empty={!outputPath}>
+                {outputPath || 'escolha o vídeo para gerar o caminho de saída'}
+              </span>
+              <button class="btn subtle small" onclick={pickOutput} disabled={!inputPath}>salvar como…</button>
+            </div>
+          </div>
+        </div>
       {/if}
 
       {#if previewItem && previewBusy}
@@ -1382,7 +1378,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
       {#if info && !previewBusy && !previewDone}
         <div class="summary-card">
           <div class="sum-row">
-            <span class="meta-k">destino</span>
+            <span class="meta-k">configuração</span>
             <span class="sum-v">
               {#if selectedPreset}
                 {selectedPreset.name} · {selectedPreset.mode === 'size' ? `${sizeMB} MB${splitOn ? '/parte' : ''}` : `CRF ${crf}`}

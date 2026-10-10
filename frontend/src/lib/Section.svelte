@@ -29,14 +29,13 @@
     }}
   >
     <span class="group-card-title">{title}</span>
-    <span class="section-end">
-      {#if infoTip}<InfoTip text={infoTip} />{/if}
-      <span class="section-chevron mono" aria-hidden="true">{open ? '▾' : '▸'}</span>
-    </span>
+    {#if infoTip}<InfoTip text={infoTip} />{/if}
   </div>
   <div class="section-collapse" class:open aria-hidden={!open}>
-    <div class="group-card-body section-body">
-      {@render children?.()}
+    <div class="section-body">
+      <div class="group-card-body">
+        {@render children?.()}
+      </div>
     </div>
   </div>
 </section>
