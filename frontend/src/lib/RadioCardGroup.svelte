@@ -3,6 +3,7 @@
     id: string
     title: string
     description?: string
+    disabled?: boolean
   }
 
   interface Props {
@@ -20,8 +21,10 @@
     <button
       class="radio-card"
       class:selected={opt.id === selected}
+      class:disabled={opt.disabled}
       role="radio"
       aria-checked={opt.id === selected}
+      disabled={opt.disabled}
       onclick={() => onchange?.(opt.id)}
     >
       <span class="radio-card-text">

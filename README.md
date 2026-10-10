@@ -190,6 +190,37 @@ com um orçamento por parte em cortes), então o resultado real fica a poucos
 pontos percentuais do esperado em conteúdo que preenche o orçamento. Em modo
 CRF ainda não há previsão determinística e o badge não aparece.
 
+## Codecs e aceleração de GPU
+
+No passo 02, o cartão **"Avançado"** troca o codec de vídeo e o codificador
+para aquele trabalho, sem alterar o preset salvo:
+
+| Opção | Codificador | 2-pass (tamanho) | Controle de tamanho |
+|---|---|---|---|
+| Software (CPU) | `libx264` / `libx265` | ✅ | ✅ preciso |
+| NVIDIA NVENC | `h264_nvenc` / `hevc_nvenc` | ❌ | VBR 1-pass (±5–10%) |
+| Intel QSV | `h264_qsv` / `hevc_qsv` | ✅ | ✅ |
+| AMD AMF | `h264_amf` / `hevc_amf` | ❌ | VBR 1-pass (±5–10%) |
+| Apple VideoToolbox | `h264_videotoolbox` / `hevc_videotoolbox` | ❌ | VBR 1-pass |
+
+- **Software continua o default**: o 2-pass do modo `size` é o único caminho
+  com previsão exata de tamanho (a estimativa no painel usa o mesmo orçamento).
+  Aceleração de GPU é muito mais rápida e libera a CPU, mas costuma exigir
+  ~20–30% mais bitrate para igualar a qualidade do software — por isso a UI
+  avisa quando um codificador de GPU está ativo e o modo `size` pode variar
+  em ±5–10% do alvo.
+- **H.265 ≠ GPU**: HEVC encolhe o arquivo na mesma qualidade (ou melhora a
+  qualidade no mesmo tamanho), mas em software ele é *mais lento* que H.264. O
+  ganho real de velocidade vem do hardware, não do codec.
+- **"Automático"** ativa o primeiro backend de hardware detectado
+  (NVENC → QSV → AMF → VideoToolbox), com fallback para software se nenhum
+  funcionar.
+- **Detecção**: o app lista os encoders do seu `ffmpeg`
+  (`ffmpeg -hide_banner -encoders`, em cache) e roda um probe de 1 frame para
+  confirmar que o driver da GPU funciona. Backends que falham aparecem
+  desabilitados com o motivo; "verificar de novo" no cartão re-detecta (ex.:
+  depois de instalar o driver).
+
 ## Corte em partes (split por tempo)
 
 Na barra lateral, o grupo **"Cortar em partes"** divide o vídeo antes de

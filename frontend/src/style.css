@@ -1223,6 +1223,63 @@ input[type="number"].num {
   box-shadow: inset 0 0 0 3px var(--inset-hover);
 }
 
+.radio-card.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.radio-card.disabled:hover {
+  background: var(--inset);
+}
+
+.codec-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.codec-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--inset);
+  color: var(--fg);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.codec-chip.selected {
+  background: var(--inset-hover);
+  outline: 1px solid var(--accent);
+}
+
+.codec-chip:hover {
+  background: var(--inset-hover);
+}
+
+.codec-chip input {
+  display: none;
+}
+
+.codec-chip-title {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.codec-chip-desc {
+  font-size: 11px;
+  color: var(--fg-dim);
+  line-height: 1.35;
+}
+
+.meta-k.spacer {
+  margin-top: 12px;
+  display: block;
+}
+
 .radio-group {
   display: flex;
   flex-direction: column;

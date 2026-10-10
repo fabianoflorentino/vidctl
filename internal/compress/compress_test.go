@@ -641,6 +641,168 @@ func TestRunNoSplitKeepsSingleDone(t *testing.T) {
 	}
 }
 
+func TestEffectivePresetOverrides(t *testing.T) {
+	base, ok := EffectivePreset(Job{PresetID: "youtube"})
+	if !ok {
+		t.Fatal("youtube should resolve")
+	}
+	if base.Codec != "" || base.Hardware != "" {
+		t.Errorf("default deveria ser software h264, got codec=%q hardware=%q", base.Codec, base.Hardware)
+	}
+
+	withOverrides, ok := EffectivePreset(Job{PresetID: "youtube", Codec: "h265", Hardware: "nvenc"})
+	if !ok || withOverrides.Codec != "h265" || withOverrides.Hardware != "nvenc" {
+		t.Errorf("overrides não aplicados: %+v", withOverrides)
+	}
+}
+
+func TestRunInvalidCodecHardware(t *testing.T) {
+	skipOnWindows(t)
+	fakeToolchain(t)
+
+	getErr := func(job Job) string {
+		got := captureCompressEvents(t)
+		Run(context.Background(), "j-bad", job)
+		return findErr(got)
+	}
+
+	if e := getErr(Job{InputPath: "in.mp4", OutputPath: "out.mp4", PresetID: "youtube", Codec: "av1"}); !strings.Contains(e, "codec desconhecido") {
+		t.Errorf("erro esperado de codec, got %q", e)
+	}
+	if e := getErr(Job{InputPath: "in.mp4", OutputPath: "out.mp4", PresetID: "youtube", Hardware: "cuda"}); !strings.Contains(e, "codificador de hardware desconhecido") {
+		t.Errorf("erro esperado de hardware, got %q", e)
+	}
+}
+
+func TestBuildSizePassesCodecHardware(t *testing.T) {
+	skipOnWindows(t)
+	fakeToolchain(t)
+	info := &media.Info{DurationSec: 80, HasAudio: true}
+	seg := split.Segment{Index: 1, EndSec: 80}
+
+	t.Run("h265 software", func(t *testing.T) {
+		p := presets.Preset{Mode: "size", SizeMB: 10, AudioBitrate: "96k", Codec: "h265"}
+		p1, p2, err := buildSizePasses(context.Background(), "job-x265", Job{InputPath: "in.mp4", OutputPath: "out.mp4"}, p, info, seg)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		for _, args := range [][]string{p1.Args, p2.Args} {
+			if !containsStr(args, "-c:v", "libx265") {
+				t.Errorf("esperava libx265, got %v", args)
+			}
+			if !containsStr(args, "-x265-params", "log-level=error") {
+				t.Errorf("esperava silenciar ruído do x265, got %v", args)
+			}
+		}
+	})
+
+	t.Run("h265 nvenc", func(t *testing.T) {
+		p := presets.Preset{Mode: "size", SizeMB: 10, AudioBitrate: "96k", Codec: "h265", Hardware: "nvenc"}
+		_, p2, err := buildSizePasses(context.Background(), "job-nvenc", Job{InputPath: "in.mp4", OutputPath: "out.mp4"}, p, info, seg)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if !containsStr(p2.Args, "-c:v", "hevc_nvenc") {
+			t.Errorf("esperava hevc_nvenc, got %v", p2.Args)
+		}
+		if containsStr(p2.Args, "-preset", "medium") {
+			t.Errorf("nvenc não deve usar preset x264, got %v", p2.Args)
+		}
+	})
+
+	t.Run("qsv pass1 sem preset", func(t *testing.T) {
+		p := presets.Preset{Mode: "size", SizeMB: 10, AudioBitrate: "96k", Hardware: "qsv"}
+		p1, _, err := buildSizePasses(context.Background(), "job-qsv", Job{InputPath: "in.mp4", OutputPath: "out.mp4"}, p, info, seg)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if containsStr(p1.Args, "-preset") {
+			t.Errorf("qsv pass1 não deve carregar preset x264, got %v", p1.Args)
+		}
+	})
+}
+
+func TestBuildSizeCmdSinglePass(t *testing.T) {
+	skipOnWindows(t)
+	fakeToolchain(t)
+	info := &media.Info{DurationSec: 80, HasAudio: true}
+	seg := split.Segment{Index: 1, EndSec: 80}
+
+	cmd, err := buildSizeCmd(context.Background(), Job{InputPath: "in.mp4", OutputPath: "out.mp4"}, presets.Preset{Mode: "size", SizeMB: 10, AudioBitrate: "96k", Hardware: "nvenc"}, info, seg)
+	if err != nil {
+		t.Fatalf("buildSizeCmd error: %v", err)
+	}
+	for _, want := range []string{"-c:v", "h264_nvenc", "-rc vbr", "-pix_fmt", "yuv420p", "-c:a aac"} {
+		if !strings.Contains(joinArgs(cmd.Args), want) {
+			t.Errorf("args deveriam conter %q, got %v", want, cmd.Args)
+		}
+	}
+	if containsStr(cmd.Args, "-pass") {
+		t.Errorf("single-pass não deve ter -pass: %v", cmd.Args)
+	}
+}
+
+func TestRunSizeHardwareSinglePass(t *testing.T) {
+	skipOnWindows(t)
+	dir := t.TempDir()
+	bin := filepath.Join(dir, "bin")
+	if err := os.MkdirAll(bin, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	for name, script := range map[string]string{"ffmpeg": fakeFFmpegRecord, "ffprobe": fakeFFprobe} {
+		if err := os.WriteFile(filepath.Join(bin, name), []byte(script), 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	t.Setenv("PATH", bin)
+	argsLog := filepath.Join(dir, "args.log")
+	t.Setenv("ARGS_LOG", argsLog)
+
+	output := filepath.Join(dir, "out.mp4")
+	got := captureCompressEvents(t)
+	Run(context.Background(), "j-gpu", Job{
+		InputPath:  "in.mp4",
+		OutputPath: output,
+		PresetID:   "whatsapp-status",
+		Hardware:   "nvenc",
+	})
+
+	var stages []string
+	var done int
+	for _, r := range *got {
+		switch d := r.data.(type) {
+		case events.ProgressEvent:
+			stages = append(stages, d.Stage)
+		case events.DoneEvent:
+			done++
+		}
+	}
+	if len(stages) == 0 || stages[0] != "encoding" {
+		t.Errorf("hardware size deveria emitir stage 'encoding' único, got %v", stages)
+	}
+	if containsStr(stages, "pass2/2") {
+		t.Errorf("não deve haver pass2/2 em backend de 1 pass, got %v", stages)
+	}
+	if done != 1 {
+		t.Errorf("esperava 1 done, got %d", done)
+	}
+	if e := findErr(got); e != "" {
+		t.Errorf("erro inesperado: %q", e)
+	}
+
+	raw, err := os.ReadFile(argsLog)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n := len(strings.Split(strings.TrimSpace(string(raw)), "\n")); n != 1 {
+		t.Errorf("esperava 1 comando ffmpeg, got %d: %q", n, string(raw))
+	}
+}
+
+func joinArgs(args []string) string {
+	return strings.Join(args, " ")
+}
+
 func containsStr(args []string, wanted ...string) bool {
 	for i := 0; i+len(wanted) <= len(args); i++ {
 		match := true

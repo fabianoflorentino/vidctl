@@ -32,8 +32,8 @@ Branch            | Fase | PR
 ---|---|---
 `feat/fase1`      | 1 — Configuração persistente | aberto
 `feat/fila`       | 2 — Fila de conversões | aberto
-`feat/estimativa` | 3 — Estimativa de tamanho | aberto
-`feat/hevc`       | 4 — HEVC/x265 + GPU (hardware) | pendente
+`feat/estimativa` | 3 — Estimativa de tamanho | mergeado
+`feat/hevc`       | 4 — HEVC/x265 + GPU (hardware) | aberto
 `feat/ajustes`    | 5 — Ajustes por arquivo | pendente
 `feat/audio`      | 6 — Extração de áudio | pendente
 `feat/notificacao`| 7 — Notificação + abrir pasta | pendente
@@ -246,6 +246,12 @@ Hoje a única estimativa é uma fórmula duplicada no frontend
 
 ## Fase 4 — Codec HEVC/x265 + aceleração de hardware (GPU)
 
+> **Status: ✅ implementada (v1)** — ver `feat/hevc`. Cobre o builder por
+> encoder (`internal/encode`), detecção com probe real e UI com aviso de GPU.
+> Default continua software; hardware é opt-in por job. **Adiado para v2:** o
+> cap de slots de GPU na fila (§ Interação com a fila) e persistir a preferência
+> de hardware na config (§ Frontend).
+
 **Objetivo:** além do libx264 atual (fixo em `buildSizePasses`/`buildCrfPass`,
 compress.go:192,207 e 234), permitir x265 e encoders de GPU (NVENC/AMF/QSV/
 VideoToolbox) com detecção de disponibilidade e fallback para software.
@@ -298,14 +304,19 @@ VideoToolbox) com detecção de disponibilidade e fallback para software.
   alterável por job.
 - Aviso visível quando hardware ativo: "GPU: mais rápido, qualidade um pouco
   menor" (e, no modo tamanho, "+/− ~5–10% no tamanho final"). Preferência
-  persistida na config (fase 1) se o usuário quiser manter GPU sempre.
+  persistida na config (fase 1) se o usuário quiser manter GPU sempre —
+  **adiado na v1**: a escolha de codec/hardware é por preset+job e não é
+  salva entre sessões.
 
 ### Interação com a fila (fase 2)
 
 - GPUs de consumo limitam sessões de encode simultâneas; a fila não deve
   disparar mais jobs de GPU em paralelo que a fila permite de CPU. Quando
   `Hardware != ""`, o worker usa slot próprio (cap `min(maxParallel, 1..2)`)
-  — detalhar o número ao implementar, medindo na máquina real.
+  — detalhar o número ao implementar, medindo na máquina real. **Adiado para
+  v2:** na v1 o `MaxParallel` default (=1) já serializa os jobs, então GPU e
+  CPU não concorrem entre si; o cap dedicado chega junto da configuração de
+  paralelismo.
 
 ### Testes
 
@@ -765,6 +776,8 @@ timestamp opcional.
 2. **Precisão em hardware (fase 4)**: NVENC/AMF 1-pass VBR não atingem o
    tamanho exato do 2-pass. Default permanece software; hardware no modo
    `size` assume tolerância (+/− ~5–10%). Validar com usuário se aceita.
+   > ✅ **Resolvido na v1 (feat/hevc):** opt-in com aviso visível na UI;
+   > validado na entrega do PR.
 3. **Paralelismo default (fase 2)**: manter `MaxParallel=1` na primeira
    entrega da fila (previsível, CPU-bound) e expor o campo em configuração
    antes de ativar >1 por default.
@@ -787,6 +800,9 @@ timestamp opcional.
      default — preserva o comportamento atual e a confiança no tamanho final
      do modo `size`; o custo (20–30% mais bitrate no mesmo resultado) só vale
      quando a velocidade importa mais. Validar com usuário.
+     > ✅ **Resolvido na v1 (feat/hevc):** opt-in por job (valor `auto`
+     > resolve para o primeiro backend detectado quando o usuário escolhe);
+     > validado na entrega do PR.
 
 ---
 
