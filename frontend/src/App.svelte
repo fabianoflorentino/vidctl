@@ -8,6 +8,7 @@
     GetMediaInfo,
     GetThumbnail,
     OpenOutputDialog,
+    OpenThumbnailDialog,
     Compress as StartCompress,
     CompressMultiple,
     DebugEnabled,
@@ -32,6 +33,7 @@
   import Stepper from './lib/Stepper.svelte'
   import RadioCardGroup from './lib/RadioCardGroup.svelte'
   import InfoTip from './lib/InfoTip.svelte'
+import Toggle from './lib/Toggle.svelte'
   import PreferencesModal from './lib/PreferencesModal.svelte'
   import { stageLabel } from './lib/stages'
 
@@ -362,6 +364,7 @@
         split: split ?? undefined,
         codec,
         hardware,
+        ...adjustPayload(),
       })
       const [got, estimated] = await Promise.allSettled([GetAdvice(job), EstimateSize(job)])
       if (seq !== adviceSeq) return
@@ -465,6 +468,110 @@
     const m = Math.floor(sec / 60)
     const s = Math.floor(sec % 60)
     return `${m}:${String(s).padStart(2, '0')}`
+  }
+
+  type ScaleMode = 'original' | 'default' | 'custom'
+  let adjustOpen = $state(false)
+  let scaleMode = $state<ScaleMode>('default')
+  let scaleCustom = $state('1280x720')
+  let trimStart = $state('')
+  let trimEnd = $state('')
+  let removeAudio = $state(false)
+  let fps = $state(0)
+  let rotate = $state(0)
+  let thumbnailOn = $state(false)
+  let thumbnailPath = $state('')
+
+  const scaleOptions = [
+    { id: 'default' as ScaleMode, title: 'Padrão', description: 'limita a 1280px no lado maior' },
+    { id: 'original' as ScaleMode, title: 'Original', description: 'mantém a resolução da fonte' },
+    { id: 'custom' as ScaleMode, title: 'Personalizado', description: 'você define a resolução' },
+  ]
+
+  const rotateOptions = [
+    { id: '0', title: '0°', description: 'horizontal normal' },
+    { id: '90', title: '90°', description: 'girar para a direita' },
+    { id: '180', title: '180°', description: 'de cabeça para baixo' },
+    { id: '270', title: '270°', description: 'girar para a esquerda' },
+  ]
+
+  function parseClock(input: string): number {
+    const s = input.trim()
+    if (!s) return 0
+    const parts = s.split(':')
+    if (parts.length > 3) return Number.NaN
+    const nums = parts.map((p) => Number(p.replace(',', '.')))
+    if (nums.some((n) => Number.isNaN(n) || n < 0)) return Number.NaN
+    if (parts.length === 1) return nums[0]
+    if (parts.length === 2) return nums[0] * 60 + nums[1]
+    return nums[0] * 3600 + nums[1] * 60 + nums[2]
+  }
+
+  const trimStartSec = $derived(parseClock(trimStart))
+  const trimEndSec = $derived(parseClock(trimEnd))
+  const trimming = $derived(trimStart.trim() !== '' || trimEnd.trim() !== '')
+
+  const adjustError = $derived.by<string>(() => {
+    if (scaleMode === 'custom' && !/^\s*\d+x\d+\s*$/.test(scaleCustom)) {
+      return 'escala personalizada deve ser LARGURAxALTURA (ex.: 1280x720)'
+    }
+    if (Number.isNaN(trimStartSec) || Number.isNaN(trimEndSec)) {
+      return 'tempo de corte inválido — use mm:ss (ex.: 1:30)'
+    }
+    if (trimStartSec > 0 && trimEndSec > 0 && trimEndSec <= trimStartSec) {
+      return 'o fim do corte deve ser maior que o início'
+    }
+    if (trimming && splitOn) {
+      return 'corte manual e divisão em partes não podem ser combinados'
+    }
+    if (thumbnailOn && !thumbnailPath) {
+      return 'escolha o destino da thumbnail'
+    }
+    return ''
+  })
+
+  const adjustSummary = $derived.by(() => {
+    const parts: string[] = []
+    if (scaleMode === 'original') parts.push('resolução original')
+    else if (scaleMode === 'custom') parts.push(scaleCustom.trim())
+    if (trimStartSec > 0 || trimEndSec > 0) {
+      parts.push(`corte ${trimStartSec > 0 ? fmtClock(trimStartSec) : '0:00'}–${trimEndSec > 0 ? fmtClock(trimEndSec) : 'fim'}`)
+    }
+    if (fps > 0) parts.push(`${fps} fps`)
+    if (rotate !== 0) parts.push(`${rotate}°`)
+    if (removeAudio) parts.push('sem áudio')
+    if (thumbnailOn) parts.push('thumbnail')
+    return parts.join(' · ')
+  })
+
+  function adjustPayload() {
+    return {
+      scale: scaleMode === 'default' ? '' : scaleMode === 'original' ? 'original' : scaleCustom.trim(),
+      trimStartSec: trimStartSec > 0 ? trimStartSec : undefined,
+      trimEndSec: trimEndSec > 0 ? trimEndSec : undefined,
+      removeAudio,
+      fps: fps > 0 ? fps : undefined,
+      rotate: rotate !== 0 ? rotate : undefined,
+      thumbnailPath: thumbnailOn && thumbnailPath ? thumbnailPath : undefined,
+    }
+  }
+
+  function suggestedThumbnailPath(): string {
+    const name = (inputPath ? inputPath.replace(/\.[^.]+$/, '').split(/[\\/]/).pop() : 'video') + '-thumb.png'
+    if (!outputDir) return name
+    const sep = outputDir.includes('\\') && !outputDir.includes('/') ? '\\' : '/'
+    return outputDir.replace(/[\\/]+$/, '') + sep + name
+  }
+
+  function toggleThumbnail(v: boolean) {
+    thumbnailOn = v
+    if (v && !thumbnailPath) thumbnailPath = suggestedThumbnailPath()
+    if (!v) thumbnailPath = ''
+  }
+
+  async function pickThumbnail() {
+    const path = await OpenThumbnailDialog(thumbnailPath.split(/[\\/]/).pop() || 'thumbnail.png')
+    if (path) thumbnailPath = path
   }
 
   const selectedPreset = $derived(presetList.find((p) => p.id === selectedPresetId) ?? null)
@@ -700,7 +807,7 @@
   }
 
   function canRun(): boolean {
-    if (!ffmpegOk || !inputPath || !outputPath || !selectedPreset || splitBlocked) return false
+    if (!ffmpegOk || !inputPath || !outputPath || !selectedPreset || splitBlocked || adjustError) return false
     return !queue.some(
       (i) => i.inputPath === inputPath && (i.state === 'queued' || i.state === 'running'),
     )
@@ -727,6 +834,7 @@
       split: splitPayload() ?? undefined,
       codec,
       hardware,
+      ...adjustPayload(),
     })
   }
 
@@ -1005,6 +1113,84 @@
       </section>
 
       <section class="group-card">
+        <div
+          class="group-card-head adjust-head"
+          role="button"
+          tabindex="0"
+          aria-expanded={adjustOpen}
+          onclick={() => (adjustOpen = !adjustOpen)}
+          onkeydown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') adjustOpen = !adjustOpen
+          }}
+        >
+          <span class="group-card-title">Ajustes por arquivo</span>
+          <span class="adjust-chevron mono">{adjustOpen ? '▾' : '▸'}</span>
+        </div>
+        {#if adjustOpen}
+          <div class="group-card-body">
+            <div class="meta-k">escala</div>
+            <RadioCardGroup options={scaleOptions} selected={scaleMode} name="scale" onchange={(v) => (scaleMode = v as ScaleMode)} />
+            {#if scaleMode === 'custom'}
+              <input
+                class="text-input mono"
+                value={scaleCustom}
+                aria-label="resolução personalizada"
+                placeholder="1280x720"
+                oninput={(e) => (scaleCustom = e.currentTarget.value)}
+              />
+            {/if}
+
+            <div class="trim-row">
+              <div class="trim-field">
+                <span class="meta-k">início (mm:ss)</span>
+                <input
+                  class="text-input mono"
+                  value={trimStart}
+                  aria-label="início do corte"
+                  placeholder="0:00"
+                  oninput={(e) => (trimStart = e.currentTarget.value)}
+                />
+              </div>
+              <div class="trim-field">
+                <span class="meta-k">fim (mm:ss)</span>
+                <input
+                  class="text-input mono"
+                  value={trimEnd}
+                  aria-label="fim do corte"
+                  placeholder="fim do vídeo"
+                  oninput={(e) => (trimEnd = e.currentTarget.value)}
+                />
+              </div>
+            </div>
+
+            <div class="tune-row">
+              <span class="meta-k">FPS (0 = original)</span>
+              <Stepper value={fps} min={0} max={120} digits={1} ariaLabel="frames por segundo" onchange={(v) => (fps = v)} />
+            </div>
+
+            <div class="meta-k spacer">orientação</div>
+            <RadioCardGroup options={rotateOptions} selected={String(rotate)} name="rotate" onchange={(v) => (rotate = Number(v))} />
+
+            <Toggle title="remover áudio" description="descarta a trilha de áudio da saída" checked={removeAudio} onchange={(v) => (removeAudio = v)} />
+
+            <Toggle title="gerar thumbnail" description="extrai um quadro do vídeo ao terminar" checked={thumbnailOn} onchange={toggleThumbnail} />
+            {#if thumbnailOn}
+              <div class="thumb-actions">
+                <button class="btn subtle small" onclick={pickThumbnail} disabled={!inputPath}>escolher destino…</button>
+                {#if thumbnailPath}
+                  <span class="thumb-path mono" title={thumbnailPath}>{thumbnailPath}</span>
+                {/if}
+              </div>
+            {/if}
+
+            {#if adjustError}
+              <div class="split-error mono">{adjustError}</div>
+            {/if}
+          </div>
+        {/if}
+      </section>
+
+      <section class="group-card">
         <div class="group-card-head">
           <span class="group-card-title">Saída</span>
         </div>
@@ -1139,6 +1325,12 @@
               {/if}
             </span>
           </div>
+          {#if adjustSummary}
+            <div class="sum-row">
+              <span class="meta-k">ajustes</span>
+              <span class="sum-v">{adjustSummary}</span>
+            </div>
+          {/if}
           {#if advice && advice.kbps > 0}
             <div class="sum-row">
               <span class="meta-k">bitrate</span>

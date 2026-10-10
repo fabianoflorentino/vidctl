@@ -548,6 +548,63 @@ button {
   color: var(--error);
 }
 
+/* per-file adjustments (fase 5) */
+.adjust-head {
+  cursor: pointer;
+  user-select: none;
+}
+
+.adjust-chevron {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.trim-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 2px 0 4px;
+}
+
+.trim-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.text-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 7px 9px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--inset);
+  color: var(--fg);
+  font-size: 13px;
+}
+
+.text-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.thumb-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 12px 4px;
+  flex-wrap: wrap;
+}
+
+.thumb-path {
+  font-size: 11px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1 1 140px;
+}
+
 /* quality advice (estimativa antes do encode) */
 .advice {
   display: flex;
