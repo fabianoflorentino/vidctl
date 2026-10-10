@@ -172,7 +172,8 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   }
 
   function suggestedOutput(base: string): string {
-    return targetDir() + base + '-compressed.mp4'
+    const name = base.split(/[\\/]/).pop() + '-compressed.mp4'
+    return targetDir() + name
   }
 
   let queue = $state<QueueItem[]>([])
