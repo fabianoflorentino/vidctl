@@ -352,7 +352,7 @@ func Run(ctx context.Context, jobID string, job Job) error {
 			sizeMB = float64(sizeBytes) / (1024 * 1024)
 		}
 		// A thumbnail sai do primeiro segmento (início do vídeo), num frame de
-// conteúdo perto do começo — não do meio/último segmento.
+		// conteúdo perto do começo — não do meio/último segmento.
 		if job.ThumbnailPath != "" && seg.Index == 1 {
 			thumb, err := buildThumbnail(ctx, outPath, job.ThumbnailPath, thumbSeek(effectiveDuration(job, seg)))
 			if err != nil {

@@ -1437,7 +1437,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
 {/if}
 
 <footer class="foot mono">
-  offline · h264 + aac · 2-pass quando há limite de tamanho
+  h264 + aac · 2-pass quando há limite de tamanho
 </footer>
 
 <PreferencesModal
