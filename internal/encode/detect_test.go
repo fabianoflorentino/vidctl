@@ -51,6 +51,12 @@ const encodersList = ` V....D libx264              libx264 H.264 / AVC / MPEG-4 
  A..... aac                  AAC (Advanced Audio Coding)
 `
 
+// amfList advertises only the AMD backends so the whole backend can be probed
+// with a forced failure, leaving Codecs empty.
+const amfList = ` V..... h264_amf             AMD AMF H.264 Encoder (codec h264)
+ V..... hevc_amf             AMD AMF HEVC Encoder (codec hevc)
+`
+
 func TestDetectorAvailability(t *testing.T) {
 	skipOnWindows(t)
 	fakeFFmpeg(t, encodersList, "hevc_videotoolbox")
@@ -146,6 +152,29 @@ func TestProbeEncoderFailure(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "indisponível") {
 		t.Errorf("erro deveria carregar a mensagem do stderr, got %v", err)
+	}
+}
+
+func TestDetectorBackendWithoutCodecs(t *testing.T) {
+	skipOnWindows(t)
+	fakeFFmpeg(t, amfList, "amf")
+	d := &Detector{}
+	avail, err := d.Availability()
+	if err != nil {
+		t.Fatalf("Availability() error: %v", err)
+	}
+	amf := findInfo(avail, HWAMF)
+	if amf == nil {
+		t.Fatalf("amf deveria aparecer listado mesmo com probe falho, got %+v", avail.Hardware)
+	}
+	if amf.Codecs == nil {
+		t.Error("codecs não pode ser nil: viraria null no JSON e quebraria o frontend")
+	}
+	if len(amf.Codecs) != 0 {
+		t.Errorf("codecs deveria estar vazio, got %v", amf.Codecs)
+	}
+	if amf.Error == "" {
+		t.Error("erro do probe deveria ser preservado para a UI")
 	}
 }
 

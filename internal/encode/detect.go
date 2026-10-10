@@ -82,7 +82,7 @@ func (d *Detector) Availability() (Availability, error) {
 		if !contains(listed, h264) && !contains(listed, h265) {
 			continue
 		}
-		info := EncoderInfo{ID: id, Label: Label(id)}
+		info := EncoderInfo{ID: id, Label: Label(id), Codecs: []string{}}
 		for _, codec := range []string{CodecH264, CodecH265} {
 			name := VideoCodec(codec, id)
 			if !contains(listed, name) {
