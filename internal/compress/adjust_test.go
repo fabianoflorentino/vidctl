@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/fabianoflorentino/vidctl/internal/cmdutil"
 	"github.com/fabianoflorentino/vidctl/internal/estimate"
 	"github.com/fabianoflorentino/vidctl/internal/media"
 	"github.com/fabianoflorentino/vidctl/internal/presets"
@@ -154,7 +155,14 @@ func TestOriginalScaleOmitsVF(t *testing.T) {
 }
 
 func TestBuildThumbnail(t *testing.T) {
-	fakeToolchain(t)
+	dir := t.TempDir()
+	bin := filepath.Join(dir, "ffmpeg.exe")
+	if err := os.WriteFile(bin, nil, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	cmdutil.SetOverride("ffmpeg", bin)
+	t.Cleanup(cmdutil.ClearOverrides)
+
 	cmd, err := buildThumbnail(context.Background(), "out.mp4", "poster.png", 12.5)
 	if err != nil {
 		t.Fatalf("buildThumbnail: %v", err)
