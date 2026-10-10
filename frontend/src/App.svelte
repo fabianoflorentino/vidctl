@@ -738,9 +738,6 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
         i.stage = ''
       })
     })
-    EventsOn('wails:file-drop', (_x: number, _y: number, paths: string[]) => {
-      handleDrop(paths)
-    })
     OnFileDrop((_x: number, _y: number, paths: string[]) => {
       handleDrop(paths)
     }, true)
@@ -750,7 +747,6 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
       EventsOff('compress:progress')
       EventsOff('compress:done')
       EventsOff('compress:error')
-      EventsOff('wails:file-drop')
       OnFileDropOff()
     }
   })
