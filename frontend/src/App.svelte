@@ -352,10 +352,21 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
     if (first) adoptFile(first)
   }
 
-  function onDragOver(e: DragEvent) {
-    if (!e.dataTransfer?.types.includes('Files')) return
+  function isFileDrag(t: DataTransfer): boolean {
+    const types = t.types
+    return types.includes('Files') || types.includes('text/uri-list')
+  }
+
+  function onDragEnter(e: DragEvent) {
+    if (!e.dataTransfer || !isFileDrag(e.dataTransfer)) return
     e.preventDefault()
-    if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy'
+    dragging = true
+  }
+
+  function onDragOver(e: DragEvent) {
+    if (!e.dataTransfer || !isFileDrag(e.dataTransfer)) return
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'copy'
     dragging = true
   }
 
@@ -367,7 +378,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   // ("tocar" o vídeo e derrubar a UI). Lá, o front lê text/uri-list do próprio
   // evento de drop, que entrega os caminhos sem navegação.
   function handleWindowDrop(e: DragEvent) {
-    if (!e.dataTransfer?.types.includes('Files')) return
+    if (!e.dataTransfer || !isFileDrag(e.dataTransfer)) return
     e.preventDefault()
     dragging = false
     if (nativeFileDrop) return
@@ -377,7 +388,9 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
       .map((p) => p.trim())
       .filter((p) => p && !p.startsWith('#'))
       .map((p) => (p.startsWith('file://') ? decodeURIComponent(p.slice(7)) : p))
-    if (paths.length) handleDrop(paths)
+    const first = e.dataTransfer.files.length ? (e.dataTransfer.files[0] as { path?: string }).path : undefined
+    const dropped = paths.length ? paths : first ? [first] : []
+    if (dropped.length) handleDrop(dropped)
   }
 
   $effect(() => {
@@ -1008,7 +1021,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   }
 </script>
 
-<svelte:window ondragover={onDragOver} ondragleave={onDragLeave} ondrop={handleWindowDrop} />
+<svelte:window ondragenter={onDragEnter} ondragover={onDragOver} ondragleave={onDragLeave} ondrop={handleWindowDrop} />
 
 <div class="drop-overlay" class:show={dragging} aria-hidden="true"></div>
 
