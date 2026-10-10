@@ -130,13 +130,13 @@ vídeo aceita escala, corte, remoção de áudio, FPS, rotação e thumbnail.
   qualquer SO e **Software**/"Automático" seguem sempre disponíveis. Além disso,
   o motivo do probe falho agora aparece na UI (cartão **Avançado**) em vez de um
   texto genérico.
-- **Arrastar e soltar** voltou a funcionar: o app apenas escutava `wails:file-drop`,
-  mas o WebView só entrega o drop quando o `OnFileDrop` do runtime do Wails é
-  registrado, e no Linux a opção `DisableWebViewDrop` estava removendo a janela
-  dos destinos de drag do GTK (nenhum evento chegava). Agora `main.go` usa só
-  `EnableFileDrop`, `OnFileDrop` é registrado com a janela inteira como alvo
-  (`--wails-drop-target: drop` no `body`) e, durante o arrasto, um **pontilhado
-  ao redor da tela** indica a área de drop.
+- **Arrastar e soltar** funcionando nas três plataformas: o app não só escuta
+  `wails:file-drop` como registra o `OnFileDrop` do runtime (que liga os
+  listeners de drop no WebView). No **Linux** o handler nativo do Wails faz o
+  WebKit navegar para o arquivo solto (o vídeo "toca" e a UI some), então lá o
+  caminho é lido do próprio DOM (`text/uri-list`) sem navegação; Windows/macOS
+  seguem com o drop nativo do Wails. A janela inteira é a área de drop e,
+  durante o arrasto, um **pontilhado ao redor da tela** indica onde soltar.
 
 ## [2.1.0] — 2026-09-27
 

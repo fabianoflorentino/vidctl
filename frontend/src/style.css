@@ -130,7 +130,7 @@ body {
 }
 
 /* pontilhado de "área de drop" ao redor da janela durante o arrasto (fase 15) */
-body.wails-drop-target-active .drop-overlay {
+.drop-overlay.show {
   opacity: 1;
 }
 

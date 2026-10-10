@@ -25,7 +25,7 @@
     GetEncoders,
     RefreshEncoders,
   } from '../wailsjs/go/main/App.js'
-  import { EventsOn, EventsOff, OnFileDrop, OnFileDropOff } from '../wailsjs/runtime/runtime.js'
+  import { EventsOn, EventsOff, OnFileDrop, OnFileDropOff, Environment } from '../wailsjs/runtime/runtime.js'
   import type { main, presets, media, config, encode } from '../wailsjs/go/models.js'
   import { compress as bindings, config as configBindings } from '../wailsjs/go/models.js'
   import StatusPage from './lib/StatusPage.svelte'
@@ -307,6 +307,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
 
   let prefsOpen = $state(false)
   let dragging = $state(false)
+  let nativeFileDrop = true
 
   const VIDEO_EXT = ['.mp4', '.mov', '.mkv', '.webm', '.m4v', '.avi', '.wmv', '.flv']
 
@@ -352,15 +353,31 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   }
 
   function onDragOver(e: DragEvent) {
-    if (e.dataTransfer?.types.includes('Files')) dragging = true
+    if (!e.dataTransfer?.types.includes('Files')) return
+    e.preventDefault()
+    if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy'
+    dragging = true
   }
 
   function onDragLeave(e: DragEvent) {
     if (e.relatedTarget === null) dragging = false
   }
 
-  function onDropEnd() {
+  // No Linux o drop nativo do Wails faz o WebKit navegar para o arquivo solto
+  // ("tocar" o vídeo e derrubar a UI). Lá, o front lê text/uri-list do próprio
+  // evento de drop, que entrega os caminhos sem navegação.
+  function handleWindowDrop(e: DragEvent) {
+    if (!e.dataTransfer?.types.includes('Files')) return
+    e.preventDefault()
     dragging = false
+    if (nativeFileDrop) return
+    const uri = e.dataTransfer.getData('text/uri-list') ?? ''
+    const paths = uri
+      .split('\n')
+      .map((p) => p.trim())
+      .filter((p) => p && !p.startsWith('#'))
+      .map((p) => (p.startsWith('file://') ? decodeURIComponent(p.slice(7)) : p))
+    if (paths.length) handleDrop(paths)
   }
 
   $effect(() => {
@@ -685,6 +702,9 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
 
   onMount(() => {
     load()
+    Environment()
+      .then((env) => (nativeFileDrop = env.platform !== 'linux'))
+      .catch(() => {})
     DebugEnabled()
       .then((v) => (debug = v))
       .catch(() => {})
@@ -988,9 +1008,9 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   }
 </script>
 
-<svelte:window ondragover={onDragOver} ondragleave={onDragLeave} ondrop={onDropEnd} />
+<svelte:window ondragover={onDragOver} ondragleave={onDragLeave} ondrop={handleWindowDrop} />
 
-<div class="drop-overlay" aria-hidden="true"></div>
+<div class="drop-overlay" class:show={dragging} aria-hidden="true"></div>
 
 <header class="topbar">
   <span class="ffmpeg-pill" class:bad={!ffmpegOk}>
