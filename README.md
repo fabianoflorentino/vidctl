@@ -223,6 +223,11 @@ para aquele trabalho, sem alterar o preset salvo:
 - **Por plataforma**: **AMF** (AMD) só é oferecido no Windows e
   **VideoToolbox** só no macOS (são APIs específicas desses sistemas). NVENC e
   QSV são detectados em qualquer SO onde o `ffmpeg` os lista.
+- **GPU no painel de progresso**: o "GPU %" mostra o máximo entre a engine
+  gráfica e a de **vídeo** (`utilization.gpu` vs `utilization.encoder`). Um
+  encode NVENC sobe a engine de encoder, não a barra de gráficos — se você
+  acompanhar por `nvtop`/`nvidia-smi`, observe a coluna **ENC** (ou o "GPU %" do
+  painel), não a barra principal.
 
 ## Corte em partes (split por tempo)
 

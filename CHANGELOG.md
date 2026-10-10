@@ -96,6 +96,11 @@ vídeo aceita escala, corte, remoção de áudio, FPS, rotação e thumbnail.
   GPU AMD): `codecs` vinha `null` no JSON e o frontend quebrava ao montar a
   lista de codificadores. Agora a detecção devolve sempre uma lista (vazia
   quando não há codecs) e o frontend também tolera `null`.
+- O **"GPU %"** do painel de progresso media apenas `utilization.gpu`
+  (gráficos/compute), que fica ~0 durante um encode NVENC — o encode de vídeo
+  carrega a engine de **encoder** (`utilization.encoder`), não a barra de
+  gráficos. O coletor agora reporta o **máximo entre as duas**, então o painel
+  reflete o encode de hardware de verdade.
 - O probe de encoders de hardware passou a usar um frame `256×256`: o `64×64`
   anterior estava **abaixo do tamanho mínimo** do NVENC ("Frame Dimension less
   than the minimum supported value"), então GPUs NVIDIA modernas apareciam como

@@ -104,6 +104,36 @@ func TestSnapshotWithFakeNvidia(t *testing.T) {
 	}
 }
 
+func TestSnapshotCountsEncoderUtilization(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("fake shell bin não executam no Windows")
+	}
+	dir := t.TempDir()
+	bin := filepath.Join(dir, "nvidia-smi")
+	if err := os.WriteFile(bin, []byte("#!/bin/sh\nprintf '12, 88\\n'\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("PATH", dir)
+
+	c := NewCollector()
+	s := c.Snapshot()
+	if s.GPU != 88 {
+		t.Errorf("GPU = %v, want 88 (utilization.encoder tem prioridade)", s.GPU)
+	}
+}
+
+func TestParseNvidiaMaxAcrossFields(t *testing.T) {
+	if got, ok := parseNvidia([]byte("12, 88")); !ok || got != 88 {
+		t.Errorf("parseNvidia(12,88) = %v,%v want 88,true", got, ok)
+	}
+	if got, ok := parseNvidia([]byte("90\n3")); !ok || got != 90 {
+		t.Errorf("parseNvidia(90\\n3) = %v,%v want 90,true", got, ok)
+	}
+	if got, ok := parseNvidia([]byte("")); ok || got != 0 {
+		t.Errorf("parseNvidia(vazio) = %v,%v want 0,false", got, ok)
+	}
+}
+
 func TestSnapshotNvidiaMissingCached(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("LookPath no Windows exige .exe; PATH vazio não simula o caso")
