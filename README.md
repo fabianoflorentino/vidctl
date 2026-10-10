@@ -228,6 +228,11 @@ para aquele trabalho, sem alterar o preset salvo:
   encode NVENC sobe a engine de encoder, não a barra de gráficos — se você
   acompanhar por `nvtop`/`nvidia-smi`, observe a coluna **ENC** (ou o "GPU %" do
   painel), não a barra principal.
+- **Preset NVENC**: com o codificador NVIDIA ativo, o cartão "Avançado" deixa
+  trocar o preset `p1`–`p7` por trabalho (default `p4`). `p1`/`p2` quase dobram
+  a velocidade de encode — a engine de vídeo fica saturada de qualquer forma;
+  `p7` prioriza a qualidade. O trade-off é leve no modo tamanho (eficiência de
+  compressão).
 
 ## Corte em partes (split por tempo)
 

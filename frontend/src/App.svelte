@@ -96,6 +96,7 @@ import Toggle from './lib/Toggle.svelte'
   let crf = $state(23)
   let codec = $state<'h264' | 'h265'>('h264')
   let hardware = $state('')
+  let nvencPreset = $state('p4')
   let encoders = $state<encode.Availability | null>(null)
   let encodersError = $state('')
 
@@ -364,6 +365,7 @@ import Toggle from './lib/Toggle.svelte'
         split: split ?? undefined,
         codec,
         hardware,
+        nvencPreset,
         ...adjustPayload(),
       })
       const [got, estimated] = await Promise.allSettled([GetAdvice(job), EstimateSize(job)])
@@ -628,6 +630,16 @@ import Toggle from './lib/Toggle.svelte'
     { id: 'h265', title: 'H.265 / HEVC', description: 'Menor arquivo na mesma qualidade, menos compatível' },
   ]
 
+  const nvencPresetOptions = [
+    { id: 'p1', title: 'mais rápido' },
+    { id: 'p2', title: 'muito rápido' },
+    { id: 'p3', title: 'rápido' },
+    { id: 'p4', title: 'equilíbrio (padrão)' },
+    { id: 'p5', title: 'melhor qualidade' },
+    { id: 'p6', title: 'alta qualidade' },
+    { id: 'p7', title: 'máxima qualidade' },
+  ]
+
   const appView = $derived(info ? 'queue' : 'empty')
 
   const originalMB = $derived(info ? info.sizeMB : 0)
@@ -846,6 +858,7 @@ import Toggle from './lib/Toggle.svelte'
       split: splitPayload() ?? undefined,
       codec,
       hardware,
+      nvencPreset,
       ...adjustPayload(),
     })
   }
@@ -1060,6 +1073,17 @@ import Toggle from './lib/Toggle.svelte'
                 Codificador de GPU ativo: mais rápido, porém qualidade e tamanho podem variar em relação ao software
                 (±5–10% no modo tamanho).
               </p>
+            </div>
+          {/if}
+
+          {#if hardware === 'nvenc'}
+            <div class="tune-row">
+              <span class="meta-k">preset NVENC</span>
+              <select class="select-input" value={nvencPreset} aria-label="preset NVENC" onchange={(e) => (nvencPreset = e.currentTarget.value)}>
+                {#each nvencPresetOptions as o (o.id)}
+                  <option value={o.id}>{o.id} · {o.title}</option>
+                {/each}
+              </select>
             </div>
           {/if}
 

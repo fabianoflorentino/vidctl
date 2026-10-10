@@ -63,6 +63,7 @@ export namespace compress {
 	    split?: split.Spec;
 	    codec?: string;
 	    hardware?: string;
+	    nvencPreset?: string;
 	    scale?: string;
 	    trimStartSec?: number;
 	    trimEndSec?: number;
@@ -85,6 +86,7 @@ export namespace compress {
 	        this.split = this.convertValues(source["split"], split.Spec);
 	        this.codec = source["codec"];
 	        this.hardware = source["hardware"];
+	        this.nvencPreset = source["nvencPreset"];
 	        this.scale = source["scale"];
 	        this.trimStartSec = source["trimStartSec"];
 	        this.trimEndSec = source["trimEndSec"];

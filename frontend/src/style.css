@@ -588,6 +588,20 @@ button {
   border-color: var(--accent);
 }
 
+.select-input {
+  padding: 7px 9px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--inset);
+  color: var(--fg);
+  font-size: 13px;
+}
+
+.select-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
 .thumb-actions {
   display: flex;
   align-items: center;

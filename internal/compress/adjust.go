@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/fabianoflorentino/vidctl/internal/encode"
 	"github.com/fabianoflorentino/vidctl/internal/split"
 )
 
@@ -111,6 +112,9 @@ func Validate(job Job) error {
 	}
 	if job.FPS < 0 {
 		return errors.New("FPS inválido")
+	}
+	if job.NvencPreset != "" && !encode.ValidNvencPreset(job.NvencPreset) {
+		return fmt.Errorf("preset NVENC inválido: %q (use p1..p7)", job.NvencPreset)
 	}
 	if job.Scale != "" && job.Scale != ScaleOriginal && !strings.Contains(job.Scale, "x") {
 		return fmt.Errorf("escala inválida: %q (use LARGURAxALTURA)", job.Scale)

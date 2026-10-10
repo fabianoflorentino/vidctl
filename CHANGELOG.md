@@ -44,6 +44,13 @@ vídeo aceita escala, corte, remoção de áudio, FPS, rotação e thumbnail.
   progresso baseados na duração cortada, validação de conflitos (corte manual
   × split, corte invertido, rotação/FPS fora da faixa) e novo binding
   `OpenThumbnailDialog`.
+- **Preset NVENC (velocidade × qualidade)**: com o codificador NVIDIA ativo, o
+  cartão **Avançado** ganha um seletor de preset `p1`–`p7` por trabalho
+  (default `p4`, equilíbrio). `p1`/`p2` quase dobram a velocidade de encode na
+  engine de vídeo (que já fica em 100%), com leve perda de eficiência de
+  compressão no modo tamanho; `p7` prioriza a qualidade. Encode de hardware não
+  usa a engine gráfica — o "GPU %" do painel reflete o máximo entre gráficos e
+  encoder.
 - **Modo de depuração local**: `VIDCTL_DEBUG=1 ./build/bin/vidctl` liga um log
   no terminal com as transições da fila, os eventos emitidos/recebidos (e os
   patches descartados por estado), as chamadas `Compress`/`GetTasks` e as

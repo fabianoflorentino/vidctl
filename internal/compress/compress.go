@@ -26,14 +26,15 @@ import (
 
 // Job is the payload coming from the frontend.
 type Job struct {
-	InputPath  string      `json:"inputPath"`
-	OutputPath string      `json:"outputPath"`
-	PresetID   string      `json:"presetId"`
-	SizeMB     float64     `json:"sizeMB"` // used when preset mode is "size"
-	CRF        float64     `json:"crf"`
-	Split      *split.Spec `json:"split,omitempty"`
-	Codec      string      `json:"codec,omitempty"`    // overrides the preset codec when set
-	Hardware   string      `json:"hardware,omitempty"` // overrides the preset hardware when set
+	InputPath   string      `json:"inputPath"`
+	OutputPath  string      `json:"outputPath"`
+	PresetID    string      `json:"presetId"`
+	SizeMB      float64     `json:"sizeMB"` // used when preset mode is "size"
+	CRF         float64     `json:"crf"`
+	Split       *split.Spec `json:"split,omitempty"`
+	Codec       string      `json:"codec,omitempty"`       // overrides the preset codec when set
+	Hardware    string      `json:"hardware,omitempty"`    // overrides the preset hardware when set
+	NvencPreset string      `json:"nvencPreset,omitempty"` // NVENC quality preset p1..p7 ("" = default p4)
 
 	// Per-file adjustments (fase 5). All optional.
 	Scale         string  `json:"scale,omitempty"`         // "" default cap | ScaleOriginal | "WxH"
@@ -112,7 +113,7 @@ func buildSizePasses(ctx context.Context, jobID string, job Job, preset presets.
 	pass2Args = append(pass2Args, seek...)
 	pass2Args = append(pass2Args, "-i", job.InputPath)
 	pass2Args = appendVideoFilter(pass2Args, job)
-	pass2Args = append(pass2Args, encode.SizeArgs(preset.Codec, preset.Hardware, lines.VideoBitrate, lines.MaxRate, lines.BufSize)...)
+	pass2Args = append(pass2Args, encode.SizeArgsP(preset.Codec, preset.Hardware, lines.VideoBitrate, lines.MaxRate, lines.BufSize, job.NvencPreset)...)
 	pass2Args = append(pass2Args, "-pix_fmt", "yuv420p")
 	if h265 != nil {
 		pass2Args = append(pass2Args, h265...)
@@ -145,13 +146,13 @@ func buildSizeCmd(ctx context.Context, job Job, preset presets.Preset, info *med
 	if err != nil {
 		return nil, err
 	}
-	v := encode.SizeArgs(preset.Codec, preset.Hardware, lines.VideoBitrate, lines.MaxRate, lines.BufSize)
+	v := encode.SizeArgsP(preset.Codec, preset.Hardware, lines.VideoBitrate, lines.MaxRate, lines.BufSize, job.NvencPreset)
 	return buildSingle(ctx, job, preset, info, seg, v), nil
 }
 
 // buildCrfPass creates the single-pass ffmpeg command for quality-based encoding.
 func buildCrfPass(ctx context.Context, job Job, preset presets.Preset, info *media.Info, seg split.Segment) *exec.Cmd {
-	v := encode.QualityArgs(preset.Codec, preset.Hardware, preset.CRF)
+	v := encode.QualityArgsP(preset.Codec, preset.Hardware, preset.CRF, job.NvencPreset)
 	return buildSingle(ctx, job, preset, info, seg, v)
 }
 
@@ -364,10 +365,10 @@ func encodeSegment(ctx context.Context, jobID, logID string, job Job, preset pre
 		suffix = fmt.Sprintf(" · parte %d/%d", seg.Index, total)
 	}
 	dlog.Printf(
-		"[compress] job=%s plugin mode=%s encoder=%s hw=%q 2pass=%t vf=%q seek=%s removerAudio=%t fps=%g rot=%d thumb=%q out=%q",
+		"[compress] job=%s plugin mode=%s encoder=%s hw=%q 2pass=%t vf=%q seek=%s removerAudio=%t fps=%g rot=%d preset=%q thumb=%q out=%q",
 		logID, preset.Mode, encode.VideoCodec(preset.Codec, preset.Hardware), preset.Hardware,
 		encode.TwoPass(preset.Hardware), buildVideoFilter(job), strings.Join(seekArgs(job, seg), " "),
-		job.RemoveAudio, job.FPS, job.Rotate, job.ThumbnailPath, job.OutputPath,
+		job.RemoveAudio, job.FPS, job.Rotate, encode.NvencPreset(job.NvencPreset), job.ThumbnailPath, job.OutputPath,
 	)
 
 	if preset.Mode == "size" {

@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/fabianoflorentino/vidctl/internal/cmdutil"
+	"github.com/fabianoflorentino/vidctl/internal/encode"
 	"github.com/fabianoflorentino/vidctl/internal/estimate"
 	"github.com/fabianoflorentino/vidctl/internal/media"
 	"github.com/fabianoflorentino/vidctl/internal/presets"
@@ -51,6 +52,8 @@ func TestValidate(t *testing.T) {
 		{Rotate: 90}, {Rotate: 180}, {Rotate: 270},
 		{Scale: ScaleOriginal},
 		{Scale: "1280x720"},
+		{NvencPreset: "p1"},
+		{NvencPreset: "p7"},
 	}
 	for _, job := range valid {
 		if err := Validate(job); err != nil {
@@ -69,6 +72,7 @@ func TestValidate(t *testing.T) {
 		{"fps negativo", Job{FPS: -1}, "FPS"},
 		{"rotação inválida", Job{Rotate: 45}, "rotação"},
 		{"escala inválida", Job{Scale: "hd"}, "escala"},
+		{"preset nvenc inválido", Job{NvencPreset: "fast"}, "preset NVENC"},
 		{"split + trim", Job{Split: &split.Spec{Parts: 2}, TrimStartSec: 5}, "não podem ser combinados"},
 	}
 	for _, tc := range invalid {
@@ -213,6 +217,23 @@ func TestRunRejectsInvalidAdjustments(t *testing.T) {
 	})
 	if e := findErr(got); !strings.Contains(e, "fim do corte") {
 		t.Errorf("esperava erro de corte invertido, got %q", e)
+	}
+}
+
+func TestNvencPresetArgs(t *testing.T) {
+	skipOnWindows(t)
+	fakeToolchain(t)
+	info := &media.Info{DurationSec: 80, HasAudio: true}
+	seg := split.Segment{Index: 1, EndSec: 80}
+
+	fast := buildCrfPass(context.Background(), Job{InputPath: "in.mp4", OutputPath: "out.mp4", NvencPreset: "p1"}, presets.Preset{CRF: 23, AudioBitrate: "96k", Hardware: encode.HWNVENC}, info, seg)
+	if !containsStr(fast.Args, "-preset", "p1") {
+		t.Errorf("com preset p1 deveria incluir -preset p1, args: %v", fast.Args)
+	}
+
+	def := buildCrfPass(context.Background(), Job{InputPath: "in.mp4", OutputPath: "out.mp4"}, presets.Preset{CRF: 23, AudioBitrate: "96k", Hardware: encode.HWNVENC}, info, seg)
+	if !containsStr(def.Args, "-preset", "p4") {
+		t.Errorf("sem preset deveria usar o default p4, args: %v", def.Args)
 	}
 }
 
