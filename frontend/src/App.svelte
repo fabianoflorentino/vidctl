@@ -537,10 +537,16 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   const sectionState = $state({
     config: true,
     avancado: false,
-    presets: true,
+    presets: false,
     split: false,
     ajustes: false,
   })
+
+  function toggleSection(key: keyof typeof sectionState) {
+    const next = !sectionState[key]
+    for (const k of Object.keys(sectionState) as (keyof typeof sectionState)[]) sectionState[k] = false
+    sectionState[key] = next
+  }
   let scaleMode = $state<ScaleMode>('default')
   let scaleCustom = $state('1280x720')
   let trimStart = $state('')
@@ -1069,7 +1075,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   <div class="split">
     <aside class="sidebar">
       {#if selectedPreset?.mode === 'size'}
-        <Section title="Tamanho alvo" open={sectionState.config} onchange={(v) => (sectionState.config = v)} infoTip="Presets de tamanho fazem o ffmpeg calcular o bitrate pela duração para caber no alvo (encode 2-pass).">
+        <Section title="Tamanho alvo" open={sectionState.config} onchange={() => toggleSection("config")} infoTip="Presets de tamanho fazem o ffmpeg calcular o bitrate pela duração para caber no alvo (encode 2-pass).">
           <div class="tune-row">
             <span class="meta-k">tamanho (MB)</span>
             <Stepper value={sizeMB} min={2} max={100} digits={1} ariaLabel="tamanho alvo" onchange={(v) => (sizeMB = v)} />
@@ -1101,7 +1107,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
             {/if}
           </Section>
       {:else if selectedPreset}
-        <Section title="Qualidade" open={sectionState.config} onchange={(v) => (sectionState.config = v)} infoTip="Encode CRF: qualidade constante sem limite de tamanho. Quanto menor o CRF, melhor a imagem e maior o arquivo.">
+        <Section title="Qualidade" open={sectionState.config} onchange={() => toggleSection("config")} infoTip="Encode CRF: qualidade constante sem limite de tamanho. Quanto menor o CRF, melhor a imagem e maior o arquivo.">
           <div class="tune-row">
             <span class="meta-k">CRF — quanto menor, melhor</span>
             <Stepper value={crf} min={16} max={34} ariaLabel="CRF" onchange={(v) => (crf = v)} />
@@ -1109,7 +1115,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
           </Section>
       {/if}
 
-      <Section title="Avançado" open={sectionState.avancado} onchange={(v) => (sectionState.avancado = v)} infoTip="Altera o codec de vídeo e o codificador para este trabalho (não altera o preset salvo). Aceleração de hardware é mais rápida, mas costuma exigir um pouco mais de bitrate para a mesma qualidade; no modo tamanho o arquivo pode variar em ±5–10%.">
+      <Section title="Avançado" open={sectionState.avancado} onchange={() => toggleSection("avancado")} infoTip="Altera o codec de vídeo e o codificador para este trabalho (não altera o preset salvo). Aceleração de hardware é mais rápida, mas costuma exigir um pouco mais de bitrate para a mesma qualidade; no modo tamanho o arquivo pode variar em ±5–10%.">
           <div class="meta-k">codec de vídeo</div>
           <div class="codec-row">
             {#each codecOptions as opt (opt.id)}
@@ -1160,11 +1166,11 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
           {/if}
           </Section>
 
-      <Section title="Presets" open={sectionState.presets} onchange={(v) => (sectionState.presets = v)} infoTip="Escolha um preset de saída. Presets de tamanho calculam o bitrate pela duração para caber no alvo (2-pass); presets CRF priorizam qualidade.">
+      <Section title="Presets" open={sectionState.presets} onchange={() => toggleSection("presets")} infoTip="Escolha um preset de saída. Presets de tamanho calculam o bitrate pela duração para caber no alvo (2-pass); presets CRF priorizam qualidade.">
           <RadioCardGroup options={presetOptions} selected={selectedPresetId} name="presets" onchange={selectPresetById} />
           </Section>
 
-      <Section title="Cortar em partes" open={sectionState.split} onchange={(v) => (sectionState.split = v)} infoTip="Divide o vídeo em partes sequenciais de duração fixa. Cada parte passa pela compressão escolhida. Mínimo de 1 minuto por parte; a última pode ficar menor ou levar a sobra. Ajuste um dos contadores para ativar o corte.">
+      <Section title="Cortar em partes" open={sectionState.split} onchange={() => toggleSection("split")} infoTip="Divide o vídeo em partes sequenciais de duração fixa. Cada parte passa pela compressão escolhida. Mínimo de 1 minuto por parte; a última pode ficar menor ou levar a sobra. Ajuste um dos contadores para ativar o corte.">
           <div class="split-head">
             <div class="split-toggle">
               <button class="btn small" class:solid={!splitOn} onclick={() => (splitOn = false)}>
@@ -1196,7 +1202,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
           {/if}
           </Section>
 
-      <Section title="Ajustes por arquivo" open={sectionState.ajustes} onchange={(v) => (sectionState.ajustes = v)}>
+      <Section title="Ajustes por arquivo" open={sectionState.ajustes} onchange={() => toggleSection("ajustes")}>
           <div class="meta-k">escala</div>
             <RadioCardGroup options={scaleOptions} selected={scaleMode} name="scale" onchange={(v) => (scaleMode = v as ScaleMode)} />
             {#if scaleMode === 'custom'}

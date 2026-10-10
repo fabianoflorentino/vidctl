@@ -15,7 +15,8 @@
 
 <section class="group-card">
   <div
-    class="group-card-head section-head"
+    class="section-head"
+    class:open
     role="button"
     tabindex="0"
     aria-expanded={open}
@@ -33,9 +34,9 @@
       <span class="section-chevron mono" aria-hidden="true">{open ? '▾' : '▸'}</span>
     </span>
   </div>
-  {#if open}
-    <div class="group-card-body">
+  <div class="section-collapse" class:open aria-hidden={!open}>
+    <div class="group-card-body section-body">
       {@render children?.()}
     </div>
-  {/if}
+  </div>
 </section>

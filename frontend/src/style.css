@@ -582,11 +582,30 @@ button {
 
 /* collapsible sidebar sections (fase 13) */
 .section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--card);
+  border: 1px solid transparent;
+  border-radius: var(--radius);
   cursor: pointer;
   user-select: none;
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
 
-.section-head:hover .group-card-title {
+.section-head:hover,
+.section-head:focus-visible {
+  background: var(--inset);
+  outline: none;
+}
+
+.section-head.open {
+  border-color: var(--accent);
+}
+
+.section-head.open .group-card-title {
   color: var(--accent);
 }
 
@@ -599,6 +618,22 @@ button {
 .section-chevron {
   color: var(--muted);
   font-size: 12px;
+  transition: transform 0.2s ease;
+}
+
+.section-collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.25s ease;
+}
+
+.section-collapse.open {
+  grid-template-rows: 1fr;
+}
+
+.section-body {
+  overflow: hidden;
+  min-height: 0;
 }
 
 /* media drop target (fase 15) */
