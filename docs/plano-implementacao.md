@@ -33,8 +33,8 @@ Branch            | Fase | PR
 `feat/fase1`      | 1 — Configuração persistente | aberto
 `feat/fila`       | 2 — Fila de conversões | aberto
 `feat/estimativa` | 3 — Estimativa de tamanho | mergeado
-`feat/hevc`       | 4 — HEVC/x265 + GPU (hardware) | aberto
-`feat/ajustes`    | 5 — Ajustes por arquivo | pendente
+`feat/hevc`       | 4 — HEVC/x265 + GPU (hardware) | mergeado
+`feat/ajustes`    | 5 — Ajustes por arquivo | aberto
 `feat/audio`      | 6 — Extração de áudio | pendente
 `feat/notificacao`| 7 — Notificação + abrir pasta | pendente
 `feat/updates`    | 8 — Verificação de atualização | pendente
@@ -339,6 +339,10 @@ VideoToolbox) com detecção de disponibilidade e fallback para software.
 ## Fase 5 — Ajustes por arquivo (escala, corte, remover áudio, FPS, thumbnail)
 
 **Objetivo:** controles de ajuste por vídeo além do preset fixo.
+
+> **Status: ✅ implementada** — ver `feat/ajustes`. Builder em
+> `internal/compress/adjust.go`; rotação segue `transpose=1/2/3` (90/180/270)
+> conforme esta seção.
 
 > Diferença entre **corte** desta fase e **split** da fase 11: aqui `TrimStartSec/
 > TrimEndSec` guarda **uma única janela** de um vídeo (ex. só o trecho 1:00–3:30);

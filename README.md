@@ -239,6 +239,24 @@ gera um arquivo `saída-partN.mp4` (índice com zero à esquerda quando são 10+
 partes). O progresso mostra `parte X/N` e, ao final, o app resume a economia
 total sobre o arquivo original.
 
+## Ajustes por arquivo
+
+O grupo **"Ajustes por arquivo"** aplica controles extras ao vídeo *depois* do
+preset, também por trabalho:
+
+| Controle | Comportamento |
+|---|---|
+| **Escala** | **Padrão** limita a 1280px no lado maior (comportamento normal); **Original** mantém a resolução da fonte (sem filtro de escala); **Personalizado** usa `LARGURAxALTURA` (ex.: `1280x720`) preservando a proporção |
+| **Corte** | `início`/`fim` em `mm:ss` guardam **uma janela** do vídeo (ex.: só o trecho 1:00–3:30), com seek antes do decode (`-ss/-to` antes de `-i`); o orçamento de tamanho e o progresso consideram a duração cortada |
+| **Remover áudio** | saída sem trilha de áudio (`-an` / sem `-c:a`) |
+| **FPS** | sobrescreve os quadros por segundo (`fps=<N>`); `0` mantém o da fonte |
+| **Orientação** | gira 90°, 180° ou 270° (`transpose`, aplicado antes da escala) |
+| **Thumbnail** | após o encode, extrai um quadro do vídeo de saída para o arquivo escolhido (`ffmpeg -ss <meio> -frames:v 1`) |
+
+A ordem dos filtros de vídeo é sempre `transpose → scale → fps`. Corte manual
+e **"Cortar em partes"** não podem ser combinados. Formatos de tempo aceitos:
+`90` (segundos), `1:30` (minutos:segundos) e `1:02:30` (horas).
+
 ## Fila de conversões
 
 O botão **"Adicionar vídeos…"** (ou arrastar vários arquivos de uma vez para a

@@ -12,10 +12,11 @@ operacional dos pacotes.
 ## [Unreleased]
 
 Persistência das preferências, fila de conversões em lote, estimativa de
-tamanho e codecs de vídeo com aceleração de GPU: as preferências sobrevivem ao
-fechamento, dá para comprimir vários vídeos de uma vez, o tamanho esperado
-aparece antes de comprimir e o cartão **Avançado** troca para H.265 ou para
-encoders de hardware (NVENC/QSV/AMF/VideoToolbox).
+tamanho, codecs de vídeo com aceleração de GPU e ajustes por arquivo: as
+preferências sobrevivem ao fechamento, dá para comprimir vários vídeos de uma
+vez, o tamanho esperado aparece antes de comprimir, o cartão **Avançado** troca
+para H.265 ou para encoders de hardware (NVENC/QSV/AMF/VideoToolbox) e cada
+vídeo aceita escala, corte, remoção de áudio, FPS, rotação e thumbnail.
 
 ### Adicionado
 
@@ -35,6 +36,14 @@ encoders de hardware (NVENC/QSV/AMF/VideoToolbox).
   `GetEncoders` com cache e re-detecção ("verificar de novo"). GPUs do modo
   tamanho usam VBR 1-pass (destino aproximado, ±5–10%), e a UI avisa quando o
   encoder de hardware está ativo; software continua o default.
+- **Ajustes por arquivo**: novo cartão **"Ajustes por arquivo"** no passo 02
+  com escala (padrão/original/personalizada), corte por janela em `mm:ss`,
+  remoção de áudio, FPS, rotação (transpose) e geração de thumbnail ao final do
+  encode. Builder de filtros em `internal/compress/adjust.go` com ordem fixa
+  transpose→scale→fps, `-ss/-to` antes do `-i`, orçamento de tamanho e
+  progresso baseados na duração cortada, validação de conflitos (corte manual
+  × split, corte invertido, rotação/FPS fora da faixa) e novo binding
+  `OpenThumbnailDialog`.
 - **Modo de depuração local**: `VIDCTL_DEBUG=1 ./build/bin/vidctl` liga um log
   no terminal com as transições da fila, os eventos emitidos/recebidos (e os
   patches descartados por estado), as chamadas `Compress`/`GetTasks` e as
