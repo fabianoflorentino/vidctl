@@ -147,6 +147,46 @@ func TestPass1Args(t *testing.T) {
 	}
 }
 
+func TestNvencPreset(t *testing.T) {
+	if got := NvencPreset(""); got != HWNVENCPreset {
+		t.Errorf("NvencPreset(\"\") = %q, want %q", got, HWNVENCPreset)
+	}
+	if got := NvencPreset("p1"); got != "p1" {
+		t.Errorf("NvencPreset(p1) = %q", got)
+	}
+	if got := NvencPreset("p7"); got != "p7" {
+		t.Errorf("NvencPreset(p7) = %q", got)
+	}
+	if got := NvencPreset("fast"); got != HWNVENCPreset {
+		t.Errorf("NvencPreset(fast) = %q, want default %q", got, HWNVENCPreset)
+	}
+	if !ValidNvencPreset("p2") || ValidNvencPreset("") || ValidNvencPreset("x") {
+		t.Errorf("ValidNvencPreset inválido")
+	}
+}
+
+func TestSizeArgsPNvencPreset(t *testing.T) {
+	fast := join(SizeArgsP(CodecH265, HWNVENC, 500000, 550000, 1100000, "p1"))
+	if !strings.Contains(fast, "-preset p1") {
+		t.Errorf("nvenc com p1 deveria incluir -preset p1: %q", fast)
+	}
+	def := join(SizeArgs(CodecH265, HWNVENC, 500000, 550000, 1100000))
+	if !strings.Contains(def, "-preset "+HWNVENCPreset) {
+		t.Errorf("nvenc default deveria incluir -preset %s: %q", HWNVENCPreset, def)
+	}
+}
+
+func TestQualityArgsPNvencPreset(t *testing.T) {
+	fast := join(QualityArgsP(CodecH265, HWNVENC, 23, "p2"))
+	if !strings.Contains(fast, "-preset p2") {
+		t.Errorf("nvenc quality com p2 deveria incluir -preset p2: %q", fast)
+	}
+	sw := join(QualityArgsP(CodecH264, "", 23, "p1"))
+	if strings.Contains(sw, "p1") {
+		t.Errorf("software não deve aceitar preset nvenc: %q", sw)
+	}
+}
+
 func TestResolveAuto(t *testing.T) {
 	cases := []struct {
 		avail []string

@@ -12,10 +12,11 @@ operacional dos pacotes.
 ## [Unreleased]
 
 Persistência das preferências, fila de conversões em lote, estimativa de
-tamanho e codecs de vídeo com aceleração de GPU: as preferências sobrevivem ao
-fechamento, dá para comprimir vários vídeos de uma vez, o tamanho esperado
-aparece antes de comprimir e o cartão **Avançado** troca para H.265 ou para
-encoders de hardware (NVENC/QSV/AMF/VideoToolbox).
+tamanho, codecs de vídeo com aceleração de GPU e ajustes por arquivo: as
+preferências sobrevivem ao fechamento, dá para comprimir vários vídeos de uma
+vez, o tamanho esperado aparece antes de comprimir, o cartão **Avançado** troca
+para H.265 ou para encoders de hardware (NVENC/QSV/AMF/VideoToolbox) e cada
+vídeo aceita escala, corte, remoção de áudio, FPS, rotação e thumbnail.
 
 ### Adicionado
 
@@ -35,6 +36,34 @@ encoders de hardware (NVENC/QSV/AMF/VideoToolbox).
   `GetEncoders` com cache e re-detecção ("verificar de novo"). GPUs do modo
   tamanho usam VBR 1-pass (destino aproximado, ±5–10%), e a UI avisa quando o
   encoder de hardware está ativo; software continua o default.
+- **Ajustes por arquivo**: novo cartão **"Ajustes por arquivo"** no passo 02
+  com escala (padrão/original/personalizada), corte por janela em `mm:ss`,
+  remoção de áudio, FPS, rotação (transpose) e geração de thumbnail ao final do
+  encode. Builder de filtros em `internal/compress/adjust.go` com ordem fixa
+  transpose→scale→fps, `-ss/-to` antes do `-i`, orçamento de tamanho e
+  progresso baseados na duração cortada, validação de conflitos (corte manual
+  × split, corte invertido, rotação/FPS fora da faixa) e novo binding
+  `OpenThumbnailDialog`.
+- **Preset NVENC (velocidade × qualidade)**: com o codificador NVIDIA ativo, o
+  cartão **Avançado** ganha um seletor de preset `p1`–`p7` por trabalho
+  (default `p4`, equilíbrio). `p1`/`p2` quase dobram a velocidade de encode na
+  engine de vídeo (que já fica em 100%), com leve perda de eficiência de
+  compressão no modo tamanho; `p7` prioriza a qualidade. Encode de hardware não
+  usa a engine gráfica — o "GPU %" do painel reflete o máximo entre gráficos e
+  encoder.
+- **Sidebar colapsável**: os cartões de configuração (`Tamanho alvo`/`Qualidade`,
+  `Avançado`, `Presets`, `Cortar em partes`, `Ajustes por arquivo`) colapsam e
+  expandem pelo cabeçalho (chevron, clique ou teclado). `Avançado`, `Cortar em
+  partes` e `Ajustes` vêm **fechados** por padrão, reduzindo a poluição visual;
+  o estado vale para a sessão.
+- **Tempo total de conversão**: cada trabalho da fila mostra o tempo decorrido
+  em tempo real durante o processamento e o **total** ao concluir (card de
+  progresso, linha da fila e card de resultado) — útil para comparar presets e
+  encoders (software × GPU, NVENC `p1`–`p7`).
+- **Arrastar e soltar na janela principal**: o conteúdo ganha uma área de
+  destino (drop-target) com "arraste um vídeo aqui" + botão **"abrir vídeo…"**,
+  visível inclusive com um vídeo já carregado — soltar um arquivo troca a
+  entrada e vários enfileiram (reuso do `wails:file-drop`).
 - **Modo de depuração local**: `VIDCTL_DEBUG=1 ./build/bin/vidctl` liga um log
   no terminal com as transições da fila, os eventos emitidos/recebidos (e os
   patches descartados por estado), as chamadas `Compress`/`GetTasks` e as
@@ -73,6 +102,12 @@ encoders de hardware (NVENC/QSV/AMF/VideoToolbox).
 - Campos `language`, `notifyOnDone` e `openFolderOnDone` já são preservados no
   arquivo, mas só passam a ter efeito quando os recursos correspondentes
   existirem (fases futuras do plano).
+- O modo de depuração (`VIDCTL_DEBUG=1`) agora rastreia os **comandos externos
+  e a decisão do pipeline**: o comando `ffmpeg` completo (2-pass, single-pass e
+  thumbnail), a escolha de encoder/hardware por segmento (`encoder=hevc_nvenc`,
+  2-pass, cadeia `-vf`, seek, remoção de áudio, FPS, rotação), o `ffprobe` e a
+  miniatura (`[media]`), e a listagem/probe de encoders (`[encode]`, com o
+  motivo quando um backend falha). Cada comando é reproduzível linha a linha.
 
 ### Corrigido
 
@@ -81,6 +116,35 @@ encoders de hardware (NVENC/QSV/AMF/VideoToolbox).
   GPU AMD): `codecs` vinha `null` no JSON e o frontend quebrava ao montar a
   lista de codificadores. Agora a detecção devolve sempre uma lista (vazia
   quando não há codecs) e o frontend também tolera `null`.
+- O **"GPU %"** do painel de progresso media apenas `utilization.gpu`
+  (gráficos/compute), que fica ~0 durante um encode NVENC — o encode de vídeo
+  carrega a engine de **encoder** (`utilization.encoder`), não a barra de
+  gráficos. O coletor agora reporta o **máximo entre as duas**, então o painel
+  reflete o encode de hardware de verdade.
+- O probe de encoders de hardware passou a usar um frame `256×256`: o `64×64`
+  anterior estava **abaixo do tamanho mínimo** do NVENC ("Frame Dimension less
+  than the minimum supported value"), então GPUs NVIDIA modernas apareciam como
+  "detectado mas não rodou" mesmo com driver funcionando.
+- Backends por plataforma: **AMF (AMD)** só é oferecido no Windows e
+  **VideoToolbox** só no macOS; NVENC e QSV continuam sendo detectados em
+  qualquer SO e **Software**/"Automático" seguem sempre disponíveis. Além disso,
+  o motivo do probe falho agora aparece na UI (cartão **Avançado**) em vez de um
+  texto genérico.
+- **Arrastar e soltar** funcionando nas três plataformas: o app não só escuta
+  `wails:file-drop` como registra o `OnFileDrop` do runtime (que liga os
+  listeners de drop no WebView). No **Linux** o handler nativo do Wails faz o
+  WebKit navegar para o arquivo solto (o vídeo "toca" e a UI some), então lá o
+  caminho é lido do próprio DOM (`text/uri-list`) sem navegação; Windows/macOS
+  seguem com o drop nativo do Wails. A janela inteira é a área de drop e,
+  durante o arrasto, um **pontilhado ao redor da tela** indica onde soltar.
+- **Saída e thumbnail por padrão junto da fonte**: sem pasta de destino salva,
+  os caminhos sugeridos iam para o diretório de trabalho do app (o arquivo da
+  thumbnail "sumia" para quem procurava ao lado do vídeo). Agora o default é a
+  pasta do vídeo de origem (ou a pasta configurada nas Preferências).
+- A **thumbnail** gerada usa um frame **5 segundos após o início** do vídeo
+  (primeiro segmento) em vez do meio do último trecho — nas divisões em partes
+  caía perto do fim e parecia o "último frame"; e evita telas pretas de
+  abertura. Em vídeos curtos (menos de 10s) cai para a metade.
 
 ## [2.1.0] — 2026-09-27
 

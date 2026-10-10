@@ -12,6 +12,15 @@ import (
 //go:embed all:frontend/dist
 var assets embed.FS
 
+// fileDropOption enables the native Wails file drop so absolute paths reach
+// the frontend via "wails:file-drop". The DOM-only fallback (text/uri-list) is
+// not enough: on WebKitGTK the list comes empty and File objects expose no
+// path. Navigation to the dropped file is prevented in the frontend by
+// calling preventDefault on dragenter/dragover/drop.
+func fileDropOption() *options.DragAndDrop {
+	return &options.DragAndDrop{EnableFileDrop: true}
+}
+
 func main() {
 	// Create an instance of the app structure
 	app := NewApp()
@@ -29,11 +38,8 @@ func main() {
 			Assets: assets,
 		},
 		BackgroundColour: &options.RGBA{R: 13, G: 12, B: 10, A: 1},
-		DragAndDrop: &options.DragAndDrop{
-			EnableFileDrop:     true,
-			DisableWebViewDrop: true,
-		},
-		OnStartup: app.startup,
+		DragAndDrop:      fileDropOption(),
+		OnStartup:        app.startup,
 		Bind: []interface{}{
 			app,
 		},

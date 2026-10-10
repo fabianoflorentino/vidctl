@@ -210,6 +210,9 @@ func (a *App) RefreshEncoders() (encode.Availability, error) {
 // "auto" hardware sentinel into the first detected backend, falling back to
 // software when nothing is probed.
 func (a *App) resolveEncoder(job compress.Job) (compress.Job, error) {
+	if err := compress.Validate(job); err != nil {
+		return job, err
+	}
 	if !encode.ValidCodec(job.Codec) {
 		return job, fmt.Errorf("codec desconhecido: %s", job.Codec)
 	}
@@ -282,6 +285,23 @@ func (a *App) OpenOutputDialog(suggestedName string) (string, error) {
 		Filters: []wailsruntime.FileFilter{{
 			DisplayName: "Vídeo MP4",
 			Pattern:     "*.mp4",
+		}},
+	})
+	if err != nil {
+		return "", fmt.Errorf("falha ao abrir o seletor de arquivos: %w", err)
+	}
+	return path, nil
+}
+
+// OpenThumbnailDialog opens the native save dialog for the generated thumbnail.
+// Returns "" when the user cancels.
+func (a *App) OpenThumbnailDialog(suggestedName string) (string, error) {
+	path, err := wailsruntime.SaveFileDialog(a.ctx, wailsruntime.SaveDialogOptions{
+		Title:           "Salvar thumbnail",
+		DefaultFilename: suggestedName,
+		Filters: []wailsruntime.FileFilter{{
+			DisplayName: "Imagem",
+			Pattern:     "*.png;*.jpg;*.jpeg",
 		}},
 	})
 	if err != nil {

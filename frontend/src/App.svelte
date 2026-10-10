@@ -8,6 +8,7 @@
     GetMediaInfo,
     GetThumbnail,
     OpenOutputDialog,
+    OpenThumbnailDialog,
     Compress as StartCompress,
     CompressMultiple,
     DebugEnabled,
@@ -24,14 +25,16 @@
     GetEncoders,
     RefreshEncoders,
   } from '../wailsjs/go/main/App.js'
-  import { EventsOn, EventsOff } from '../wailsjs/runtime/runtime.js'
+  import { EventsOn, EventsOff, OnFileDrop, OnFileDropOff, Environment } from '../wailsjs/runtime/runtime.js'
   import type { main, presets, media, config, encode } from '../wailsjs/go/models.js'
   import { compress as bindings, config as configBindings } from '../wailsjs/go/models.js'
   import StatusPage from './lib/StatusPage.svelte'
   import VideoRow from './lib/VideoRow.svelte'
   import Stepper from './lib/Stepper.svelte'
-  import RadioCardGroup from './lib/RadioCardGroup.svelte'
-  import InfoTip from './lib/InfoTip.svelte'
+import RadioCardGroup from './lib/RadioCardGroup.svelte'
+  import Toggle from './lib/Toggle.svelte'
+  import Section from './lib/Section.svelte'
+  import DropTarget from './lib/DropTarget.svelte'
   import PreferencesModal from './lib/PreferencesModal.svelte'
   import { stageLabel } from './lib/stages'
 
@@ -55,6 +58,8 @@
     partsTotal: number
     partsDone: number
     error: string
+    startedAt: number
+    elapsedSec: number
   }
   type ThemeChoice = 'system' | 'light' | 'dark'
 
@@ -94,6 +99,7 @@
   let crf = $state(23)
   let codec = $state<'h264' | 'h265'>('h264')
   let hardware = $state('')
+  let nvencPreset = $state('p4')
   let encoders = $state<encode.Availability | null>(null)
   let encodersError = $state('')
 
@@ -153,11 +159,21 @@
     scheduleSaveConfig()
   })
 
+  function sepFor(dir: string): string {
+    return dir.includes('\\') && !dir.includes('/') ? '\\' : '/'
+  }
+
+  // Pasta de destino: a preferência salva quando existe; senão, a pasta do
+  // arquivo de origem (nunca o diretório de trabalho do app).
+  function targetDir(): string {
+    if (outputDir) return outputDir.replace(/[\\/]+$/, '') + sepFor(outputDir)
+    const last = Math.max(inputPath.lastIndexOf('/'), inputPath.lastIndexOf('\\'))
+    return last >= 0 ? inputPath.slice(0, last + 1) : ''
+  }
+
   function suggestedOutput(base: string): string {
-    const name = base + '-compressed.mp4'
-    if (!outputDir) return name
-    const sep = outputDir.includes('\\') && !outputDir.includes('/') ? '\\' : '/'
-    return outputDir.replace(/[\\/]+$/, '') + sep + name
+    const name = base.split(/[\\/]/).pop() + '-compressed.mp4'
+    return targetDir() + name
   }
 
   let queue = $state<QueueItem[]>([])
@@ -222,6 +238,8 @@
       partsTotal: 1,
       partsDone: 0,
       error: '',
+      startedAt: 0,
+      elapsedSec: 0,
       ...fields,
     }
     queue.push(item)
@@ -248,6 +266,8 @@
       partsTotal: t.partsTotal,
       partsDone: t.partsDone,
       error: t.error,
+      startedAt: 0,
+      elapsedSec: 0,
     }
   }
 
@@ -259,14 +279,21 @@
     return presetList.find((p) => p.id === id)?.name ?? id
   }
 
+  function fmtDuration(sec: number): string {
+    if (!sec || !Number.isFinite(sec) || sec < 0) return '—'
+    const m = Math.floor(sec / 60)
+    const s = Math.round(sec % 60)
+    return m > 0 ? `${m}min ${String(s).padStart(2, '0')}s` : `${s}s`
+  }
+
   function stateLabel(item: QueueItem): string {
     switch (item.state) {
       case 'queued':
         return item.position > 1 ? `aguardando · ${item.position}º da fila` : 'aguardando'
       case 'running':
-        return `processando · ${item.percent.toFixed(0)}%`
+        return `processando · ${item.percent.toFixed(0)}%${item.startedAt ? ` · ${fmtDuration((Date.now() - item.startedAt) / 1000)}` : ''}`
       case 'done':
-        return 'concluído'
+        return `concluído${item.elapsedSec ? ` · ${fmtDuration(item.elapsedSec)}` : ''}`
       case 'error':
         return 'erro'
       case 'canceled':
@@ -281,8 +308,16 @@
   const anyBusy = $derived(queue.some((i) => i.state === 'queued' || i.state === 'running'))
   const hasFinished = $derived(queue.some((i) => i.state !== 'queued' && i.state !== 'running'))
 
+  let now = $state(Date.now())
+  $effect(() => {
+    if (!anyBusy) return
+    const id = setInterval(() => (now = Date.now()), 500)
+    return () => clearInterval(id)
+  })
+
   let prefsOpen = $state(false)
   let dragging = $state(false)
+  let nativeFileDrop = true
 
   const VIDEO_EXT = ['.mp4', '.mov', '.mkv', '.webm', '.m4v', '.avi', '.wmv', '.flv']
 
@@ -293,7 +328,9 @@
 
   async function adoptFile(path: string) {
     if (!isVideoPath(path)) {
-      error = `extensão não suportada: ${path.split('.').pop() || path}`
+      const msg = `extensão não suportada: ${path.split('.').pop() || path}`
+      dbg(`adoptFile rejeitado path=${path}`)
+      error = msg
       return
     }
     inputPath = path
@@ -301,7 +338,9 @@
     error = ''
     thumb = ''
     try {
-      info = await GetMediaInfo(path)
+      const got = await GetMediaInfo(path)
+      dbg(`adoptFile ok path=${path} duration=${got.durationSec} w=${got.width}`)
+      info = got
       const base = path.replace(/\.[^.]+$/, '')
       outputPath = suggestedOutput(base)
       GetThumbnail(path, info.durationSec)
@@ -312,6 +351,7 @@
           thumb = ''
         })
     } catch (err) {
+      dbg(`adoptFile erro path=${path} err=${String(err)}`)
       info = null
       error = String(err)
     }
@@ -327,16 +367,50 @@
     if (first) adoptFile(first)
   }
 
+  function isFileDrag(t: DataTransfer): boolean {
+    const types = t.types
+    return types.includes('Files') || types.includes('text/uri-list')
+  }
+
+  function onDragEnter(e: DragEvent) {
+    if (!e.dataTransfer || !isFileDrag(e.dataTransfer)) return
+    e.preventDefault()
+    dragging = true
+  }
+
   function onDragOver(e: DragEvent) {
-    if (e.dataTransfer?.types.includes('Files')) dragging = true
+    if (!e.dataTransfer || !isFileDrag(e.dataTransfer)) return
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'copy'
+    dragging = true
   }
 
   function onDragLeave(e: DragEvent) {
     if (e.relatedTarget === null) dragging = false
   }
 
-  function onDropEnd() {
+  // No Linux o drop nativo do Wails faz o WebKit navegar para o arquivo solto
+  // ("tocar" o vídeo e derrubar a UI). Lá, o front lê text/uri-list do próprio
+  // evento de drop, que entrega os caminhos sem navegação.
+  function handleWindowDrop(e: DragEvent) {
+    if (!e.dataTransfer || !isFileDrag(e.dataTransfer)) return
+    e.preventDefault()
     dragging = false
+    if (nativeFileDrop) return
+    try {
+      const uri = e.dataTransfer.getData('text/uri-list') ?? ''
+      const paths = uri
+        .split('\n')
+        .map((p) => p.trim())
+        .filter((p) => p && !p.startsWith('#'))
+        .map((p) => (p.startsWith('file://') ? decodeURIComponent(p.slice(7)) : p))
+      const first = e.dataTransfer.files.length ? (e.dataTransfer.files[0] as { path?: string }).path : undefined
+      const dropped = paths.length ? paths : first ? [first] : []
+      dbg(`drop uri=${JSON.stringify(uri)} paths=${JSON.stringify(dropped)}`)
+      if (dropped.length) handleDrop(dropped)
+    } catch (err) {
+      dbg(`drop erro ${String(err)}`)
+    }
   }
 
   $effect(() => {
@@ -362,6 +436,8 @@
         split: split ?? undefined,
         codec,
         hardware,
+        nvencPreset,
+        ...adjustPayload(),
       })
       const [got, estimated] = await Promise.allSettled([GetAdvice(job), EstimateSize(job)])
       if (seq !== adviceSeq) return
@@ -467,6 +543,120 @@
     return `${m}:${String(s).padStart(2, '0')}`
   }
 
+  type ScaleMode = 'original' | 'default' | 'custom'
+  const sectionState = $state({
+    config: true,
+    avancado: false,
+    presets: false,
+    split: false,
+    ajustes: false,
+  })
+
+  function toggleSection(key: keyof typeof sectionState) {
+    const next = !sectionState[key]
+    for (const k of Object.keys(sectionState) as (keyof typeof sectionState)[]) sectionState[k] = false
+    sectionState[key] = next
+  }
+  let scaleMode = $state<ScaleMode>('default')
+  let scaleCustom = $state('1280x720')
+  let trimStart = $state('')
+  let trimEnd = $state('')
+  let removeAudio = $state(false)
+  let fps = $state(0)
+  let rotate = $state(0)
+  let thumbnailOn = $state(false)
+  let thumbnailPath = $state('')
+
+  const scaleOptions = [
+    { id: 'default' as ScaleMode, title: 'Padrão', description: 'limita a 1280px no lado maior' },
+    { id: 'original' as ScaleMode, title: 'Original', description: 'mantém a resolução da fonte' },
+    { id: 'custom' as ScaleMode, title: 'Personalizado', description: 'você define a resolução' },
+  ]
+
+  const rotateOptions = [
+    { id: '0', title: '0°', description: 'horizontal normal' },
+    { id: '90', title: '90°', description: 'girar para a direita' },
+    { id: '180', title: '180°', description: 'de cabeça para baixo' },
+    { id: '270', title: '270°', description: 'girar para a esquerda' },
+  ]
+
+  function parseClock(input: string): number {
+    const s = input.trim()
+    if (!s) return 0
+    const parts = s.split(':')
+    if (parts.length > 3) return Number.NaN
+    const nums = parts.map((p) => Number(p.replace(',', '.')))
+    if (nums.some((n) => Number.isNaN(n) || n < 0)) return Number.NaN
+    if (parts.length === 1) return nums[0]
+    if (parts.length === 2) return nums[0] * 60 + nums[1]
+    return nums[0] * 3600 + nums[1] * 60 + nums[2]
+  }
+
+  const trimStartSec = $derived(parseClock(trimStart))
+  const trimEndSec = $derived(parseClock(trimEnd))
+  const trimming = $derived(trimStart.trim() !== '' || trimEnd.trim() !== '')
+
+  const adjustError = $derived.by<string>(() => {
+    if (scaleMode === 'custom' && !/^\s*\d+x\d+\s*$/.test(scaleCustom)) {
+      return 'escala personalizada deve ser LARGURAxALTURA (ex.: 1280x720)'
+    }
+    if (Number.isNaN(trimStartSec) || Number.isNaN(trimEndSec)) {
+      return 'tempo de corte inválido — use mm:ss (ex.: 1:30)'
+    }
+    if (trimStartSec > 0 && trimEndSec > 0 && trimEndSec <= trimStartSec) {
+      return 'o fim do corte deve ser maior que o início'
+    }
+    if (trimming && splitOn) {
+      return 'corte manual e divisão em partes não podem ser combinados'
+    }
+    if (thumbnailOn && !thumbnailPath) {
+      return 'escolha o destino da thumbnail'
+    }
+    return ''
+  })
+
+  const adjustSummary = $derived.by(() => {
+    const parts: string[] = []
+    if (scaleMode === 'original') parts.push('resolução original')
+    else if (scaleMode === 'custom') parts.push(scaleCustom.trim())
+    if (trimStartSec > 0 || trimEndSec > 0) {
+      parts.push(`corte ${trimStartSec > 0 ? fmtClock(trimStartSec) : '0:00'}–${trimEndSec > 0 ? fmtClock(trimEndSec) : 'fim'}`)
+    }
+    if (fps > 0) parts.push(`${fps} fps`)
+    if (rotate !== 0) parts.push(`${rotate}°`)
+    if (removeAudio) parts.push('sem áudio')
+    if (thumbnailOn) parts.push('thumbnail')
+    return parts.join(' · ')
+  })
+
+  function adjustPayload() {
+    return {
+      scale: scaleMode === 'default' ? '' : scaleMode === 'original' ? 'original' : scaleCustom.trim(),
+      trimStartSec: trimStartSec > 0 ? trimStartSec : undefined,
+      trimEndSec: trimEndSec > 0 ? trimEndSec : undefined,
+      removeAudio,
+      fps: fps > 0 ? fps : undefined,
+      rotate: rotate !== 0 ? rotate : undefined,
+      thumbnailPath: thumbnailOn && thumbnailPath ? thumbnailPath : undefined,
+    }
+  }
+
+  function suggestedThumbnailPath(): string {
+    const base = inputPath ? inputPath.replace(/\.[^.]+$/, '').split(/[\\/]/).pop() : 'video'
+    return targetDir() + base + '-thumb.png'
+  }
+
+  function toggleThumbnail(v: boolean) {
+    thumbnailOn = v
+    if (v && !thumbnailPath) thumbnailPath = suggestedThumbnailPath()
+    if (!v) thumbnailPath = ''
+  }
+
+  async function pickThumbnail() {
+    const path = await OpenThumbnailDialog(thumbnailPath.split(/[\\/]/).pop() || 'thumbnail.png')
+    if (path) thumbnailPath = path
+  }
+
   const selectedPreset = $derived(presetList.find((p) => p.id === selectedPresetId) ?? null)
 
   const presetOptions = $derived(
@@ -490,7 +680,7 @@
       const desc = labels.length
         ? `suporta ${labels.join(' e ')}`
         : info.error
-          ? 'detectado, mas não conseguiu rodar (verificar de novo)'
+          ? 'detectado, mas o teste de 1 frame falhou'
           : 'sem codecs disponíveis'
       opts.push({
         id: info.id,
@@ -502,11 +692,33 @@
     return opts
   })
 
+  function shortErr(s: string): string {
+    const line = s.split('\n').find((l) => l.trim()) ?? s
+    return line.length > 110 ? line.slice(0, 107) + '…' : line
+  }
+
+  const failingEncoders = $derived(
+    (encoders?.hardware ?? [])
+      .filter((i) => (i.codecs ?? []).length === 0 && i.error)
+      .map((i) => `${i.label}: ${shortErr(i.error)}`)
+      .join(' · '),
+  )
+
   const gpuActive = $derived(hardware !== '')
 
   const codecOptions: { id: 'h264' | 'h265'; title: string; description: string }[] = [
     { id: 'h264', title: 'H.264', description: 'Compatível com tudo (x264 / hardware)' },
     { id: 'h265', title: 'H.265 / HEVC', description: 'Menor arquivo na mesma qualidade, menos compatível' },
+  ]
+
+  const nvencPresetOptions = [
+    { id: 'p1', title: 'mais rápido' },
+    { id: 'p2', title: 'muito rápido' },
+    { id: 'p3', title: 'rápido' },
+    { id: 'p4', title: 'equilíbrio (padrão)' },
+    { id: 'p5', title: 'melhor qualidade' },
+    { id: 'p6', title: 'alta qualidade' },
+    { id: 'p7', title: 'máxima qualidade' },
   ]
 
   const appView = $derived(info ? 'queue' : 'empty')
@@ -527,6 +739,9 @@
 
   onMount(() => {
     load()
+    Environment()
+      .then((env) => (nativeFileDrop = env.platform !== 'linux'))
+      .catch(() => {})
     DebugEnabled()
       .then((v) => (debug = v))
       .catch(() => {})
@@ -544,6 +759,7 @@
       dbg(`evento compress:start job=${e.jobId}`)
       patch(e.jobId, ['queued', 'running'], (i) => {
         i.state = 'running'
+        i.startedAt = i.startedAt || Date.now()
       })
     })
     EventsOn('compress:progress', (e: ProgressEv) => {
@@ -568,6 +784,7 @@
         i.state = 'done'
         i.percent = 100
         i.stage = 'done'
+        i.elapsedSec = i.startedAt ? (Date.now() - i.startedAt) / 1000 : 0
       })
     })
     EventsOn('compress:error', (e: ErrorEv) => {
@@ -578,16 +795,16 @@
         i.stage = ''
       })
     })
-    EventsOn('wails:file-drop', (_x: number, _y: number, paths: string[]) => {
+    OnFileDrop((_x: number, _y: number, paths: string[]) => {
       handleDrop(paths)
-    })
+    }, true)
     return () => {
       EventsOff('compress:queued')
       EventsOff('compress:start')
       EventsOff('compress:progress')
       EventsOff('compress:done')
       EventsOff('compress:error')
-      EventsOff('wails:file-drop')
+      OnFileDropOff()
     }
   })
 
@@ -700,7 +917,7 @@
   }
 
   function canRun(): boolean {
-    if (!ffmpegOk || !inputPath || !outputPath || !selectedPreset || splitBlocked) return false
+    if (!ffmpegOk || !inputPath || !outputPath || !selectedPreset || splitBlocked || adjustError) return false
     return !queue.some(
       (i) => i.inputPath === inputPath && (i.state === 'queued' || i.state === 'running'),
     )
@@ -727,6 +944,8 @@
       split: splitPayload() ?? undefined,
       codec,
       hardware,
+      nvencPreset,
+      ...adjustPayload(),
     })
   }
 
@@ -826,7 +1045,9 @@
   }
 </script>
 
-<svelte:window ondragover={onDragOver} ondragleave={onDragLeave} ondrop={onDropEnd} />
+<svelte:window ondragenter={onDragEnter} ondragover={onDragOver} ondragleave={onDragLeave} ondrop={handleWindowDrop} />
+
+<div class="drop-overlay" class:show={dragging} aria-hidden="true"></div>
 
 <header class="topbar">
   <span class="ffmpeg-pill" class:bad={!ffmpegOk}>
@@ -862,16 +1083,11 @@
   <div class="split">
     <aside class="sidebar">
       {#if selectedPreset?.mode === 'size'}
-        <section class="group-card">
-          <div class="group-card-head">
-            <span class="group-card-title">Tamanho alvo</span>
-            <InfoTip text="Presets de tamanho fazem o ffmpeg calcular o bitrate pela duração para caber no alvo (encode 2-pass)." />
+        <Section title="Tamanho alvo" open={sectionState.config} onchange={() => toggleSection("config")} infoTip="Presets de tamanho fazem o ffmpeg calcular o bitrate pela duração para caber no alvo (encode 2-pass).">
+          <div class="tune-row">
+            <span class="meta-k">tamanho (MB)</span>
+            <Stepper value={sizeMB} min={2} max={100} digits={1} ariaLabel="tamanho alvo" onchange={(v) => (sizeMB = v)} />
           </div>
-          <div class="group-card-body">
-            <div class="tune-row">
-              <span class="meta-k">tamanho (MB)</span>
-              <Stepper value={sizeMB} min={2} max={100} digits={1} ariaLabel="tamanho alvo" onchange={(v) => (sizeMB = v)} />
-            </div>
             {#if sizeEstimate?.available}
               <span class="est-badge mono">
                 esperado ≈ {sizeEstimate.targetSizeMB.toFixed(1)} MB{#if sizeEstimate.audioKbps > 0} · áudio {sizeEstimate.audioKbps}k{/if}
@@ -897,29 +1113,17 @@
                 {/if}
               </div>
             {/if}
-          </div>
-        </section>
+          </Section>
       {:else if selectedPreset}
-        <section class="group-card">
-          <div class="group-card-head">
-            <span class="group-card-title">Qualidade</span>
-            <InfoTip text="Encode CRF: qualidade constante sem limite de tamanho. Quanto menor o CRF, melhor a imagem e maior o arquivo." />
+        <Section title="Qualidade" open={sectionState.config} onchange={() => toggleSection("config")} infoTip="Encode CRF: qualidade constante sem limite de tamanho. Quanto menor o CRF, melhor a imagem e maior o arquivo.">
+          <div class="tune-row">
+            <span class="meta-k">CRF — quanto menor, melhor</span>
+            <Stepper value={crf} min={16} max={34} ariaLabel="CRF" onchange={(v) => (crf = v)} />
           </div>
-          <div class="group-card-body">
-            <div class="tune-row">
-              <span class="meta-k">CRF — quanto menor, melhor</span>
-              <Stepper value={crf} min={16} max={34} ariaLabel="CRF" onchange={(v) => (crf = v)} />
-            </div>
-          </div>
-        </section>
+          </Section>
       {/if}
 
-      <section class="group-card">
-        <div class="group-card-head">
-          <span class="group-card-title">Avançado</span>
-          <InfoTip text="Altera o codec de vídeo e o codificador para este trabalho (não altera o preset salvo). Aceleração de hardware é mais rápida, mas costuma exigir um pouco mais de bitrate para a mesma qualidade; no modo tamanho o arquivo pode variar em ±5–10%." />
-        </div>
-        <div class="group-card-body">
+      <Section title="Avançado" open={sectionState.avancado} onchange={() => toggleSection("avancado")} infoTip="Altera o codec de vídeo e o codificador para este trabalho (não altera o preset salvo). Aceleração de hardware é mais rápida, mas costuma exigir um pouco mais de bitrate para a mesma qualidade; no modo tamanho o arquivo pode variar em ±5–10%.">
           <div class="meta-k">codec de vídeo</div>
           <div class="codec-row">
             {#each codecOptions as opt (opt.id)}
@@ -943,6 +1147,18 @@
             </div>
           {/if}
 
+          {#if hardware === 'nvenc'}
+            <div class="meta-k spacer">preset NVENC</div>
+            <div class="preset-row" role="radiogroup" aria-label="preset NVENC">
+              {#each nvencPresetOptions as o (o.id)}
+                <label class="preset-chip" class:selected={nvencPreset === o.id}>
+                  <input type="radio" name="nvencPreset" value={o.id} checked={nvencPreset === o.id} onchange={() => (nvencPreset = o.id)} />
+                  {o.title}
+                </label>
+              {/each}
+            </div>
+          {/if}
+
           {#if encodersError}
             <div class="hint">
               falha ao detectar encoders: {encodersError}
@@ -952,26 +1168,17 @@
             <div class="hint">
               {encoders ? `${encoders.hardware.length} backend(s) de hardware detectado(s)` : 'verificando encoders…'}
             </div>
+            {#if failingEncoders}
+              <div class="enc-fail mono" title={failingEncoders}>{failingEncoders}</div>
+            {/if}
           {/if}
-        </div>
-      </section>
+          </Section>
 
-      <section class="group-card">
-        <div class="group-card-head">
-          <span class="group-card-title">Presets</span>
-          <InfoTip text="Escolha um preset de saída. Presets de tamanho calculam o bitrate pela duração para caber no alvo (2-pass); presets CRF priorizam qualidade." />
-        </div>
-        <div class="group-card-body">
+      <Section title="Presets" open={sectionState.presets} onchange={() => toggleSection("presets")} infoTip="Escolha um preset de saída. Presets de tamanho calculam o bitrate pela duração para caber no alvo (2-pass); presets CRF priorizam qualidade.">
           <RadioCardGroup options={presetOptions} selected={selectedPresetId} name="presets" onchange={selectPresetById} />
-        </div>
-      </section>
+          </Section>
 
-      <section class="group-card">
-        <div class="group-card-head">
-          <span class="group-card-title">Cortar em partes</span>
-          <InfoTip text="Divide o vídeo em partes sequenciais de duração fixa. Cada parte passa pela compressão escolhida. Mínimo de 1 minuto por parte; a última pode ficar menor ou levar a sobra. Ajuste um dos contadores para ativar o corte." />
-        </div>
-        <div class="group-card-body">
+      <Section title="Cortar em partes" open={sectionState.split} onchange={() => toggleSection("split")} infoTip="Divide o vídeo em partes sequenciais de duração fixa. Cada parte passa pela compressão escolhida. Mínimo de 1 minuto por parte; a última pode ficar menor ou levar a sobra. Ajuste um dos contadores para ativar o corte.">
           <div class="split-head">
             <div class="split-toggle">
               <button class="btn small" class:solid={!splitOn} onclick={() => (splitOn = false)}>
@@ -1001,25 +1208,72 @@
           {:else if splitOn && activeSplit?.error}
             <div class="split-error mono">{activeSplit.error}</div>
           {/if}
-        </div>
-      </section>
+          </Section>
 
-      <section class="group-card">
-        <div class="group-card-head">
-          <span class="group-card-title">Saída</span>
-        </div>
-        <div class="group-card-body">
-          <div class="out-row">
-            <span class="out-path mono" class:empty={!outputPath}>
-              {outputPath || 'escolha o vídeo para gerar o caminho de saída'}
-            </span>
-            <button class="btn subtle small" onclick={pickOutput} disabled={!inputPath}>salvar como…</button>
-          </div>
-        </div>
-      </section>
+      <Section title="Ajustes por arquivo" open={sectionState.ajustes} onchange={() => toggleSection("ajustes")} infoTip="Escala, corte por janela (mm:ss), remoção de áudio, FPS, rotação e geração de thumbnail — aplicados além do preset, por trabalho.">
+          <div class="meta-k">escala</div>
+            <RadioCardGroup options={scaleOptions} selected={scaleMode} name="scale" onchange={(v) => (scaleMode = v as ScaleMode)} />
+            {#if scaleMode === 'custom'}
+              <input
+                class="text-input mono"
+                value={scaleCustom}
+                aria-label="resolução personalizada"
+                placeholder="1280x720"
+                oninput={(e) => (scaleCustom = e.currentTarget.value)}
+              />
+            {/if}
+
+            <div class="trim-row">
+              <div class="trim-field">
+                <span class="meta-k">início (mm:ss)</span>
+                <input
+                  class="text-input mono"
+                  value={trimStart}
+                  aria-label="início do corte"
+                  placeholder="0:00"
+                  oninput={(e) => (trimStart = e.currentTarget.value)}
+                />
+              </div>
+              <div class="trim-field">
+                <span class="meta-k">fim (mm:ss)</span>
+                <input
+                  class="text-input mono"
+                  value={trimEnd}
+                  aria-label="fim do corte"
+                  placeholder="fim do vídeo"
+                  oninput={(e) => (trimEnd = e.currentTarget.value)}
+                />
+              </div>
+            </div>
+
+            <div class="tune-row">
+              <span class="meta-k">FPS (0 = original)</span>
+              <Stepper value={fps} min={0} max={120} digits={1} ariaLabel="frames por segundo" onchange={(v) => (fps = v)} />
+            </div>
+
+            <div class="meta-k spacer">orientação</div>
+            <RadioCardGroup options={rotateOptions} selected={String(rotate)} name="rotate" onchange={(v) => (rotate = Number(v))} />
+
+            <Toggle title="remover áudio" description="descarta a trilha de áudio da saída" checked={removeAudio} onchange={(v) => (removeAudio = v)} />
+
+            <Toggle title="gerar thumbnail" description="extrai um quadro do vídeo ao terminar" checked={thumbnailOn} onchange={toggleThumbnail} />
+            {#if thumbnailOn}
+              <div class="thumb-actions">
+                <button class="btn subtle small" onclick={pickThumbnail} disabled={!inputPath}>escolher destino…</button>
+                {#if thumbnailPath}
+                  <span class="thumb-path mono" title={thumbnailPath}>{thumbnailPath}</span>
+                {/if}
+              </div>
+            {/if}
+
+            {#if adjustError}
+              <div class="split-error mono">{adjustError}</div>
+            {/if}
+          </Section>
     </aside>
 
     <main class="content dropzone" class:hot={dragging}>
+      <DropTarget hot={dragging} onOpen={pickInput} />
       <div class="sources-head">
         <span class="group-card-title">Fontes de vídeo</span>
         {#if info}
@@ -1038,6 +1292,16 @@
           onSwitch={pickInput}
           onClear={reset}
         />
+        <div class="out-card group-card">
+          <div class="group-card-body">
+            <div class="out-row">
+              <span class="out-path mono" class:empty={!outputPath}>
+                {outputPath || 'escolha o vídeo para gerar o caminho de saída'}
+              </span>
+              <button class="btn subtle small" onclick={pickOutput} disabled={!inputPath}>salvar como…</button>
+            </div>
+          </div>
+        </div>
       {/if}
 
       {#if previewItem && previewBusy}
@@ -1053,6 +1317,9 @@
           <div class="track"><div class="fill" style="width:{previewItem.percent}%"></div></div>
           <div class="progress-foot">
             <button class="btn small" onclick={() => cancelItem(previewItem.jobId)}>cancelar</button>
+            <span class="progress-time mono" aria-live="polite">
+              {previewItem.startedAt ? `⏱ ${fmtDuration((now - previewItem.startedAt) / 1000)}` : ''}
+            </span>
             <div class="usage mono" aria-live="polite">
               {#if usage}
                 CPU {Math.round(usage.cpu)}% · RAM {(usage.memUsedMB / 1024).toFixed(1)}/{(usage.memTotalMB / 1024).toFixed(1)} GB
@@ -1072,6 +1339,7 @@
               {(previewItem.sizeBytes / (1024 * 1024)).toFixed(1)} MB{#if previewItem.partsTotal > 1} · {previewItem.partsTotal} partes{/if}
             </span>
             <span class="result-from mono">de {originalMB.toFixed(1)} MB</span>
+            <span class="result-time mono">tempo {fmtDuration(previewItem.elapsedSec)}</span>
           </div>
           <div class="result-actions">
             <button class="btn solid" onclick={() => OpenFolder(previewItem.outputPath)}>abrir pasta</button>
@@ -1118,7 +1386,7 @@
       {#if info && !previewBusy && !previewDone}
         <div class="summary-card">
           <div class="sum-row">
-            <span class="meta-k">destino</span>
+            <span class="meta-k">configuração</span>
             <span class="sum-v">
               {#if selectedPreset}
                 {selectedPreset.name} · {selectedPreset.mode === 'size' ? `${sizeMB} MB${splitOn ? '/parte' : ''}` : `CRF ${crf}`}
@@ -1139,6 +1407,12 @@
               {/if}
             </span>
           </div>
+          {#if adjustSummary}
+            <div class="sum-row">
+              <span class="meta-k">ajustes</span>
+              <span class="sum-v">{adjustSummary}</span>
+            </div>
+          {/if}
           {#if advice && advice.kbps > 0}
             <div class="sum-row">
               <span class="meta-k">bitrate</span>
@@ -1163,7 +1437,7 @@
 {/if}
 
 <footer class="foot mono">
-  offline · h264 + aac · 2-pass quando há limite de tamanho
+  h264 + aac · 2-pass quando há limite de tamanho
 </footer>
 
 <PreferencesModal

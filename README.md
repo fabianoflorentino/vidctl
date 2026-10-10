@@ -216,10 +216,23 @@ para aquele trabalho, sem alterar o preset salvo:
   (NVENC → QSV → AMF → VideoToolbox), com fallback para software se nenhum
   funcionar.
 - **Detecção**: o app lista os encoders do seu `ffmpeg`
-  (`ffmpeg -hide_banner -encoders`, em cache) e roda um probe de 1 frame para
-  confirmar que o driver da GPU funciona. Backends que falham aparecem
-  desabilitados com o motivo; "verificar de novo" no cartão re-detecta (ex.:
-  depois de instalar o driver).
+  (`ffmpeg -hide_banner -encoders`, em cache) e roda um probe de 1 frame
+  (`256×256`) para confirmar que o driver da GPU funciona. Backends que falham
+  aparecem desabilitados com o motivo na UI; "verificar de novo" no cartão
+  re-detecta (ex.: depois de instalar o driver).
+- **Por plataforma**: **AMF** (AMD) só é oferecido no Windows e
+  **VideoToolbox** só no macOS (são APIs específicas desses sistemas). NVENC e
+  QSV são detectados em qualquer SO onde o `ffmpeg` os lista.
+- **GPU no painel de progresso**: o "GPU %" mostra o máximo entre a engine
+  gráfica e a de **vídeo** (`utilization.gpu` vs `utilization.encoder`). Um
+  encode NVENC sobe a engine de encoder, não a barra de gráficos — se você
+  acompanhar por `nvtop`/`nvidia-smi`, observe a coluna **ENC** (ou o "GPU %" do
+  painel), não a barra principal.
+- **Preset NVENC**: com o codificador NVIDIA ativo, o cartão "Avançado" deixa
+  trocar o preset `p1`–`p7` por trabalho (default `p4`). `p1`/`p2` quase dobram
+  a velocidade de encode — a engine de vídeo fica saturada de qualquer forma;
+  `p7` prioriza a qualidade. O trade-off é leve no modo tamanho (eficiência de
+  compressão).
 
 ## Corte em partes (split por tempo)
 
@@ -239,6 +252,24 @@ gera um arquivo `saída-partN.mp4` (índice com zero à esquerda quando são 10+
 partes). O progresso mostra `parte X/N` e, ao final, o app resume a economia
 total sobre o arquivo original.
 
+## Ajustes por arquivo
+
+O grupo **"Ajustes por arquivo"** aplica controles extras ao vídeo *depois* do
+preset, também por trabalho:
+
+| Controle | Comportamento |
+|---|---|
+| **Escala** | **Padrão** limita a 1280px no lado maior (comportamento normal); **Original** mantém a resolução da fonte (sem filtro de escala); **Personalizado** usa `LARGURAxALTURA` (ex.: `1280x720`) preservando a proporção |
+| **Corte** | `início`/`fim` em `mm:ss` guardam **uma janela** do vídeo (ex.: só o trecho 1:00–3:30), com seek antes do decode (`-ss/-to` antes de `-i`); o orçamento de tamanho e o progresso consideram a duração cortada |
+| **Remover áudio** | saída sem trilha de áudio (`-an` / sem `-c:a`) |
+| **FPS** | sobrescreve os quadros por segundo (`fps=<N>`); `0` mantém o da fonte |
+| **Orientação** | gira 90°, 180° ou 270° (`transpose`, aplicado antes da escala) |
+| **Thumbnail** | após o encode, extrai um quadro do vídeo de saída para o arquivo escolhido (`ffmpeg -ss <meio> -frames:v 1`) |
+
+A ordem dos filtros de vídeo é sempre `transpose → scale → fps`. Corte manual
+e **"Cortar em partes"** não podem ser combinados. Formatos de tempo aceitos:
+`90` (segundos), `1:30` (minutos:segundos) e `1:02:30` (horas).
+
 ## Fila de conversões
 
 O botão **"Adicionar vídeos…"** (ou arrastar vários arquivos de uma vez para a
@@ -255,7 +286,19 @@ cancelados).
   de ações fica sempre disponível — só "Adicionar vídeos…" depende do ffmpeg.
 - O progresso é por trabalho (`compress:queued`, `compress:start`,
   `compress:progress`, `compress:done`, `compress:error`), então um erro em um
-  item não derruba os demais.
+  item não derruba os demais. Cada trabalho mostra o **tempo de conversão**:
+  decorrido durante o processamento e total ao concluir — útil para comparar
+  predefinições e encoders.
+
+## Usabilidade
+
+- **Sidebar colapsável**: os cartões de configuração (`Tamanho alvo`/`Qualidade`,
+  `Avançado`, `Presets`, `Cortar em partes`, `Ajustes por arquivo`) colapsam e
+  expandem pelo cabeçalho; `Avançado`, `Cortar em partes` e `Ajustes` vêm
+  fechados por padrão.
+- **Arrastar e soltar**: a janela principal aceita soltar vídeos em qualquer
+  momento (área "arraste um vídeo aqui" + botão "abrir vídeo…"); um arquivo
+  troca a entrada e vários enfileiram.
 
 ## Stack
 
@@ -295,6 +338,13 @@ O terminal recebe, com timestamp, cada transição da fila (enfileirar,
 iniciar, fim de worker), cada evento emitido para a UI e cada evento
 recebido no frontend — incluindo patches descartados por estado — além das
 exceções de JavaScript. Sem `VIDCTL_DEBUG` o log fica desligado, sem custo.
+
+Também são rastreados os comandos externos executados e a decisão do pipeline:
+
+- `[compress] plugin …` — resumo de cada segmento: modo, encoders (`encoder=hevc_nvenc` etc.), hardware, 2-pass, cadeia `-vf`, seek (corte/split), remoção de áudio, FPS, rotação, thumbnail e saída.
+- `[compress] … exec ffmpeg …` — comando `ffmpeg` completo (passes, single-pass e thumbnail), reproduzível linha a linha.
+- `[media] exec ffprobe/ffmpeg …` — probe do arquivo e geração de miniatura.
+- `[encode] exec ffmpeg …` — listagem de encoders (`-encoders`) e o probe de 1 frame por backend, com o resultado `OK`/`indisponível` e o motivo.
 
 ## Build de produção
 

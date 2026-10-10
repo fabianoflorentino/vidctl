@@ -82,6 +82,10 @@ export function OpenOutputDialog(arg1) {
   return window['go']['main']['App']['OpenOutputDialog'](arg1);
 }
 
+export function OpenThumbnailDialog(arg1) {
+  return window['go']['main']['App']['OpenThumbnailDialog'](arg1);
+}
+
 export function RefreshEncoders() {
   return window['go']['main']['App']['RefreshEncoders']();
 }

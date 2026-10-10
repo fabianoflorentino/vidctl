@@ -49,6 +49,8 @@ export function OpenMultipleDialog():Promise<Array<string>>;
 
 export function OpenOutputDialog(arg1:string):Promise<string>;
 
+export function OpenThumbnailDialog(arg1:string):Promise<string>;
+
 export function RefreshEncoders():Promise<encode.Availability>;
 
 export function SaveConfig(arg1:config.Config):Promise<void>;

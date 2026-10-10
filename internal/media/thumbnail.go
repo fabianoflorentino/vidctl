@@ -8,8 +8,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/fabianoflorentino/vidctl/internal/cmdutil"
+	"github.com/fabianoflorentino/vidctl/internal/dlog"
 )
 
 const thumbMaxWidth = 320
@@ -62,17 +64,19 @@ func ThumbDataURL(path string, durationSec float64) (string, error) {
 			return "", err
 		}
 		seek := durationSec / 2
-		if seek > 1 {
-			seek = 1
+		if seek > 5 {
+			seek = 5
 		}
-		out, err := cmdutil.Command(bin,
+		args := []string{
 			"-v", "error",
 			"-ss", fmt.Sprintf("%.3f", seek),
 			"-i", path,
 			"-frames:v", "1",
 			"-vf", fmt.Sprintf("scale=%d:-2", thumbMaxWidth),
 			"-y", cache,
-		).CombinedOutput()
+		}
+		dlog.Printf("[media] exec ffmpeg %s", strings.Join(append([]string{bin}, args...), " "))
+		out, err := cmdutil.Command(bin, args...).CombinedOutput()
 		if err != nil {
 			return "", errors.New("não foi possível gerar a miniatura: " + string(out))
 		}

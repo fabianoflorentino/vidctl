@@ -28,6 +28,24 @@ const SoftwarePreset = "medium"
 // HWNVENCPreset balances speed and quality for the NVIDIA encoders.
 const HWNVENCPreset = "p4"
 
+// nvencPresetIDs are the accepted NVENC quality presets, p1 (fastest) to p7
+// (best quality).
+var nvencPresetIDs = map[string]bool{
+	"p1": true, "p2": true, "p3": true, "p4": true, "p5": true, "p6": true, "p7": true,
+}
+
+// NvencPreset normalizes a user-chosen NVENC preset id, falling back to the
+// balanced default when empty or unknown.
+func NvencPreset(p string) string {
+	if nvencPresetIDs[p] {
+		return p
+	}
+	return HWNVENCPreset
+}
+
+// ValidNvencPreset reports whether p is a recognized NVENC preset id.
+func ValidNvencPreset(p string) bool { return nvencPresetIDs[p] }
+
 var (
 	// hardwareIDs is the supported backends in auto-resolution priority order.
 	hardwareIDs = []string{HWNVENC, HWQSV, HWAMF, HWVideotoolbox}
@@ -88,11 +106,16 @@ func TwoPass(hw string) bool {
 
 // QualityArgs returns the -c:v section for constant-quality encoding.
 func QualityArgs(codec, hw string, crf float64) []string {
+	return QualityArgsP(codec, hw, crf, "")
+}
+
+// QualityArgsP is QualityArgs with an optional NVENC preset override (p1..p7).
+func QualityArgsP(codec, hw string, crf float64, nvencPreset string) []string {
 	n := int(math.Round(crf))
 	enc := VideoCodec(codec, hw)
 	switch hw {
 	case HWNVENC:
-		return []string{"-c:v", enc, "-preset", HWNVENCPreset, "-rc", "vbr", "-cq", strconv.Itoa(n), "-b:v", "0"}
+		return []string{"-c:v", enc, "-preset", NvencPreset(nvencPreset), "-rc", "vbr", "-cq", strconv.Itoa(n), "-b:v", "0"}
 	case HWQSV:
 		return []string{"-c:v", enc, "-global_quality", strconv.Itoa(n)}
 	case HWAMF:
@@ -106,11 +129,16 @@ func QualityArgs(codec, hw string, crf float64) []string {
 
 // SizeArgs returns the -c:v section for size-limited VBR encoding.
 func SizeArgs(codec, hw string, vbr, maxrate, bufsize int) []string {
+	return SizeArgsP(codec, hw, vbr, maxrate, bufsize, "")
+}
+
+// SizeArgsP is SizeArgs with an optional NVENC preset override (p1..p7).
+func SizeArgsP(codec, hw string, vbr, maxrate, bufsize int, nvencPreset string) []string {
 	enc := VideoCodec(codec, hw)
 	vbrS, maxS, bufS := strconv.Itoa(vbr), strconv.Itoa(maxrate), strconv.Itoa(bufsize)
 	switch hw {
 	case HWNVENC:
-		return []string{"-c:v", enc, "-preset", HWNVENCPreset, "-rc", "vbr", "-b:v", vbrS, "-maxrate", maxS, "-bufsize", bufS}
+		return []string{"-c:v", enc, "-preset", NvencPreset(nvencPreset), "-rc", "vbr", "-b:v", vbrS, "-maxrate", maxS, "-bufsize", bufS}
 	case HWQSV:
 		return []string{"-c:v", enc, "-b:v", vbrS, "-maxrate", maxS, "-bufsize", bufS}
 	case HWAMF:

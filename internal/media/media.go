@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/fabianoflorentino/vidctl/internal/cmdutil"
+	"github.com/fabianoflorentino/vidctl/internal/dlog"
 )
 
 // Info describes an input video probed with ffprobe.
@@ -71,13 +72,15 @@ func Probe(path string) (*Info, error) {
 		return nil, err
 	}
 
-	out, err := cmdutil.Command(bin,
+	args := []string{
 		"-v", "error",
 		"-print_format", "json",
 		"-show_format",
 		"-show_streams",
 		path,
-	).Output()
+	}
+	dlog.Printf("[media] exec ffprobe %s", strings.Join(append([]string{bin}, args...), " "))
+	out, err := cmdutil.Command(bin, args...).Output()
 	if err != nil {
 		return nil, errors.New("não foi possível ler o arquivo de vídeo: " + path)
 	}

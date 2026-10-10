@@ -126,6 +126,24 @@ body {
   background: var(--window);
   color: var(--fg);
   font-family: var(--sans);
+  --wails-drop-target: drop;
+}
+
+/* pontilhado de "área de drop" ao redor da janela durante o arrasto (fase 15) */
+.drop-overlay.show {
+  opacity: 1;
+}
+
+.drop-overlay {
+  position: fixed;
+  inset: 8px;
+  border: 2px dashed var(--accent);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+  z-index: 999;
 }
 
 #app {
@@ -297,6 +315,18 @@ button {
   text-align: center;
   border-radius: var(--radius);
   background: transparent;
+  border: 2px dashed var(--border);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.status-page.hot {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+  outline: none;
+}
+
+.status-page:hover {
+  border-color: var(--fg-faint);
 }
 
 .status-page svg {
@@ -546,6 +576,200 @@ button {
   padding: 6px 12px;
   font-size: 11px;
   color: var(--error);
+}
+
+/* per-file adjustments (fase 5) */
+
+/* collapsible sidebar sections (fase 13) */
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--card);
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.section-head:hover,
+.section-head:focus-visible {
+  background: var(--inset);
+  outline: none;
+}
+
+.section-head.open {
+  border-color: var(--accent);
+}
+
+.section-head.open .group-card-title {
+  color: var(--accent);
+}
+
+.section-collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.section-collapse.open {
+  grid-template-rows: 1fr;
+}
+
+.section-body {
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* media drop target (fase 15) */
+.out-card {
+  margin: 12px 0;
+}
+
+.drop-target {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  background: var(--inset);
+  color: var(--fg-dim);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.drop-target:hover,
+.drop-target:focus-visible {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.drop-target.hot {
+  border-color: var(--accent);
+  background: var(--inset-hover);
+}
+
+.drop-target svg {
+  width: 22px;
+  height: 22px;
+  flex: none;
+}
+
+.drop-target-hint {
+  flex: 1;
+  font-size: 12px;
+}
+
+.drop-target-hint strong {
+  color: var(--fg);
+  font-weight: 600;
+}
+
+.progress-time {
+  color: var(--muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.result-time {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.trim-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 2px 0 4px;
+}
+
+.trim-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.text-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 7px 9px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--inset);
+  color: var(--fg);
+  font-size: 13px;
+}
+
+.text-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.preset-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.preset-chip {
+  display: flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--inset);
+  color: var(--fg);
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.preset-chip.selected {
+  background: var(--inset-hover);
+  outline: 1px solid var(--accent);
+}
+
+.preset-chip:hover {
+  background: var(--inset-hover);
+}
+
+.preset-chip input {
+  display: none;
+}
+
+.thumb-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 12px 4px;
+  flex-wrap: wrap;
+}
+
+.thumb-path {
+  font-size: 11px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1 1 140px;
+}
+
+.enc-fail {
+  margin: 2px 4px 4px;
+  padding: 6px 9px;
+  font-size: 11px;
+  color: var(--fg);
+  opacity: 0.8;
+  background: var(--warn-bg);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* quality advice (estimativa antes do encode) */

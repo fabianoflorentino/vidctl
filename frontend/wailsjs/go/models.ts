@@ -63,6 +63,14 @@ export namespace compress {
 	    split?: split.Spec;
 	    codec?: string;
 	    hardware?: string;
+	    nvencPreset?: string;
+	    scale?: string;
+	    trimStartSec?: number;
+	    trimEndSec?: number;
+	    removeAudio?: boolean;
+	    fps?: number;
+	    rotate?: number;
+	    thumbnailPath?: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new Job(source);
@@ -78,6 +86,14 @@ export namespace compress {
 	        this.split = this.convertValues(source["split"], split.Spec);
 	        this.codec = source["codec"];
 	        this.hardware = source["hardware"];
+	        this.nvencPreset = source["nvencPreset"];
+	        this.scale = source["scale"];
+	        this.trimStartSec = source["trimStartSec"];
+	        this.trimEndSec = source["trimEndSec"];
+	        this.removeAudio = source["removeAudio"];
+	        this.fps = source["fps"];
+	        this.rotate = source["rotate"];
+	        this.thumbnailPath = source["thumbnailPath"];
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {

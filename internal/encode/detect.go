@@ -6,14 +6,22 @@ import (
 	"errors"
 	"fmt"
 	"os/exec"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/fabianoflorentino/vidctl/internal/cmdutil"
+	"github.com/fabianoflorentino/vidctl/internal/dlog"
 )
 
 const probeTimeout = 15 * time.Second
+
+// probeFrame is the encode test frame. It must be large enough for every
+// hardware encoder: NVENC rejects dimensions below its minimum (reported as
+// "Frame Dimension less than the minimum supported value" for 64x64 or 128x128
+// on recent chips), so a 256x256 frame is used.
+const probeFrame = "256x256"
 
 // EncoderInfo describes a detected hardware backend.
 type EncoderInfo struct {
@@ -78,6 +86,9 @@ func (d *Detector) Availability() (Availability, error) {
 
 	avail := Availability{Hardware: []EncoderInfo{}}
 	for _, id := range hardwareIDs {
+		if !supportedOnGOOS(id) {
+			continue
+		}
 		h264, h265 := VideoCodec(CodecH264, id), VideoCodec(CodecH265, id)
 		if !contains(listed, h264) && !contains(listed, h265) {
 			continue
@@ -112,6 +123,7 @@ func (d *Detector) Refresh() {
 // listEncoders runs `ffmpeg -hide_banner -encoders` and returns the video
 // encoder names it advertises.
 func listEncoders(bin string) ([]string, error) {
+	dlog.Printf("[encode] exec ffmpeg -hide_banner -encoders")
 	out, err := exec.Command(bin, "-hide_banner", "-encoders").Output()
 	if err != nil {
 		return nil, fmt.Errorf("falha ao listar encoders do ffmpeg: %w", err)
@@ -131,6 +143,20 @@ func listEncoders(bin string) ([]string, error) {
 	return names, nil
 }
 
+// supportedOnGOOS gates backends that only exist on one platform: AMF requires
+// the AMD runtime, which ships only on Windows, and VideoToolbox is macOS-only.
+// NVENC and QSV can be offered anywhere ffmpeg lists them.
+func supportedOnGOOS(hw string) bool {
+	switch hw {
+	case HWAMF:
+		return runtime.GOOS == "windows"
+	case HWVideotoolbox:
+		return runtime.GOOS == "darwin"
+	default:
+		return true
+	}
+}
+
 // probeEncoder runs a real 1-frame encode with the given encoder to confirm it
 // works on this machine.
 func probeEncoder(bin, encoder string) error {
@@ -138,11 +164,12 @@ func probeEncoder(bin, encoder string) error {
 	defer cancel()
 	args := []string{
 		"-hide_banner", "-loglevel", "error",
-		"-f", "lavfi", "-i", "color=c=black:s=64x64",
+		"-f", "lavfi", "-i", "color=c=black:s=" + probeFrame,
 		"-frames:v", "1",
 		"-c:v", encoder,
 		"-f", "null", "-",
 	}
+	dlog.Printf("[encode] exec ffmpeg %s %s (probe %s)", bin, strings.Join(args, " "), encoder)
 	cmd := exec.CommandContext(ctx, bin, args...)
 	var errBuf bytes.Buffer
 	cmd.Stderr = &errBuf
@@ -151,7 +178,9 @@ func probeEncoder(bin, encoder string) error {
 		if msg == "" {
 			msg = err.Error()
 		}
+		dlog.Printf("[encode] encoder %q indisponível: %s", encoder, msg)
 		return errors.New(msg)
 	}
+	dlog.Printf("[encode] encoder %q OK", encoder)
 	return nil
 }

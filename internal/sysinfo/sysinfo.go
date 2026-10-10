@@ -87,7 +87,7 @@ func (c *Collector) nvidiaPercent(ctx context.Context) (float64, bool) {
 	if err == nil {
 		var out []byte
 		out, err = cmdutil.CommandContext(ctx, bin,
-			"--query-gpu=utilization.gpu", "--format=csv,noheader,nounits").Output()
+			"--query-gpu=utilization.gpu,utilization.encoder", "--format=csv,noheader,nounits").Output()
 		if err == nil {
 			if pct, ok := parseNvidia(out); ok {
 				c.gpuProbed, c.gpuOK = true, true

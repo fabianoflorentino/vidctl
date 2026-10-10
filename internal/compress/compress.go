@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	"github.com/fabianoflorentino/vidctl/internal/cmdutil"
+	"github.com/fabianoflorentino/vidctl/internal/dlog"
 	"github.com/fabianoflorentino/vidctl/internal/encode"
 	"github.com/fabianoflorentino/vidctl/internal/estimate"
 	"github.com/fabianoflorentino/vidctl/internal/events"
@@ -25,15 +26,28 @@ import (
 
 // Job is the payload coming from the frontend.
 type Job struct {
-	InputPath  string      `json:"inputPath"`
-	OutputPath string      `json:"outputPath"`
-	PresetID   string      `json:"presetId"`
-	SizeMB     float64     `json:"sizeMB"` // used when preset mode is "size"
-	CRF        float64     `json:"crf"`
-	Split      *split.Spec `json:"split,omitempty"`
-	Codec      string      `json:"codec,omitempty"`    // overrides the preset codec when set
-	Hardware   string      `json:"hardware,omitempty"` // overrides the preset hardware when set
+	InputPath   string      `json:"inputPath"`
+	OutputPath  string      `json:"outputPath"`
+	PresetID    string      `json:"presetId"`
+	SizeMB      float64     `json:"sizeMB"` // used when preset mode is "size"
+	CRF         float64     `json:"crf"`
+	Split       *split.Spec `json:"split,omitempty"`
+	Codec       string      `json:"codec,omitempty"`       // overrides the preset codec when set
+	Hardware    string      `json:"hardware,omitempty"`    // overrides the preset hardware when set
+	NvencPreset string      `json:"nvencPreset,omitempty"` // NVENC quality preset p1..p7 ("" = default p4)
+
+	// Per-file adjustments (fase 5). All optional.
+	Scale         string  `json:"scale,omitempty"`         // "" default cap | ScaleOriginal | "WxH"
+	TrimStartSec  float64 `json:"trimStartSec,omitempty"`  // single-window cut, keeps [start, end)
+	TrimEndSec    float64 `json:"trimEndSec,omitempty"`    // 0 means "until the end"
+	RemoveAudio   bool    `json:"removeAudio,omitempty"`   // drop the audio track
+	FPS           float64 `json:"fps,omitempty"`           // 0 keeps the source frame rate
+	Rotate        int     `json:"rotate,omitempty"`        // 0|90|180|270 degrees
+	ThumbnailPath string  `json:"thumbnailPath,omitempty"` // generate one frame after encoding
 }
+
+// ScaleOriginal keeps the source resolution (no scale filter).
+const ScaleOriginal = "original"
 
 func ffmpegPath() (string, error) {
 	p, err := cmdutil.Resolve("ffmpeg")
@@ -57,16 +71,6 @@ func removePassLogs(jobID string) {
 	}
 }
 
-func seekArgs(job Job, seg split.Segment) []string {
-	if job.Split == nil {
-		return nil
-	}
-	return []string{
-		"-ss", strconv.FormatFloat(seg.StartSec, 'f', 3, 64),
-		"-to", strconv.FormatFloat(seg.EndSec, 'f', 3, 64),
-	}
-}
-
 func passLogID(jobID string, job Job, seg split.Segment) string {
 	if job.Split == nil {
 		return jobID
@@ -81,7 +85,7 @@ func buildSizePasses(ctx context.Context, jobID string, job Job, preset presets.
 		return nil, nil, err
 	}
 
-	lines, err := estimate.BudgetFor(preset, info, seg.Duration())
+	lines, err := estimate.BudgetFor(preset, info, effectiveDuration(job, seg))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -92,11 +96,8 @@ func buildSizePasses(ctx context.Context, jobID string, job Job, preset presets.
 
 	pass1Args := []string{"-y"}
 	pass1Args = append(pass1Args, seek...)
-	pass1Args = append(pass1Args,
-		"-i", job.InputPath,
-		"-an",
-		"-vf", scaleFilter(),
-	)
+	pass1Args = append(pass1Args, "-i", job.InputPath, "-an")
+	pass1Args = appendVideoFilter(pass1Args, job)
 	pass1Args = append(pass1Args, encode.Pass1Args(preset.Codec, preset.Hardware, lines.VideoBitrate)...)
 	if h265 != nil {
 		pass1Args = append(pass1Args, h265...)
@@ -110,18 +111,19 @@ func buildSizePasses(ctx context.Context, jobID string, job Job, preset presets.
 
 	pass2Args := []string{"-y"}
 	pass2Args = append(pass2Args, seek...)
-	pass2Args = append(pass2Args,
-		"-i", job.InputPath,
-		"-vf", scaleFilter(),
-	)
-	pass2Args = append(pass2Args, encode.SizeArgs(preset.Codec, preset.Hardware, lines.VideoBitrate, lines.MaxRate, lines.BufSize)...)
+	pass2Args = append(pass2Args, "-i", job.InputPath)
+	pass2Args = appendVideoFilter(pass2Args, job)
+	pass2Args = append(pass2Args, encode.SizeArgsP(preset.Codec, preset.Hardware, lines.VideoBitrate, lines.MaxRate, lines.BufSize, job.NvencPreset)...)
 	pass2Args = append(pass2Args, "-pix_fmt", "yuv420p")
 	if h265 != nil {
 		pass2Args = append(pass2Args, h265...)
 	}
+	if job.RemoveAudio {
+		pass2Args = append(pass2Args, "-an")
+	} else {
+		pass2Args = append(pass2Args, "-c:a", "aac", "-b:a", preset.AudioBitrate)
+	}
 	pass2Args = append(pass2Args,
-		"-c:a", "aac",
-		"-b:a", preset.AudioBitrate,
 		"-movflags", "+faststart",
 		"-passlogfile", passLog,
 		"-pass", "2",
@@ -140,17 +142,17 @@ func buildSizeCmd(ctx context.Context, job Job, preset presets.Preset, info *med
 	if _, err := ffmpegPath(); err != nil {
 		return nil, err
 	}
-	lines, err := estimate.BudgetFor(preset, info, seg.Duration())
+	lines, err := estimate.BudgetFor(preset, info, effectiveDuration(job, seg))
 	if err != nil {
 		return nil, err
 	}
-	v := encode.SizeArgs(preset.Codec, preset.Hardware, lines.VideoBitrate, lines.MaxRate, lines.BufSize)
+	v := encode.SizeArgsP(preset.Codec, preset.Hardware, lines.VideoBitrate, lines.MaxRate, lines.BufSize, job.NvencPreset)
 	return buildSingle(ctx, job, preset, info, seg, v), nil
 }
 
 // buildCrfPass creates the single-pass ffmpeg command for quality-based encoding.
 func buildCrfPass(ctx context.Context, job Job, preset presets.Preset, info *media.Info, seg split.Segment) *exec.Cmd {
-	v := encode.QualityArgs(preset.Codec, preset.Hardware, preset.CRF)
+	v := encode.QualityArgsP(preset.Codec, preset.Hardware, preset.CRF, job.NvencPreset)
 	return buildSingle(ctx, job, preset, info, seg, v)
 }
 
@@ -164,15 +166,13 @@ func buildSingle(ctx context.Context, job Job, preset presets.Preset, info *medi
 	}
 	args := []string{"-y"}
 	args = append(args, seekArgs(job, seg)...)
-	args = append(args,
-		"-i", job.InputPath,
-		"-vf", scaleFilter(),
-	)
+	args = append(args, "-i", job.InputPath)
+	args = appendVideoFilter(args, job)
 	args = append(args, videoArgs...)
 	args = append(args,
 		"-pix_fmt", "yuv420p",
 	)
-	if info.HasAudio {
+	if info.HasAudio && !job.RemoveAudio {
 		args = append(args, "-c:a", "aac", "-b:a", preset.AudioBitrate)
 	}
 	if h := h265Flag(preset.Codec); h != nil {
@@ -184,8 +184,38 @@ func buildSingle(ctx context.Context, job Job, preset presets.Preset, info *medi
 	return cmdutil.CommandContext(ctx, bin, args...)
 }
 
-func scaleFilter() string {
-	return "scale='min(1280,iw)':'min(1280,ih)':force_original_aspect_ratio=decrease"
+// buildThumbnail assembles the post-encode command that writes a single frame
+// of the finished output to thumbPath.
+func buildThumbnail(ctx context.Context, outPath, thumbPath string, posSec float64) (*exec.Cmd, error) {
+	bin, err := ffmpegPath()
+	if err != nil {
+		return nil, err
+	}
+	args := []string{
+		"-y",
+		"-ss", formatSec(posSec),
+		"-i", outPath,
+		"-frames:v", "1",
+		thumbPath,
+	}
+	return cmdutil.CommandContext(ctx, bin, args...), nil
+}
+
+// runQuiet executes a command without progress scanning.
+func runQuiet(ctx context.Context, cmd *exec.Cmd) error {
+	if err := cmd.Run(); err != nil {
+		if ctxErr := ctx.Err(); ctxErr != nil {
+			return ctxErr
+		}
+		return err
+	}
+	return nil
+}
+
+// traceExec logs the exact ffmpeg command line before it runs, so a conversion
+// can be reproduced and the encoder actually selected can be confirmed.
+func traceExec(jobID, stage string, cmd *exec.Cmd) {
+	dlog.Printf("[compress] job=%s stage=%s exec %s", jobID, stage, strings.Join(cmd.Args, " "))
 }
 
 // h265Flag silences the per-frame stats libx265 writes to stderr.
@@ -200,6 +230,7 @@ func h265Flag(codec string) []string {
 // The emitted percent is remapped to [base, base+span] so multi-segment jobs can
 // show aggregated progress.
 func execute(ctx context.Context, cmd *exec.Cmd, jobID, stage string, duration, base, span float64) error {
+	traceExec(jobID, stage, cmd)
 	progressPipe, err := cmd.StdoutPipe()
 	if err != nil {
 		return err
@@ -231,6 +262,16 @@ func execute(ctx context.Context, cmd *exec.Cmd, jobID, stage string, duration, 
 	return nil
 }
 
+// thumbSeek escolhe o frame da thumbnail: 5s após o início (depois de tela
+// preta/intro), ou a metade quando o vídeo é curto demais para 5s.
+func thumbSeek(durationSec float64) float64 {
+	pos := durationSec / 2
+	if pos > 5 {
+		pos = 5
+	}
+	return pos
+}
+
 // Run validates the job and executes the ffmpeg pipeline, emitting events.
 // When job.Split is set, the video is cut into sequential parts, each encoded
 // separately; a compress:done event is emitted per part. Failures emit
@@ -245,6 +286,9 @@ func Run(ctx context.Context, jobID string, job Job) error {
 	}
 	if job.InputPath == job.OutputPath {
 		return fail(errors.New("o arquivo de saída não pode ser igual ao de entrada"))
+	}
+	if err := Validate(job); err != nil {
+		return fail(err)
 	}
 
 	info, err := media.Probe(job.InputPath)
@@ -307,6 +351,21 @@ func Run(ctx context.Context, jobID string, job Job) error {
 			sizeBytes = out.Size()
 			sizeMB = float64(sizeBytes) / (1024 * 1024)
 		}
+		// A thumbnail sai do primeiro segmento (início do vídeo), num frame de
+		// conteúdo perto do começo — não do meio/último segmento.
+		if job.ThumbnailPath != "" && seg.Index == 1 {
+			thumb, err := buildThumbnail(ctx, outPath, job.ThumbnailPath, thumbSeek(effectiveDuration(job, seg)))
+			if err != nil {
+				return fail(err)
+			}
+			traceExec(jobID, "thumbnail", thumb)
+			if err := runQuiet(ctx, thumb); err != nil {
+				if ctxErr := ctx.Err(); ctxErr != nil {
+					return ctxErr
+				}
+				return fail(fmt.Errorf("falha ao gerar thumbnail: %w", err))
+			}
+		}
 		events.EmitDone(jobID, events.KindCompress, outPath, sizeBytes, sizeMB)
 	}
 	return nil
@@ -317,6 +376,12 @@ func encodeSegment(ctx context.Context, jobID, logID string, job Job, preset pre
 	if total > 1 {
 		suffix = fmt.Sprintf(" · parte %d/%d", seg.Index, total)
 	}
+	dlog.Printf(
+		"[compress] job=%s plugin mode=%s encoder=%s hw=%q 2pass=%t vf=%q seek=%s removerAudio=%t fps=%g rot=%d preset=%q thumb=%q out=%q",
+		logID, preset.Mode, encode.VideoCodec(preset.Codec, preset.Hardware), preset.Hardware,
+		encode.TwoPass(preset.Hardware), buildVideoFilter(job), strings.Join(seekArgs(job, seg), " "),
+		job.RemoveAudio, job.FPS, job.Rotate, encode.NvencPreset(job.NvencPreset), job.ThumbnailPath, job.OutputPath,
+	)
 
 	if preset.Mode == "size" {
 		removePassLogs(logID)
@@ -336,13 +401,13 @@ func encodeSegment(ctx context.Context, jobID, logID string, job Job, preset pre
 
 			stage1 := "pass1/2" + suffix
 			events.EmitProgress(jobID, events.KindCompress, stage1, base1)
-			if err := execute(ctx, pass1, jobID, stage1, seg.Duration(), base1, span1); err != nil {
+			if err := execute(ctx, pass1, jobID, stage1, effectiveDuration(job, seg), base1, span1); err != nil {
 				return wrapStage("pass 1 falhou", suffix, err)
 			}
 
 			stage2 := "pass2/2" + suffix
 			events.EmitProgress(jobID, events.KindCompress, stage2, base2)
-			if err := execute(ctx, pass2, jobID, stage2, seg.Duration(), base2, span2); err != nil {
+			if err := execute(ctx, pass2, jobID, stage2, effectiveDuration(job, seg), base2, span2); err != nil {
 				return wrapStage("pass 2 falhou", suffix, err)
 			}
 			removePassLogs(logID)
@@ -360,7 +425,7 @@ func encodeSegment(ctx context.Context, jobID, logID string, job Job, preset pre
 		}
 		stage := "encoding" + suffix
 		events.EmitProgress(jobID, events.KindCompress, stage, base)
-		if err := execute(ctx, cmd, jobID, stage, seg.Duration(), base, span); err != nil {
+		if err := execute(ctx, cmd, jobID, stage, effectiveDuration(job, seg), base, span); err != nil {
 			return wrapStage("falha ao comprimir", suffix, err)
 		}
 		return nil
@@ -374,7 +439,7 @@ func encodeSegment(ctx context.Context, jobID, logID string, job Job, preset pre
 	cmd := buildCrfPass(ctx, job, preset, info, seg)
 	stage := "encoding" + suffix
 	events.EmitProgress(jobID, events.KindCompress, stage, base)
-	if err := execute(ctx, cmd, jobID, stage, seg.Duration(), base, span); err != nil {
+	if err := execute(ctx, cmd, jobID, stage, effectiveDuration(job, seg), base, span); err != nil {
 		return wrapStage("falha ao comprimir", suffix, err)
 	}
 	return nil
