@@ -74,6 +74,14 @@ encoders de hardware (NVENC/QSV/AMF/VideoToolbox).
   arquivo, mas só passam a ter efeito quando os recursos correspondentes
   existirem (fases futuras do plano).
 
+### Corrigido
+
+- A detecção de encoders não trava mais a seleção de arquivo quando um backend
+  é listado pelo `ffmpeg` mas falha no probe de 1 frame (ex.: `h264_amf` sem
+  GPU AMD): `codecs` vinha `null` no JSON e o frontend quebrava ao montar a
+  lista de codificadores. Agora a detecção devolve sempre uma lista (vazia
+  quando não há codecs) e o frontend também tolera `null`.
+
 ## [2.1.0] — 2026-09-27
 
 Redesign visual no padrão Constrict com drag and drop, miniaturas e ajuste

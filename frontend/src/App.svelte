@@ -485,7 +485,8 @@
     ]
     opts.push({ id: 'auto', title: 'Automático', description: 'usa o primeiro backend de hardware detectado', disabled: false })
     for (const info of encoders?.hardware ?? []) {
-      const labels = info.codecs.map((c) => c.toUpperCase())
+      const codecs = info.codecs ?? []
+      const labels = codecs.map((c) => c.toUpperCase())
       const desc = labels.length
         ? `suporta ${labels.join(' e ')}`
         : info.error
@@ -495,7 +496,7 @@
         id: info.id,
         title: info.label,
         description: desc,
-        disabled: !info.codecs.includes(codec),
+        disabled: !codecs.includes(codec),
       })
     }
     return opts
