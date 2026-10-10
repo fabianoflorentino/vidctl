@@ -588,18 +588,36 @@ button {
   border-color: var(--accent);
 }
 
-.select-input {
-  padding: 7px 9px;
-  border: 1px solid var(--border);
+.preset-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.preset-chip {
+  display: flex;
+  align-items: center;
+  padding: 6px 10px;
   border-radius: var(--radius-sm);
   background: var(--inset);
   color: var(--fg);
-  font-size: 13px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s ease;
 }
 
-.select-input:focus {
-  outline: none;
-  border-color: var(--accent);
+.preset-chip.selected {
+  background: var(--inset-hover);
+  outline: 1px solid var(--accent);
+}
+
+.preset-chip:hover {
+  background: var(--inset-hover);
+}
+
+.preset-chip input {
+  display: none;
 }
 
 .thumb-actions {

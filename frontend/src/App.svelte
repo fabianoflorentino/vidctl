@@ -1077,13 +1077,14 @@ import Toggle from './lib/Toggle.svelte'
           {/if}
 
           {#if hardware === 'nvenc'}
-            <div class="tune-row">
-              <span class="meta-k">preset NVENC</span>
-              <select class="select-input" value={nvencPreset} aria-label="preset NVENC" onchange={(e) => (nvencPreset = e.currentTarget.value)}>
-                {#each nvencPresetOptions as o (o.id)}
-                  <option value={o.id}>{o.id} · {o.title}</option>
-                {/each}
-              </select>
+            <div class="meta-k spacer">preset NVENC</div>
+            <div class="preset-row" role="radiogroup" aria-label="preset NVENC">
+              {#each nvencPresetOptions as o (o.id)}
+                <label class="preset-chip" class:selected={nvencPreset === o.id}>
+                  <input type="radio" name="nvencPreset" value={o.id} checked={nvencPreset === o.id} onchange={() => (nvencPreset = o.id)} />
+                  {o.title}
+                </label>
+              {/each}
             </div>
           {/if}
 
