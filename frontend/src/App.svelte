@@ -159,11 +159,20 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
     scheduleSaveConfig()
   })
 
+  function sepFor(dir: string): string {
+    return dir.includes('\\') && !dir.includes('/') ? '\\' : '/'
+  }
+
+  // Pasta de destino: a preferência salva quando existe; senão, a pasta do
+  // arquivo de origem (nunca o diretório de trabalho do app).
+  function targetDir(): string {
+    if (outputDir) return outputDir.replace(/[\\/]+$/, '') + sepFor(outputDir)
+    const last = Math.max(inputPath.lastIndexOf('/'), inputPath.lastIndexOf('\\'))
+    return last >= 0 ? inputPath.slice(0, last + 1) : ''
+  }
+
   function suggestedOutput(base: string): string {
-    const name = base + '-compressed.mp4'
-    if (!outputDir) return name
-    const sep = outputDir.includes('\\') && !outputDir.includes('/') ? '\\' : '/'
-    return outputDir.replace(/[\\/]+$/, '') + sep + name
+    return targetDir() + base + '-compressed.mp4'
   }
 
   let queue = $state<QueueItem[]>([])
@@ -632,10 +641,8 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   }
 
   function suggestedThumbnailPath(): string {
-    const name = (inputPath ? inputPath.replace(/\.[^.]+$/, '').split(/[\\/]/).pop() : 'video') + '-thumb.png'
-    if (!outputDir) return name
-    const sep = outputDir.includes('\\') && !outputDir.includes('/') ? '\\' : '/'
-    return outputDir.replace(/[\\/]+$/, '') + sep + name
+    const base = inputPath ? inputPath.replace(/\.[^.]+$/, '').split(/[\\/]/).pop() : 'video'
+    return targetDir() + base + '-thumb.png'
   }
 
   function toggleThumbnail(v: boolean) {

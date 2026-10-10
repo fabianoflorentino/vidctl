@@ -137,6 +137,10 @@ vídeo aceita escala, corte, remoção de áudio, FPS, rotação e thumbnail.
   caminho é lido do próprio DOM (`text/uri-list`) sem navegação; Windows/macOS
   seguem com o drop nativo do Wails. A janela inteira é a área de drop e,
   durante o arrasto, um **pontilhado ao redor da tela** indica onde soltar.
+- **Saída e thumbnail por padrão junto da fonte**: sem pasta de destino salva,
+  os caminhos sugeridos iam para o diretório de trabalho do app (o arquivo da
+  thumbnail "sumia" para quem procurava ao lado do vídeo). Agora o default é a
+  pasta do vídeo de origem (ou a pasta configurada nas Preferências).
 
 ## [2.1.0] — 2026-09-27
 
