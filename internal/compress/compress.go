@@ -262,6 +262,16 @@ func execute(ctx context.Context, cmd *exec.Cmd, jobID, stage string, duration, 
 	return nil
 }
 
+// thumbSeek escolhe o frame da thumbnail: 5s após o início (depois de tela
+// preta/intro), ou a metade quando o vídeo é curto demais para 5s.
+func thumbSeek(durationSec float64) float64 {
+	pos := durationSec / 2
+	if pos > 5 {
+		pos = 5
+	}
+	return pos
+}
+
 // Run validates the job and executes the ffmpeg pipeline, emitting events.
 // When job.Split is set, the video is cut into sequential parts, each encoded
 // separately; a compress:done event is emitted per part. Failures emit
@@ -341,8 +351,10 @@ func Run(ctx context.Context, jobID string, job Job) error {
 			sizeBytes = out.Size()
 			sizeMB = float64(sizeBytes) / (1024 * 1024)
 		}
-		if job.ThumbnailPath != "" && seg.Index == total {
-			thumb, err := buildThumbnail(ctx, outPath, job.ThumbnailPath, effectiveDuration(job, seg)/2)
+		// A thumbnail sai do primeiro segmento (início do vídeo), num frame de
+// conteúdo perto do começo — não do meio/último segmento.
+		if job.ThumbnailPath != "" && seg.Index == 1 {
+			thumb, err := buildThumbnail(ctx, outPath, job.ThumbnailPath, thumbSeek(effectiveDuration(job, seg)))
 			if err != nil {
 				return fail(err)
 			}

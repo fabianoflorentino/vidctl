@@ -64,8 +64,8 @@ func ThumbDataURL(path string, durationSec float64) (string, error) {
 			return "", err
 		}
 		seek := durationSec / 2
-		if seek > 1 {
-			seek = 1
+		if seek > 5 {
+			seek = 5
 		}
 		args := []string{
 			"-v", "error",

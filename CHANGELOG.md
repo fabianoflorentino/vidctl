@@ -141,6 +141,10 @@ vídeo aceita escala, corte, remoção de áudio, FPS, rotação e thumbnail.
   os caminhos sugeridos iam para o diretório de trabalho do app (o arquivo da
   thumbnail "sumia" para quem procurava ao lado do vídeo). Agora o default é a
   pasta do vídeo de origem (ou a pasta configurada nas Preferências).
+- A **thumbnail** gerada usa um frame **5 segundos após o início** do vídeo
+  (primeiro segmento) em vez do meio do último trecho — nas divisões em partes
+  caía perto do fim e parecia o "último frame"; e evita telas pretas de
+  abertura. Em vídeos curtos (menos de 10s) cai para a metade.
 
 ## [2.1.0] — 2026-09-27
 

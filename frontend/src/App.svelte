@@ -1210,7 +1210,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
           {/if}
           </Section>
 
-      <Section title="Ajustes por arquivo" open={sectionState.ajustes} onchange={() => toggleSection("ajustes")}>
+      <Section title="Ajustes por arquivo" open={sectionState.ajustes} onchange={() => toggleSection("ajustes")} infoTip="Escala, corte por janela (mm:ss), remoção de áudio, FPS, rotação e geração de thumbnail — aplicados além do preset, por trabalho.">
           <div class="meta-k">escala</div>
             <RadioCardGroup options={scaleOptions} selected={scaleMode} name="scale" onchange={(v) => (scaleMode = v as ScaleMode)} />
             {#if scaleMode === 'custom'}

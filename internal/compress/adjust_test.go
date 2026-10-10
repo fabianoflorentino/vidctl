@@ -237,6 +237,18 @@ func TestNvencPresetArgs(t *testing.T) {
 	}
 }
 
+func TestThumbSeek(t *testing.T) {
+	if got := thumbSeek(300); got != 5 {
+		t.Errorf("thumbSeek(300s) = %v, want 5", got)
+	}
+	if got := thumbSeek(8); got != 4 {
+		t.Errorf("thumbSeek(8s) = %v, want 4", got)
+	}
+	if got := thumbSeek(2); got != 1 {
+		t.Errorf("thumbSeek(2s) = %v, want 1", got)
+	}
+}
+
 func beforeInput(args []string, flag, val string) bool {
 	for i := 0; i+1 < len(args); i++ {
 		if args[i] == "-i" {
