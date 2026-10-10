@@ -31,9 +31,10 @@
   import StatusPage from './lib/StatusPage.svelte'
   import VideoRow from './lib/VideoRow.svelte'
   import Stepper from './lib/Stepper.svelte'
-  import RadioCardGroup from './lib/RadioCardGroup.svelte'
-  import InfoTip from './lib/InfoTip.svelte'
-import Toggle from './lib/Toggle.svelte'
+import RadioCardGroup from './lib/RadioCardGroup.svelte'
+  import Toggle from './lib/Toggle.svelte'
+  import Section from './lib/Section.svelte'
+  import DropTarget from './lib/DropTarget.svelte'
   import PreferencesModal from './lib/PreferencesModal.svelte'
   import { stageLabel } from './lib/stages'
 
@@ -57,6 +58,8 @@ import Toggle from './lib/Toggle.svelte'
     partsTotal: number
     partsDone: number
     error: string
+    startedAt: number
+    elapsedSec: number
   }
   type ThemeChoice = 'system' | 'light' | 'dark'
 
@@ -225,6 +228,8 @@ import Toggle from './lib/Toggle.svelte'
       partsTotal: 1,
       partsDone: 0,
       error: '',
+      startedAt: 0,
+      elapsedSec: 0,
       ...fields,
     }
     queue.push(item)
@@ -251,6 +256,8 @@ import Toggle from './lib/Toggle.svelte'
       partsTotal: t.partsTotal,
       partsDone: t.partsDone,
       error: t.error,
+      startedAt: 0,
+      elapsedSec: 0,
     }
   }
 
@@ -262,14 +269,21 @@ import Toggle from './lib/Toggle.svelte'
     return presetList.find((p) => p.id === id)?.name ?? id
   }
 
+  function fmtDuration(sec: number): string {
+    if (!sec || !Number.isFinite(sec) || sec < 0) return '—'
+    const m = Math.floor(sec / 60)
+    const s = Math.round(sec % 60)
+    return m > 0 ? `${m}min ${String(s).padStart(2, '0')}s` : `${s}s`
+  }
+
   function stateLabel(item: QueueItem): string {
     switch (item.state) {
       case 'queued':
         return item.position > 1 ? `aguardando · ${item.position}º da fila` : 'aguardando'
       case 'running':
-        return `processando · ${item.percent.toFixed(0)}%`
+        return `processando · ${item.percent.toFixed(0)}%${item.startedAt ? ` · ${fmtDuration((Date.now() - item.startedAt) / 1000)}` : ''}`
       case 'done':
-        return 'concluído'
+        return `concluído${item.elapsedSec ? ` · ${fmtDuration(item.elapsedSec)}` : ''}`
       case 'error':
         return 'erro'
       case 'canceled':
@@ -283,6 +297,13 @@ import Toggle from './lib/Toggle.svelte'
   const previewDone = $derived(previewState === 'done')
   const anyBusy = $derived(queue.some((i) => i.state === 'queued' || i.state === 'running'))
   const hasFinished = $derived(queue.some((i) => i.state !== 'queued' && i.state !== 'running'))
+
+  let now = $state(Date.now())
+  $effect(() => {
+    if (!anyBusy) return
+    const id = setInterval(() => (now = Date.now()), 500)
+    return () => clearInterval(id)
+  })
 
   let prefsOpen = $state(false)
   let dragging = $state(false)
@@ -473,7 +494,13 @@ import Toggle from './lib/Toggle.svelte'
   }
 
   type ScaleMode = 'original' | 'default' | 'custom'
-  let adjustOpen = $state(false)
+  const sectionState = $state({
+    config: true,
+    avancado: false,
+    presets: true,
+    split: false,
+    ajustes: false,
+  })
   let scaleMode = $state<ScaleMode>('default')
   let scaleCustom = $state('1280x720')
   let trimStart = $state('')
@@ -675,6 +702,7 @@ import Toggle from './lib/Toggle.svelte'
       dbg(`evento compress:start job=${e.jobId}`)
       patch(e.jobId, ['queued', 'running'], (i) => {
         i.state = 'running'
+        i.startedAt = i.startedAt || Date.now()
       })
     })
     EventsOn('compress:progress', (e: ProgressEv) => {
@@ -699,6 +727,7 @@ import Toggle from './lib/Toggle.svelte'
         i.state = 'done'
         i.percent = 100
         i.stage = 'done'
+        i.elapsedSec = i.startedAt ? (Date.now() - i.startedAt) / 1000 : 0
       })
     })
     EventsOn('compress:error', (e: ErrorEv) => {
@@ -995,16 +1024,11 @@ import Toggle from './lib/Toggle.svelte'
   <div class="split">
     <aside class="sidebar">
       {#if selectedPreset?.mode === 'size'}
-        <section class="group-card">
-          <div class="group-card-head">
-            <span class="group-card-title">Tamanho alvo</span>
-            <InfoTip text="Presets de tamanho fazem o ffmpeg calcular o bitrate pela duração para caber no alvo (encode 2-pass)." />
+        <Section title="Tamanho alvo" open={sectionState.config} onchange={(v) => (sectionState.config = v)} infoTip="Presets de tamanho fazem o ffmpeg calcular o bitrate pela duração para caber no alvo (encode 2-pass).">
+          <div class="tune-row">
+            <span class="meta-k">tamanho (MB)</span>
+            <Stepper value={sizeMB} min={2} max={100} digits={1} ariaLabel="tamanho alvo" onchange={(v) => (sizeMB = v)} />
           </div>
-          <div class="group-card-body">
-            <div class="tune-row">
-              <span class="meta-k">tamanho (MB)</span>
-              <Stepper value={sizeMB} min={2} max={100} digits={1} ariaLabel="tamanho alvo" onchange={(v) => (sizeMB = v)} />
-            </div>
             {#if sizeEstimate?.available}
               <span class="est-badge mono">
                 esperado ≈ {sizeEstimate.targetSizeMB.toFixed(1)} MB{#if sizeEstimate.audioKbps > 0} · áudio {sizeEstimate.audioKbps}k{/if}
@@ -1030,29 +1054,17 @@ import Toggle from './lib/Toggle.svelte'
                 {/if}
               </div>
             {/if}
-          </div>
-        </section>
+          </Section>
       {:else if selectedPreset}
-        <section class="group-card">
-          <div class="group-card-head">
-            <span class="group-card-title">Qualidade</span>
-            <InfoTip text="Encode CRF: qualidade constante sem limite de tamanho. Quanto menor o CRF, melhor a imagem e maior o arquivo." />
+        <Section title="Qualidade" open={sectionState.config} onchange={(v) => (sectionState.config = v)} infoTip="Encode CRF: qualidade constante sem limite de tamanho. Quanto menor o CRF, melhor a imagem e maior o arquivo.">
+          <div class="tune-row">
+            <span class="meta-k">CRF — quanto menor, melhor</span>
+            <Stepper value={crf} min={16} max={34} ariaLabel="CRF" onchange={(v) => (crf = v)} />
           </div>
-          <div class="group-card-body">
-            <div class="tune-row">
-              <span class="meta-k">CRF — quanto menor, melhor</span>
-              <Stepper value={crf} min={16} max={34} ariaLabel="CRF" onchange={(v) => (crf = v)} />
-            </div>
-          </div>
-        </section>
+          </Section>
       {/if}
 
-      <section class="group-card">
-        <div class="group-card-head">
-          <span class="group-card-title">Avançado</span>
-          <InfoTip text="Altera o codec de vídeo e o codificador para este trabalho (não altera o preset salvo). Aceleração de hardware é mais rápida, mas costuma exigir um pouco mais de bitrate para a mesma qualidade; no modo tamanho o arquivo pode variar em ±5–10%." />
-        </div>
-        <div class="group-card-body">
+      <Section title="Avançado" open={sectionState.avancado} onchange={(v) => (sectionState.avancado = v)} infoTip="Altera o codec de vídeo e o codificador para este trabalho (não altera o preset salvo). Aceleração de hardware é mais rápida, mas costuma exigir um pouco mais de bitrate para a mesma qualidade; no modo tamanho o arquivo pode variar em ±5–10%.">
           <div class="meta-k">codec de vídeo</div>
           <div class="codec-row">
             {#each codecOptions as opt (opt.id)}
@@ -1101,25 +1113,13 @@ import Toggle from './lib/Toggle.svelte'
               <div class="enc-fail mono" title={failingEncoders}>{failingEncoders}</div>
             {/if}
           {/if}
-        </div>
-      </section>
+          </Section>
 
-      <section class="group-card">
-        <div class="group-card-head">
-          <span class="group-card-title">Presets</span>
-          <InfoTip text="Escolha um preset de saída. Presets de tamanho calculam o bitrate pela duração para caber no alvo (2-pass); presets CRF priorizam qualidade." />
-        </div>
-        <div class="group-card-body">
+      <Section title="Presets" open={sectionState.presets} onchange={(v) => (sectionState.presets = v)} infoTip="Escolha um preset de saída. Presets de tamanho calculam o bitrate pela duração para caber no alvo (2-pass); presets CRF priorizam qualidade.">
           <RadioCardGroup options={presetOptions} selected={selectedPresetId} name="presets" onchange={selectPresetById} />
-        </div>
-      </section>
+          </Section>
 
-      <section class="group-card">
-        <div class="group-card-head">
-          <span class="group-card-title">Cortar em partes</span>
-          <InfoTip text="Divide o vídeo em partes sequenciais de duração fixa. Cada parte passa pela compressão escolhida. Mínimo de 1 minuto por parte; a última pode ficar menor ou levar a sobra. Ajuste um dos contadores para ativar o corte." />
-        </div>
-        <div class="group-card-body">
+      <Section title="Cortar em partes" open={sectionState.split} onchange={(v) => (sectionState.split = v)} infoTip="Divide o vídeo em partes sequenciais de duração fixa. Cada parte passa pela compressão escolhida. Mínimo de 1 minuto por parte; a última pode ficar menor ou levar a sobra. Ajuste um dos contadores para ativar o corte.">
           <div class="split-head">
             <div class="split-toggle">
               <button class="btn small" class:solid={!splitOn} onclick={() => (splitOn = false)}>
@@ -1149,26 +1149,10 @@ import Toggle from './lib/Toggle.svelte'
           {:else if splitOn && activeSplit?.error}
             <div class="split-error mono">{activeSplit.error}</div>
           {/if}
-        </div>
-      </section>
+          </Section>
 
-      <section class="group-card">
-        <div
-          class="group-card-head adjust-head"
-          role="button"
-          tabindex="0"
-          aria-expanded={adjustOpen}
-          onclick={() => (adjustOpen = !adjustOpen)}
-          onkeydown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') adjustOpen = !adjustOpen
-          }}
-        >
-          <span class="group-card-title">Ajustes por arquivo</span>
-          <span class="adjust-chevron mono">{adjustOpen ? '▾' : '▸'}</span>
-        </div>
-        {#if adjustOpen}
-          <div class="group-card-body">
-            <div class="meta-k">escala</div>
+      <Section title="Ajustes por arquivo" open={sectionState.ajustes} onchange={(v) => (sectionState.ajustes = v)}>
+          <div class="meta-k">escala</div>
             <RadioCardGroup options={scaleOptions} selected={scaleMode} name="scale" onchange={(v) => (scaleMode = v as ScaleMode)} />
             {#if scaleMode === 'custom'}
               <input
@@ -1226,9 +1210,7 @@ import Toggle from './lib/Toggle.svelte'
             {#if adjustError}
               <div class="split-error mono">{adjustError}</div>
             {/if}
-          </div>
-        {/if}
-      </section>
+          </Section>
 
       <section class="group-card">
         <div class="group-card-head">
@@ -1246,6 +1228,7 @@ import Toggle from './lib/Toggle.svelte'
     </aside>
 
     <main class="content dropzone" class:hot={dragging}>
+      <DropTarget hot={dragging} onOpen={pickInput} />
       <div class="sources-head">
         <span class="group-card-title">Fontes de vídeo</span>
         {#if info}
@@ -1279,6 +1262,9 @@ import Toggle from './lib/Toggle.svelte'
           <div class="track"><div class="fill" style="width:{previewItem.percent}%"></div></div>
           <div class="progress-foot">
             <button class="btn small" onclick={() => cancelItem(previewItem.jobId)}>cancelar</button>
+            <span class="progress-time mono" aria-live="polite">
+              {previewItem.startedAt ? `⏱ ${fmtDuration((now - previewItem.startedAt) / 1000)}` : ''}
+            </span>
             <div class="usage mono" aria-live="polite">
               {#if usage}
                 CPU {Math.round(usage.cpu)}% · RAM {(usage.memUsedMB / 1024).toFixed(1)}/{(usage.memTotalMB / 1024).toFixed(1)} GB
@@ -1298,6 +1284,7 @@ import Toggle from './lib/Toggle.svelte'
               {(previewItem.sizeBytes / (1024 * 1024)).toFixed(1)} MB{#if previewItem.partsTotal > 1} · {previewItem.partsTotal} partes{/if}
             </span>
             <span class="result-from mono">de {originalMB.toFixed(1)} MB</span>
+            <span class="result-time mono">tempo {fmtDuration(previewItem.elapsedSec)}</span>
           </div>
           <div class="result-actions">
             <button class="btn solid" onclick={() => OpenFolder(previewItem.outputPath)}>abrir pasta</button>

@@ -286,7 +286,19 @@ cancelados).
   de ações fica sempre disponível — só "Adicionar vídeos…" depende do ffmpeg.
 - O progresso é por trabalho (`compress:queued`, `compress:start`,
   `compress:progress`, `compress:done`, `compress:error`), então um erro em um
-  item não derruba os demais.
+  item não derruba os demais. Cada trabalho mostra o **tempo de conversão**:
+  decorrido durante o processamento e total ao concluir — útil para comparar
+  predefinições e encoders.
+
+## Usabilidade
+
+- **Sidebar colapsável**: os cartões de configuração (`Tamanho alvo`/`Qualidade`,
+  `Avançado`, `Presets`, `Cortar em partes`, `Ajustes por arquivo`) colapsam e
+  expandem pelo cabeçalho; `Avançado`, `Cortar em partes` e `Ajustes` vêm
+  fechados por padrão.
+- **Arrastar e soltar**: a janela principal aceita soltar vídeos em qualquer
+  momento (área "arraste um vídeo aqui" + botão "abrir vídeo…"); um arquivo
+  troca a entrada e vários enfileiram.
 
 ## Stack
 

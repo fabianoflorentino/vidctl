@@ -42,6 +42,9 @@ Branch            | Fase | PR
 `feat/i18n`       | 10 — i18n pt/en | pendente
 `feat/split-tempo`| 11 — Corte por tempo | pendente
 `feat/transcricao`| 12 — Transcrição de vídeo | pendente
+`feat/sidebar`    | 13 — Barra lateral colapsável | pendente
+`feat/tempo`      | 14 — Tempo total de conversão | pendente
+`feat/drop`       | 15 — Importação por arrastar e soltar | pendente
 
 ---
 
@@ -61,6 +64,9 @@ Branch            | Fase | PR
 | 10 | i18n (pt/en) — opcional | §10 | M |
 | 11 | Corte em segmentos por tempo (split) | §11 | G |
 | 12 | Transcrição de vídeo (legendas srt/vtt + texto) | §12 | G |
+| 13 | Barra lateral colapsável (UX) | §13 | P |
+| 14 | Tempo total de conversão (por preset/config) | §14 | P |
+| 15 | Importação por arrastar e soltar na janela principal | §15 | P |
 
 Redesign da UI no estilo do Constrict (fila visual, drag&drop, tema adwaita)
 está detalhado em [`plano-ui-constrict.md`](./plano-ui-constrict.md); ele consome
@@ -749,6 +755,71 @@ timestamp opcional.
 
 ---
 
+## Fase 13 — Barra lateral colapsável (UX)
+
+**Objetivo:** reduzir a poluição visual da barra lateral de configuração, que
+cresceu com os recursos das fases 4 e 5 (Avançado, Cortar em partes, Ajustes).
+
+### Comportamento
+
+- Cada grupo da sidebar (`Tamanho alvo`/`Qualidade`, `Avançado`, `Presets`,
+  `Cortar em partes`, `Ajustes por arquivo`) ganha um **cabeçalho colapsável**
+  (título + chevron `▾/▸`, clique ou Enter/Espaço alterna).
+- Padrão: o cartão ativo da configuração e `Presets` abertos; `Avançado`,
+  `Cortar em partes` e `Ajustes` **fechados** por padrão — o usuário abre só o
+  que precisa.
+- O estado de cada grupo vale para a sessão (não persiste entre abas ainda).
+
+### Testes
+
+- svelte-check; comportamento manual no `wails dev`.
+
+---
+
+## Fase 14 — Tempo total de conversão (por preset/configuração)
+
+**Objetivo:** mostrar quanto tempo cada conversão levou, para comparar presets
+e configurações (software vs. GPU, preset NVENC p1–p7 etc.).
+
+### Comportamento
+
+- Cada item da fila registra `startedAt` (ao iniciar) e mostra o **tempo
+  decorrido em tempo real** durante o processamento e o **tempo total** ao
+  concluir (`mm:ss`/`x min y s`), no card de progresso, na linha da fila e no
+  card de resultado.
+- Sem novo evento de backend: é cronômetro de cliente (timestamps
+  `Date.now()`), adicionado ao `QueueItem`; multi-partes soma o tempo total do
+  trabalho.
+
+### Testes
+
+- svelte-check; manual com preset `p1` vs `p4` (NVENC) para validar a leitura.
+
+---
+
+## Fase 15 — Importação por arrastar e soltar na janela principal
+
+**Objetivo:** manter a janela principal sempre pronta para receber vídeo pelo
+"arrasta e solta" **junto** da opção de abrir pelo seletor — no estilo de
+import de mídia de um compositor (ex.: DaVinci Resolve).
+
+### Comportamento
+
+- O conteúdo principal exibe uma **área de destino** compacta no topo
+  (`drop-target`): borda tracejada, ícone de upload, "arraste um vídeo aqui" e
+  botão **"abrir vídeo…"** (seletor único), clicável e com destaque (`hot`)
+  durante o arrasto.
+- A área permanece visível também com o vídeo já carregado (troca de entrada) —
+  o drop com um arquivo troca/seleciona; múltiplos enfileiram (reaproveita o
+  `wails:file-drop`). A tela vazia continua com o `StatusPage` de arrastar/abrir.
+- Novo `lib/DropTarget.svelte` reutilizável.
+
+### Testes
+
+- svelte-check; arrastar + soltar arquivo único/múltiplos manualmente.
+
+---
+
 ## Melhorias transversais necessárias
 
 - **Fila + Job + eventos**: o contrato `Job` muda nas fases 4/5 — definir os
@@ -828,6 +899,9 @@ v2.9.0  → Fase 8 (check update)      [usa a API de releases por tag + fluxo de
 v2.10.0 → Fase 9 (presets custom)    [depende de config]
 v2.11.0 → Fase 10 (i18n, opcional)
 v2.12.0 → Fase 12 (transcrição srt/vtt/txt)
+v2.13.0 → Fase 13 (barra lateral colapsável)   [UX]
+v2.14.0 → Fase 14 (tempo total de conversão)   [UX]
+v2.15.0 → Fase 15 (arrastar e soltar na janela) [UX]
 ```
 
 Cada versão deve passar por `make check` (vet + test + gofmt + svelte-check) e

@@ -51,6 +51,19 @@ vídeo aceita escala, corte, remoção de áudio, FPS, rotação e thumbnail.
   compressão no modo tamanho; `p7` prioriza a qualidade. Encode de hardware não
   usa a engine gráfica — o "GPU %" do painel reflete o máximo entre gráficos e
   encoder.
+- **Sidebar colapsável**: os cartões de configuração (`Tamanho alvo`/`Qualidade`,
+  `Avançado`, `Presets`, `Cortar em partes`, `Ajustes por arquivo`) colapsam e
+  expandem pelo cabeçalho (chevron, clique ou teclado). `Avançado`, `Cortar em
+  partes` e `Ajustes` vêm **fechados** por padrão, reduzindo a poluição visual;
+  o estado vale para a sessão.
+- **Tempo total de conversão**: cada trabalho da fila mostra o tempo decorrido
+  em tempo real durante o processamento e o **total** ao concluir (card de
+  progresso, linha da fila e card de resultado) — útil para comparar presets e
+  encoders (software × GPU, NVENC `p1`–`p7`).
+- **Arrastar e soltar na janela principal**: o conteúdo ganha uma área de
+  destino (drop-target) com "arraste um vídeo aqui" + botão **"abrir vídeo…"**,
+  visível inclusive com um vídeo já carregado — soltar um arquivo troca a
+  entrada e vários enfileiram (reuso do `wails:file-drop`).
 - **Modo de depuração local**: `VIDCTL_DEBUG=1 ./build/bin/vidctl` liga um log
   no terminal com as transições da fila, os eventos emitidos/recebidos (e os
   patches descartados por estado), as chamadas `Compress`/`GetTasks` e as

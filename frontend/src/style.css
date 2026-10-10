@@ -549,14 +549,79 @@ button {
 }
 
 /* per-file adjustments (fase 5) */
-.adjust-head {
+
+/* collapsible sidebar sections (fase 13) */
+.section-head {
   cursor: pointer;
   user-select: none;
 }
 
-.adjust-chevron {
+.section-head:hover .group-card-title {
+  color: var(--accent);
+}
+
+.section-end {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-chevron {
   color: var(--muted);
   font-size: 12px;
+}
+
+/* media drop target (fase 15) */
+.drop-target {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  background: var(--inset);
+  color: var(--fg-dim);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.drop-target:hover,
+.drop-target:focus-visible {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.drop-target.hot {
+  border-color: var(--accent);
+  background: var(--inset-hover);
+}
+
+.drop-target svg {
+  width: 22px;
+  height: 22px;
+  flex: none;
+}
+
+.drop-target-hint {
+  flex: 1;
+  font-size: 12px;
+}
+
+.drop-target-hint strong {
+  color: var(--fg);
+  font-weight: 600;
+}
+
+.progress-time {
+  color: var(--muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.result-time {
+  font-size: 11px;
+  color: var(--muted);
 }
 
 .trim-row {
