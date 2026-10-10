@@ -2,7 +2,6 @@ package main
 
 import (
 	"embed"
-	"runtime"
 
 	"github.com/fabianoflorentino/vidctl/internal/dlog"
 	"github.com/wailsapp/wails/v2"
@@ -13,17 +12,13 @@ import (
 //go:embed all:frontend/dist
 var assets embed.FS
 
-// fileDropOption decides how file drops reach the app. On Linux the Wails drop
-// handler returns FALSE from the GTK drop signal, which makes WebKit navigate
-// to the dropped file (it "plays" the video and the UI is lost), so the Linux
-// frontend reads text/uri-list from the DOM drop event instead. Windows and
-// macOS keep the native Wails path, which returns absolute paths reliably.
+// fileDropOption enables the native Wails file drop so absolute paths reach
+// the frontend via "wails:file-drop". The DOM-only fallback (text/uri-list) is
+// not enough: on WebKitGTK the list comes empty and File objects expose no
+// path. Navigation to the dropped file is prevented in the frontend by
+// calling preventDefault on dragenter/dragover/drop.
 func fileDropOption() *options.DragAndDrop {
-	dnd := &options.DragAndDrop{}
-	if runtime.GOOS != "linux" {
-		dnd.EnableFileDrop = true
-	}
-	return dnd
+	return &options.DragAndDrop{EnableFileDrop: true}
 }
 
 func main() {
