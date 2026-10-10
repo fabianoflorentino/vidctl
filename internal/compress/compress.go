@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	"github.com/fabianoflorentino/vidctl/internal/cmdutil"
+	"github.com/fabianoflorentino/vidctl/internal/dlog"
 	"github.com/fabianoflorentino/vidctl/internal/encode"
 	"github.com/fabianoflorentino/vidctl/internal/estimate"
 	"github.com/fabianoflorentino/vidctl/internal/events"
@@ -210,6 +211,12 @@ func runQuiet(ctx context.Context, cmd *exec.Cmd) error {
 	return nil
 }
 
+// traceExec logs the exact ffmpeg command line before it runs, so a conversion
+// can be reproduced and the encoder actually selected can be confirmed.
+func traceExec(jobID, stage string, cmd *exec.Cmd) {
+	dlog.Printf("[compress] job=%s stage=%s exec %s", jobID, stage, strings.Join(cmd.Args, " "))
+}
+
 // h265Flag silences the per-frame stats libx265 writes to stderr.
 func h265Flag(codec string) []string {
 	if codec != encode.CodecH265 {
@@ -222,6 +229,7 @@ func h265Flag(codec string) []string {
 // The emitted percent is remapped to [base, base+span] so multi-segment jobs can
 // show aggregated progress.
 func execute(ctx context.Context, cmd *exec.Cmd, jobID, stage string, duration, base, span float64) error {
+	traceExec(jobID, stage, cmd)
 	progressPipe, err := cmd.StdoutPipe()
 	if err != nil {
 		return err
@@ -337,6 +345,7 @@ func Run(ctx context.Context, jobID string, job Job) error {
 			if err != nil {
 				return fail(err)
 			}
+			traceExec(jobID, "thumbnail", thumb)
 			if err := runQuiet(ctx, thumb); err != nil {
 				if ctxErr := ctx.Err(); ctxErr != nil {
 					return ctxErr
@@ -354,6 +363,12 @@ func encodeSegment(ctx context.Context, jobID, logID string, job Job, preset pre
 	if total > 1 {
 		suffix = fmt.Sprintf(" · parte %d/%d", seg.Index, total)
 	}
+	dlog.Printf(
+		"[compress] job=%s plugin mode=%s encoder=%s hw=%q 2pass=%t vf=%q seek=%s removerAudio=%t fps=%g rot=%d thumb=%q out=%q",
+		logID, preset.Mode, encode.VideoCodec(preset.Codec, preset.Hardware), preset.Hardware,
+		encode.TwoPass(preset.Hardware), buildVideoFilter(job), strings.Join(seekArgs(job, seg), " "),
+		job.RemoveAudio, job.FPS, job.Rotate, job.ThumbnailPath, job.OutputPath,
+	)
 
 	if preset.Mode == "size" {
 		removePassLogs(logID)

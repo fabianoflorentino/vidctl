@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/fabianoflorentino/vidctl/internal/cmdutil"
+	"github.com/fabianoflorentino/vidctl/internal/dlog"
 )
 
 const probeTimeout = 15 * time.Second
@@ -122,6 +123,7 @@ func (d *Detector) Refresh() {
 // listEncoders runs `ffmpeg -hide_banner -encoders` and returns the video
 // encoder names it advertises.
 func listEncoders(bin string) ([]string, error) {
+	dlog.Printf("[encode] exec ffmpeg -hide_banner -encoders")
 	out, err := exec.Command(bin, "-hide_banner", "-encoders").Output()
 	if err != nil {
 		return nil, fmt.Errorf("falha ao listar encoders do ffmpeg: %w", err)
@@ -167,6 +169,7 @@ func probeEncoder(bin, encoder string) error {
 		"-c:v", encoder,
 		"-f", "null", "-",
 	}
+	dlog.Printf("[encode] exec ffmpeg %s %s (probe %s)", bin, strings.Join(args, " "), encoder)
 	cmd := exec.CommandContext(ctx, bin, args...)
 	var errBuf bytes.Buffer
 	cmd.Stderr = &errBuf
@@ -175,7 +178,9 @@ func probeEncoder(bin, encoder string) error {
 		if msg == "" {
 			msg = err.Error()
 		}
+		dlog.Printf("[encode] encoder %q indisponível: %s", encoder, msg)
 		return errors.New(msg)
 	}
+	dlog.Printf("[encode] encoder %q OK", encoder)
 	return nil
 }

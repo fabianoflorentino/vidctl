@@ -317,6 +317,13 @@ iniciar, fim de worker), cada evento emitido para a UI e cada evento
 recebido no frontend — incluindo patches descartados por estado — além das
 exceções de JavaScript. Sem `VIDCTL_DEBUG` o log fica desligado, sem custo.
 
+Também são rastreados os comandos externos executados e a decisão do pipeline:
+
+- `[compress] plugin …` — resumo de cada segmento: modo, encoders (`encoder=hevc_nvenc` etc.), hardware, 2-pass, cadeia `-vf`, seek (corte/split), remoção de áudio, FPS, rotação, thumbnail e saída.
+- `[compress] … exec ffmpeg …` — comando `ffmpeg` completo (passes, single-pass e thumbnail), reproduzível linha a linha.
+- `[media] exec ffprobe/ffmpeg …` — probe do arquivo e geração de miniatura.
+- `[encode] exec ffmpeg …` — listagem de encoders (`-encoders`) e o probe de 1 frame por backend, com o resultado `OK`/`indisponível` e o motivo.
+
 ## Build de produção
 
 ```bash

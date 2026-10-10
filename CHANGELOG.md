@@ -82,6 +82,12 @@ vídeo aceita escala, corte, remoção de áudio, FPS, rotação e thumbnail.
 - Campos `language`, `notifyOnDone` e `openFolderOnDone` já são preservados no
   arquivo, mas só passam a ter efeito quando os recursos correspondentes
   existirem (fases futuras do plano).
+- O modo de depuração (`VIDCTL_DEBUG=1`) agora rastreia os **comandos externos
+  e a decisão do pipeline**: o comando `ffmpeg` completo (2-pass, single-pass e
+  thumbnail), a escolha de encoder/hardware por segmento (`encoder=hevc_nvenc`,
+  2-pass, cadeia `-vf`, seek, remoção de áudio, FPS, rotação), o `ffprobe` e a
+  miniatura (`[media]`), e a listagem/probe de encoders (`[encode]`, com o
+  motivo quando um backend falha). Cada comando é reproduzível linha a linha.
 
 ### Corrigido
 
