@@ -605,6 +605,19 @@ button {
   flex: 1 1 140px;
 }
 
+.enc-fail {
+  margin: 2px 4px 4px;
+  padding: 6px 9px;
+  font-size: 11px;
+  color: var(--fg);
+  opacity: 0.8;
+  background: var(--warn-bg);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* quality advice (estimativa antes do encode) */
 .advice {
   display: flex;

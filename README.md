@@ -216,10 +216,13 @@ para aquele trabalho, sem alterar o preset salvo:
   (NVENC → QSV → AMF → VideoToolbox), com fallback para software se nenhum
   funcionar.
 - **Detecção**: o app lista os encoders do seu `ffmpeg`
-  (`ffmpeg -hide_banner -encoders`, em cache) e roda um probe de 1 frame para
-  confirmar que o driver da GPU funciona. Backends que falham aparecem
-  desabilitados com o motivo; "verificar de novo" no cartão re-detecta (ex.:
-  depois de instalar o driver).
+  (`ffmpeg -hide_banner -encoders`, em cache) e roda um probe de 1 frame
+  (`256×256`) para confirmar que o driver da GPU funciona. Backends que falham
+  aparecem desabilitados com o motivo na UI; "verificar de novo" no cartão
+  re-detecta (ex.: depois de instalar o driver).
+- **Por plataforma**: **AMF** (AMD) só é oferecido no Windows e
+  **VideoToolbox** só no macOS (são APIs específicas desses sistemas). NVENC e
+  QSV são detectados em qualquer SO onde o `ffmpeg` os lista.
 
 ## Corte em partes (split por tempo)
 

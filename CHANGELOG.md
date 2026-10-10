@@ -90,6 +90,15 @@ vídeo aceita escala, corte, remoção de áudio, FPS, rotação e thumbnail.
   GPU AMD): `codecs` vinha `null` no JSON e o frontend quebrava ao montar a
   lista de codificadores. Agora a detecção devolve sempre uma lista (vazia
   quando não há codecs) e o frontend também tolera `null`.
+- O probe de encoders de hardware passou a usar um frame `256×256`: o `64×64`
+  anterior estava **abaixo do tamanho mínimo** do NVENC ("Frame Dimension less
+  than the minimum supported value"), então GPUs NVIDIA modernas apareciam como
+  "detectado mas não rodou" mesmo com driver funcionando.
+- Backends por plataforma: **AMF (AMD)** só é oferecido no Windows e
+  **VideoToolbox** só no macOS; NVENC e QSV continuam sendo detectados em
+  qualquer SO e **Software**/"Automático" seguem sempre disponíveis. Além disso,
+  o motivo do probe falho agora aparece na UI (cartão **Avançado**) em vez de um
+  texto genérico.
 
 ## [2.1.0] — 2026-09-27
 

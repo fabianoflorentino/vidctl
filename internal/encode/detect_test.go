@@ -51,10 +51,10 @@ const encodersList = ` V....D libx264              libx264 H.264 / AVC / MPEG-4 
  A..... aac                  AAC (Advanced Audio Coding)
 `
 
-// amfList advertises only the AMD backends so the whole backend can be probed
-// with a forced failure, leaving Codecs empty.
-const amfList = ` V..... h264_amf             AMD AMF H.264 Encoder (codec h264)
- V..... hevc_amf             AMD AMF HEVC Encoder (codec hevc)
+// nvencList advertises only the NVIDIA backends so the whole backend can be
+// probed with a forced failure, leaving Codecs empty.
+const nvencList = ` V..... h264_nvenc           NVIDIA NVENC H.264 encoder (codec h264)
+ V..... hevc_nvenc           NVIDIA NVENC HEVC encoder (codec hevc)
 `
 
 func TestDetectorAvailability(t *testing.T) {
@@ -76,11 +76,15 @@ func TestDetectorAvailability(t *testing.T) {
 		t.Errorf("qsv esperava codecs [h264 h265], got %+v", qsv)
 	}
 	vt := findInfo(avail, HWVideotoolbox)
-	if vt == nil || !sameStrings(vt.Codecs, []string{CodecH264}) || vt.Error == "" {
-		t.Errorf("videotoolbox esperava apenas h264 com erro de probe, got %+v", vt)
+	if runtime.GOOS == "darwin" {
+		if vt == nil || !sameStrings(vt.Codecs, []string{CodecH264}) || vt.Error == "" {
+			t.Errorf("videotoolbox esperava apenas h264 com erro de probe, got %+v", vt)
+		}
+	} else if vt != nil {
+		t.Errorf("videotoolbox não deveria aparecer fora do macOS, got %+v", vt)
 	}
 	if findInfo(avail, HWAMF) != nil {
-		t.Errorf("amf não deveria aparecer, got %+v", avail.Hardware)
+		t.Errorf("amf não deveria aparecer fora do Windows, got %+v", avail.Hardware)
 	}
 }
 
@@ -101,8 +105,8 @@ func TestDetectorCachesAndRefreshes(t *testing.T) {
 	if first.Hardware == nil || len(first.Hardware) != len(second.Hardware) {
 		t.Fatalf("cache inesperado: %+v vs %+v", first.Hardware, second.Hardware)
 	}
-	if len(first.Hardware) != 3 {
-		t.Fatalf("esperava 3 backends, got %d", len(first.Hardware))
+	if len(first.Hardware) != expectedBackends() {
+		t.Fatalf("esperava %d backends, got %d: %+v", expectedBackends(), len(first.Hardware), first.Hardware)
 	}
 
 	// Backends desapareceram: Refresh deve re-detectar.
@@ -157,24 +161,47 @@ func TestProbeEncoderFailure(t *testing.T) {
 
 func TestDetectorBackendWithoutCodecs(t *testing.T) {
 	skipOnWindows(t)
-	fakeFFmpeg(t, amfList, "amf")
+	fakeFFmpeg(t, nvencList, "nvenc")
 	d := &Detector{}
 	avail, err := d.Availability()
 	if err != nil {
 		t.Fatalf("Availability() error: %v", err)
 	}
-	amf := findInfo(avail, HWAMF)
-	if amf == nil {
-		t.Fatalf("amf deveria aparecer listado mesmo com probe falho, got %+v", avail.Hardware)
+	nvenc := findInfo(avail, HWNVENC)
+	if nvenc == nil {
+		t.Fatalf("nvenc deveria aparecer listado mesmo com probe falho, got %+v", avail.Hardware)
 	}
-	if amf.Codecs == nil {
+	if nvenc.Codecs == nil {
 		t.Error("codecs não pode ser nil: viraria null no JSON e quebraria o frontend")
 	}
-	if len(amf.Codecs) != 0 {
-		t.Errorf("codecs deveria estar vazio, got %v", amf.Codecs)
+	if len(nvenc.Codecs) != 0 {
+		t.Errorf("codecs deveria estar vazio, got %v", nvenc.Codecs)
 	}
-	if amf.Error == "" {
+	if nvenc.Error == "" {
 		t.Error("erro do probe deveria ser preservado para a UI")
+	}
+}
+
+// expectedBackends is how many backends of encodersList survive the per-OS gate
+// (VideoToolbox only on macOS, AMF only on Windows — the tests skip Windows).
+func expectedBackends() int {
+	if runtime.GOOS == "darwin" {
+		return 3
+	}
+	return 2
+}
+
+func TestSupportedOnGOOS(t *testing.T) {
+	if supportedOnGOOS(HWAMF) != (runtime.GOOS == "windows") {
+		t.Errorf("amf deveria ser oferecido só no Windows, got %v", supportedOnGOOS(HWAMF))
+	}
+	if supportedOnGOOS(HWVideotoolbox) != (runtime.GOOS == "darwin") {
+		t.Errorf("videotoolbox deveria ser oferecido só no macOS, got %v", supportedOnGOOS(HWVideotoolbox))
+	}
+	for _, id := range []string{HWNVENC, HWQSV, ""} {
+		if !supportedOnGOOS(id) {
+			t.Errorf("%q deveria ser oferecido em qualquer SO", id)
+		}
 	}
 }
 

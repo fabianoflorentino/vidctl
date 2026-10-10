@@ -597,7 +597,7 @@ import Toggle from './lib/Toggle.svelte'
       const desc = labels.length
         ? `suporta ${labels.join(' e ')}`
         : info.error
-          ? 'detectado, mas não conseguiu rodar (verificar de novo)'
+          ? 'detectado, mas o teste de 1 frame falhou'
           : 'sem codecs disponíveis'
       opts.push({
         id: info.id,
@@ -608,6 +608,18 @@ import Toggle from './lib/Toggle.svelte'
     }
     return opts
   })
+
+  function shortErr(s: string): string {
+    const line = s.split('\n').find((l) => l.trim()) ?? s
+    return line.length > 110 ? line.slice(0, 107) + '…' : line
+  }
+
+  const failingEncoders = $derived(
+    (encoders?.hardware ?? [])
+      .filter((i) => (i.codecs ?? []).length === 0 && i.error)
+      .map((i) => `${i.label}: ${shortErr(i.error)}`)
+      .join(' · '),
+  )
 
   const gpuActive = $derived(hardware !== '')
 
@@ -1060,6 +1072,9 @@ import Toggle from './lib/Toggle.svelte'
             <div class="hint">
               {encoders ? `${encoders.hardware.length} backend(s) de hardware detectado(s)` : 'verificando encoders…'}
             </div>
+            {#if failingEncoders}
+              <div class="enc-fail mono" title={failingEncoders}>{failingEncoders}</div>
+            {/if}
           {/if}
         </div>
       </section>
