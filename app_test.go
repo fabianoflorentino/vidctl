@@ -827,3 +827,13 @@ func TestCompressRejectsInvalidEncoder(t *testing.T) {
 		t.Error("esperava erro de hardware inválido no enqueue")
 	}
 }
+
+func TestCompressRejectsInvalidAdjustments(t *testing.T) {
+	a := newTestApp(t)
+	if _, err := a.Compress(compress.Job{InputPath: "in.mp4", PresetID: "youtube", TrimStartSec: 30, TrimEndSec: 10}); err == nil {
+		t.Error("esperava erro de corte invertido no enqueue")
+	}
+	if _, err := a.Compress(compress.Job{InputPath: "in.mp4", PresetID: "youtube", Rotate: 45}); err == nil {
+		t.Error("esperava erro de rotação inválida no enqueue")
+	}
+}
