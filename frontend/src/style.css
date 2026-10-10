@@ -626,7 +626,7 @@ button {
 
 /* media drop target (fase 15) */
 .out-card {
-  margin-bottom: 12px;
+  margin: 12px 0;
 }
 
 .drop-target {
