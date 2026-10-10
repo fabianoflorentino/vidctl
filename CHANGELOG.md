@@ -130,6 +130,11 @@ vídeo aceita escala, corte, remoção de áudio, FPS, rotação e thumbnail.
   qualquer SO e **Software**/"Automático" seguem sempre disponíveis. Além disso,
   o motivo do probe falho agora aparece na UI (cartão **Avançado**) em vez de um
   texto genérico.
+- **Arrastar e soltar** voltou a funcionar: o app apenas escutava o evento
+  `wails:file-drop`, mas o WebView só entrega o drop quando o `OnFileDrop` do
+  runtime do Wails é registrado (e o alvo declara `--wails-drop-target`).
+  Agora isso é feito, com a janela inteira como alvo, e durante o arrasto
+  aparece um **pontilhado ao redor da tela** indicando a área de drop.
 
 ## [2.1.0] — 2026-09-27
 

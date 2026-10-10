@@ -126,6 +126,24 @@ body {
   background: var(--window);
   color: var(--fg);
   font-family: var(--sans);
+  --wails-drop-target: drop;
+}
+
+/* pontilhado de "área de drop" ao redor da janela durante o arrasto (fase 15) */
+body.wails-drop-target-active .drop-overlay {
+  opacity: 1;
+}
+
+.drop-overlay {
+  position: fixed;
+  inset: 8px;
+  border: 2px dashed var(--accent);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+  z-index: 999;
 }
 
 #app {

@@ -25,7 +25,7 @@
     GetEncoders,
     RefreshEncoders,
   } from '../wailsjs/go/main/App.js'
-  import { EventsOn, EventsOff } from '../wailsjs/runtime/runtime.js'
+  import { EventsOn, EventsOff, OnFileDrop, OnFileDropOff } from '../wailsjs/runtime/runtime.js'
   import type { main, presets, media, config, encode } from '../wailsjs/go/models.js'
   import { compress as bindings, config as configBindings } from '../wailsjs/go/models.js'
   import StatusPage from './lib/StatusPage.svelte'
@@ -741,6 +741,9 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
     EventsOn('wails:file-drop', (_x: number, _y: number, paths: string[]) => {
       handleDrop(paths)
     })
+    OnFileDrop((_x: number, _y: number, paths: string[]) => {
+      handleDrop(paths)
+    }, true)
     return () => {
       EventsOff('compress:queued')
       EventsOff('compress:start')
@@ -748,6 +751,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
       EventsOff('compress:done')
       EventsOff('compress:error')
       EventsOff('wails:file-drop')
+      OnFileDropOff()
     }
   })
 
@@ -989,6 +993,8 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
 </script>
 
 <svelte:window ondragover={onDragOver} ondragleave={onDragLeave} ondrop={onDropEnd} />
+
+<div class="drop-overlay" aria-hidden="true"></div>
 
 <header class="topbar">
   <span class="ffmpeg-pill" class:bad={!ffmpegOk}>
