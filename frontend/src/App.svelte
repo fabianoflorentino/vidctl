@@ -318,7 +318,9 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
 
   async function adoptFile(path: string) {
     if (!isVideoPath(path)) {
-      error = `extensão não suportada: ${path.split('.').pop() || path}`
+      const msg = `extensão não suportada: ${path.split('.').pop() || path}`
+      dbg(`adoptFile rejeitado path=${path}`)
+      error = msg
       return
     }
     inputPath = path
@@ -326,7 +328,9 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
     error = ''
     thumb = ''
     try {
-      info = await GetMediaInfo(path)
+      const got = await GetMediaInfo(path)
+      dbg(`adoptFile ok path=${path} duration=${got.durationSec} w=${got.width}`)
+      info = got
       const base = path.replace(/\.[^.]+$/, '')
       outputPath = suggestedOutput(base)
       GetThumbnail(path, info.durationSec)
@@ -337,6 +341,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
           thumb = ''
         })
     } catch (err) {
+      dbg(`adoptFile erro path=${path} err=${String(err)}`)
       info = null
       error = String(err)
     }
@@ -382,15 +387,20 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
     e.preventDefault()
     dragging = false
     if (nativeFileDrop) return
-    const uri = e.dataTransfer.getData('text/uri-list') ?? ''
-    const paths = uri
-      .split('\n')
-      .map((p) => p.trim())
-      .filter((p) => p && !p.startsWith('#'))
-      .map((p) => (p.startsWith('file://') ? decodeURIComponent(p.slice(7)) : p))
-    const first = e.dataTransfer.files.length ? (e.dataTransfer.files[0] as { path?: string }).path : undefined
-    const dropped = paths.length ? paths : first ? [first] : []
-    if (dropped.length) handleDrop(dropped)
+    try {
+      const uri = e.dataTransfer.getData('text/uri-list') ?? ''
+      const paths = uri
+        .split('\n')
+        .map((p) => p.trim())
+        .filter((p) => p && !p.startsWith('#'))
+        .map((p) => (p.startsWith('file://') ? decodeURIComponent(p.slice(7)) : p))
+      const first = e.dataTransfer.files.length ? (e.dataTransfer.files[0] as { path?: string }).path : undefined
+      const dropped = paths.length ? paths : first ? [first] : []
+      dbg(`drop uri=${JSON.stringify(uri)} paths=${JSON.stringify(dropped)}`)
+      if (dropped.length) handleDrop(dropped)
+    } catch (err) {
+      dbg(`drop erro ${String(err)}`)
+    }
   }
 
   $effect(() => {
