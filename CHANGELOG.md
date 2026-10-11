@@ -91,6 +91,11 @@ vídeo aceita escala, corte, remoção de áudio, FPS, rotação e thumbnail.
 
 ### Mudado
 
+- A barra lateral virou um **painel arredondado** (estilo GNOME/panela flutuante):
+  mesma cor do conteúdo, com contorno suave (`18px` de raio) e sombra sutil no
+  lugar da coluna "quadrada" com linha cheia de divisão — a separação agora é
+  por espaço e cantos arredondados, com sombra definida por tema (claro/escuro)
+  e sem depender do sistema.
 - O card de progresso acompanha o item selecionado na fila e o cancelamento
   passa a ser por item — a ação não para mais o trabalho inteiro.
 - `maxParallel` passa a valer: define quantos vídeos são comprimidos ao mesmo
