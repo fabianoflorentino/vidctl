@@ -11,6 +11,10 @@ operacional dos pacotes.
 
 ## [Unreleased]
 
+Nada ainda — em desenvolvimento.
+
+## [2.2.0] — 2026-10-11
+
 Persistência das preferências, fila de conversões em lote, estimativa de
 tamanho, codecs de vídeo com aceleração de GPU e ajustes por arquivo: as
 preferências sobrevivem ao fechamento, dá para comprimir vários vídeos de uma
