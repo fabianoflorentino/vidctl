@@ -14,7 +14,7 @@ arquivo** (escala, corte, remover áudio, FPS, rotação, thumbnail). 100% offli
 
 - Presets exatos por plataforma (WhatsApp 10/16 MB, Instagram 16 MB, Shorts
   30 MB, YouTube CRF, ou um tamanho livre definido por você)
-- **Corte em partes**: divide o vídeo por tempo — N partes iguais ou X minutos
+- **Cortar**: divide o vídeo por tempo — N partes iguais ou X minutos
   por parte (ex.: 30 min → 6 × 5 min) — com mínimo de 1 min por parte; cada
   parte é comprimida de forma independente e sai como `nome-part1.mp4`, …
   O `min/parte` aceita fração (ex.: `1.5` = 1 m 30 s) e os contadores têm
@@ -30,10 +30,10 @@ arquivo** (escala, corte, remover áudio, FPS, rotação, thumbnail). 100% offli
   H.264 ↔ H.265 e escolhe o codificador por trabalho — NVENC, QSV, AMF ou
   VideoToolbox — com detecção automática (probe de 1 frame) e, no NVENC, preset
   de velocidade/qualdade `p1`–`p7`
-- **Ajustes por arquivo**: escala (padrão/original/personalizada), corte por
+- **Ajustes de vídeo**: escala (padrão/original/personalizada), corte por
   janela em `mm:ss`, remover áudio, FPS, rotação e geração de thumbnail —
   aplicados por trabalho, além do preset
-- **Extrair áudio**: pelo menu do vídeo (⋮ → "extrair áudio…") você tira a faixa
+- **Extrair áudio**: a seção **"Extrair áudio"** da barra lateral tira a faixa
   de áudio sem reencodar o vídeo, escolhendo formato (mp3/opus/aac/flac/wav ou
   copiar), qualidade, canais e normalização — a extração entra na mesma fila
   de conversões
@@ -251,9 +251,9 @@ para aquele trabalho, sem alterar o preset salvo:
   `p7` prioriza a qualidade. O trade-off é leve no modo tamanho (eficiência de
   compressão).
 
-## Corte em partes (split por tempo)
+## Cortar (split por tempo)
 
-Na barra lateral, o grupo **"Cortar em partes"** divide o vídeo antes de
+Na barra lateral, o grupo **"Cortar"** divide o vídeo antes de
 comprimir — útil quando o destino tem limite de tamanho/duração (ex.: status
 de 60 s) ou quando você quer publicar o conteúdo fatiado.
 
@@ -269,9 +269,9 @@ gera um arquivo `saída-partN.mp4` (índice com zero à esquerda quando são 10+
 partes). O progresso mostra `parte X/N` e, ao final, o app resume a economia
 total sobre o arquivo original.
 
-## Ajustes por arquivo
+## Ajustes de vídeo
 
-O grupo **"Ajustes por arquivo"** aplica controles extras ao vídeo *depois* do
+O grupo **"Ajustes de vídeo"** aplica controles extras ao vídeo *depois* do
 preset, também por trabalho:
 
 | Controle | Comportamento |
@@ -284,13 +284,14 @@ preset, também por trabalho:
 | **Thumbnail** | após o encode, extrai um quadro do vídeo de saída para o arquivo escolhido (`ffmpeg -ss <meio> -frames:v 1`) |
 
 A ordem dos filtros de vídeo é sempre `transpose → scale → fps`. Corte manual
-e **"Cortar em partes"** não podem ser combinados. Formatos de tempo aceitos:
+e **"Cortar"** não podem ser combinados. Formatos de tempo aceitos:
 `90` (segundos), `1:30` (minutos:segundos) e `1:02:30` (horas).
 
 ## Extrair áudio
 
-No menu do vídeo (⋮ → **"extrair áudio…"**) o vidctl tira a faixa de áudio
-sem reencodar o vídeo. O modal escolhe:
+A seção **"Extrair áudio"** da barra lateral (aberta com a sidebar de
+configuração) tira a faixa de áudio do vídeo carregado, sem reencodar o vídeo.
+O painel escolhe:
 
 | Opção | Detalhe |
 |---|---|
@@ -332,8 +333,9 @@ cancelados).
 ## Usabilidade
 
 - **Sidebar colapsável**: os cartões de configuração (`Tamanho alvo`/`Qualidade`,
-  `Avançado`, `Presets`, `Cortar em partes`, `Ajustes por arquivo`) colapsam e
-  expandem pelo cabeçalho; `Avançado`, `Cortar em partes` e `Ajustes` vêm
+  `Avançado`, `Presets`, `Cortar`, `Extrair áudio`, `Ajustes de vídeo`) colapsam e
+  expandem pelo cabeçalho; `Avançado`, `Cortar`, `Extrair áudio` e `Ajustes de
+  vídeo` vêm
   fechados por padrão.
 - **Arrastar e soltar**: a janela principal aceita soltar vídeos em qualquer
   momento (área "arraste um vídeo aqui" + botão "abrir vídeo…"); um arquivo

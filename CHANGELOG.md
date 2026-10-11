@@ -11,13 +11,16 @@ operacional dos pacotes.
 
 ## [Unreleased]
 
-- **Extrair áudio de um vídeo** (fase 6): pelo menu do vídeo, dá para extrair a
-  faixa de áudio sem reencodar o vídeo, escolhendo formato (mp3, opus, aac,
-  flac, wav ou copiar — sinalização de stream, só remux), qualidade (kbps),
-  canais (mono/estéreo), normalização EBU R128 (loudnorm) e uma janela de
-  tempo (mm:ss). A extração entra na mesma fila de conversões, com progresso,
+- **Extrair áudio de um vídeo** (fase 6): a nova seção **"Extrair áudio"** da
+  barra lateral extrai a faixa sem reencodar o vídeo, escolhendo formato (mp3,
+  opus, aac, flac, wav ou copiar — sinalização de stream, só remux), qualidade
+  (kbps), canais (mono/estéreo), normalização EBU R128 (loudnorm) e uma janela
+  de tempo (mm:ss). A extração entra na mesma fila de conversões, com progresso,
   cancelamento e abrir pasta ao concluir. O sufixo do arquivo de saída é
   configurável nas Preferências (`-audio` por padrão).
+- **Nomes da barra lateral**: "Cortar em partes" virou **"Cortar"** e "Ajustes
+  por arquivo" virou **"Ajustes de vídeo"**, deixando claro o que pertence a
+  áudio (extração) e o que pertence ao vídeo (escala, corte, FPS, rotação…)
 
 ## [2.2.1] — 2026-10-11
 

@@ -473,17 +473,19 @@ só comprime vídeo; extração é um botão novo no card do arquivo.
 
 ### Frontend
 
-- `VideoRow.svelte`: item novo no `KebabMenu` ("extrair áudio…") ao lado de
-  "trocar arquivo"/"limpar" — ou card de ação no `StatusPage` quando não há
-  vídeo ainda.
-- Modal novo `AudioModal.svelte` reaproveitando o design system (`Modal`,
-  `RadioCardGroup`, `Stepper`, `Toggle` já existentes em `frontend/src/lib/`):
+- Seção nova **"Extrair áudio"** na barra lateral (`App.svelte`, passo 02), com
+  o painel `AudioPanel.svelte` reaproveitando o design system (`RadioCardGroup`,
+  `Stepper`, `Toggle`, `InfoTip` já existentes em `frontend/src/lib/`):
   - formato: `RadioCardGroup` (MP3/Opus/AAC/FLAC/WAV/copiar);
   - qualidade: `Stepper`/select de kbps, **oculto** para `flac`/`wav`/`copy`;
   - canais: `RadioCardGroup` manter/mono/estéreo;
   - normalizar: `Toggle` com `InfoTip` explicando o EBU R128;
-  - janela: dois `Stepper` `mm:ss` reaproveitando o do split (fase 11);
-  - prévia do nome de saída (`SuggestOutput`) e botão "EXTRAIR ÁUDIO".
+  - janela: dois textos `mm:ss` (mesmo formato do trim de ajustes);
+  - prévia do nome de saída (`SuggestAudioOutput`) + botão "salvar como…"
+    (`OpenAudioDialog`) e "EXTRAIR ÁUDIO".
+- A seção entra no acordeão da sidebar junto com `Cortar` e `Ajustes de vídeo`
+  (nomes encurtados na mesma leva, para separar áudio de vídeo); a extração
+  aparece desabilitada quando o vídeo não tem faixa de áudio.
 - Ao concluir, o item da fila mostra formato + tamanho + `OpenFolder` (mesmo
   card de resultado da compressão).
 

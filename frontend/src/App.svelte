@@ -37,7 +37,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   import Section from './lib/Section.svelte'
   import DropTarget from './lib/DropTarget.svelte'
   import PreferencesModal from './lib/PreferencesModal.svelte'
-  import AudioModal from './lib/AudioModal.svelte'
+  import AudioPanel from './lib/AudioPanel.svelte'
   import { stageLabel } from './lib/stages'
 
   type ProgressEv = { jobId: string; stage: string; percent: number }
@@ -327,7 +327,6 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   })
 
   let prefsOpen = $state(false)
-  let audioModalOpen = $state(false)
   let dragging = $state(false)
   let nativeFileDrop = true
 
@@ -562,6 +561,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
     presets: false,
     split: false,
     ajustes: false,
+    audio: false,
   })
 
   function toggleSection(key: keyof typeof sectionState) {
@@ -1098,7 +1098,6 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   }
 
   async function extractAudio(spec: audio.Spec) {
-    audioModalOpen = false
     try {
       const jobId = await ExtractAudio(spec)
       dbg(`ExtractAudio ok job=${jobId} codec=${spec.codec}`)
@@ -1275,7 +1274,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
           <RadioCardGroup options={presetOptions} selected={selectedPresetId} name="presets" onchange={selectPresetById} />
           </Section>
 
-      <Section title="Cortar em partes" open={sectionState.split} onchange={() => toggleSection("split")} infoTip="Divide o vídeo em partes sequenciais de duração fixa. Cada parte passa pela compressão escolhida. Mínimo de 1 minuto por parte; a última pode ficar menor ou levar a sobra. Ajuste um dos contadores para ativar o corte.">
+      <Section title="Cortar" open={sectionState.split} onchange={() => toggleSection("split")} infoTip="Divide o vídeo em partes sequenciais de duração fixa. Cada parte passa pela compressão escolhida. Mínimo de 1 minuto por parte; a última pode ficar menor ou levar a sobra. Ajuste um dos contadores para ativar o corte.">
           <div class="split-head">
             <div class="split-toggle">
               <button class="btn small" class:solid={!splitOn} onclick={() => (splitOn = false)}>
@@ -1307,7 +1306,15 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
           {/if}
           </Section>
 
-      <Section title="Ajustes por arquivo" open={sectionState.ajustes} onchange={() => toggleSection("ajustes")} infoTip="Escala, corte por janela (mm:ss), remoção de áudio, FPS, rotação e geração de thumbnail — aplicados além do preset, por trabalho.">
+      <Section title="Extrair áudio" open={sectionState.audio} onchange={() => toggleSection("audio")} infoTip="Tira a faixa de áudio do vídeo sem reencodar o vídeo: formato (mp3/opus/aac/flac/wav/copiar), qualidade, canais, normalização e janela de tempo. A extração entra na mesma fila de conversões.">
+          {#if !info}
+            <div class="hint">escolha o vídeo para extrair o áudio</div>
+          {:else}
+            <AudioPanel {inputPath} hasAudio={info.hasAudio} onExtract={extractAudio} />
+          {/if}
+          </Section>
+
+      <Section title="Ajustes de vídeo" open={sectionState.ajustes} onchange={() => toggleSection("ajustes")} infoTip="Escala, corte por janela (mm:ss), remoção de áudio, FPS, rotação e geração de thumbnail — aplicados além do preset, por trabalho.">
           <div class="meta-k">escala</div>
             <RadioCardGroup options={scaleOptions} selected={scaleMode} name="scale" onchange={(v) => (scaleMode = v as ScaleMode)} />
             {#if scaleMode === 'custom'}
@@ -1400,7 +1407,6 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
           {thumb}
           onSwitch={pickInput}
           onClear={reset}
-          onAudio={() => (audioModalOpen = true)}
         />
         <div class="out-card group-card">
           <div class="group-card-body">
@@ -1568,11 +1574,4 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   onffmpegpath={(v) => (ffmpegPath = v)}
   onffprobepath={(v) => (ffprobePath = v)}
   onaudiosuffix={(v) => (audioSuffix = v)}
-/>
-
-<AudioModal
-  open={audioModalOpen}
-  {inputPath}
-  onclose={() => (audioModalOpen = false)}
-  onExtract={extractAudio}
 />

@@ -1,21 +1,19 @@
 <script lang="ts">
-  import Modal from './Modal.svelte'
   import RadioCardGroup from './RadioCardGroup.svelte'
   import Stepper from './Stepper.svelte'
   import Toggle from './Toggle.svelte'
   import InfoTip from './InfoTip.svelte'
   import type { RadioOption } from './RadioCardGroup.svelte'
-  import { ExtractAudio, OpenAudioDialog, SuggestAudioOutput } from '../../wailsjs/go/main/App.js'
+  import { OpenAudioDialog, SuggestAudioOutput } from '../../wailsjs/go/main/App.js'
   import type { audio } from '../../wailsjs/go/models.js'
 
   interface Props {
-    open: boolean
     inputPath: string
-    onclose?: () => void
+    hasAudio: boolean
     onExtract?: (spec: audio.Spec) => void
   }
 
-  let { open, inputPath, onclose = () => {}, onExtract }: Props = $props()
+  let { inputPath, hasAudio, onExtract }: Props = $props()
 
   const FORMATS = [
     { id: 'mp3', title: 'MP3', description: 'padrão da UI · 192 kbps' },
@@ -37,7 +35,8 @@
   let trimStart = $state('')
   let trimEnd = $state('')
   let outputPath = $state('')
-  let modalError = $state('')
+  let manual = $state(false)
+  let panelError = $state('')
 
   const codecOptions: RadioOption[] = FORMATS.map((f) => ({ id: f.id, title: f.title, description: f.description }))
 
@@ -61,7 +60,6 @@
 
   const trimStartSec = $derived(parseClock(trimStart))
   const trimEndSec = $derived(parseClock(trimEnd))
-  const trimming = $derived(trimStart.trim() !== '' || trimEnd.trim() !== '')
 
   const lossless = $derived(LOSSLESS[codec] ?? false)
 
@@ -93,16 +91,16 @@
     if (codec === 'copy') normalize = false
   })
 
-  let manual = $state(false)
-
   $effect(() => {
-    if (open) manual = false
+    const path = inputPath
+    if (!path) return
+    manual = false
   })
 
   $effect(() => {
     const path = inputPath
     const fmt = codec
-    if (!open || !path || manual) return
+    if (!path || manual) return
     let cancelled = false
     SuggestAudioOutput(path, fmt)
       .then((p) => {
@@ -133,91 +131,75 @@
     if (!LOSSLESS[id]) bitrateKbps = DEFAULT_BITRATE[id] ?? bitrateKbps
   }
 
-  async function run() {
-    if (validation || !inputPath) {
-      modalError = validation || 'escolha um vídeo primeiro'
+  function run() {
+    if (validation) {
+      panelError = validation
       return
     }
-    modalError = ''
+    panelError = ''
     onExtract?.(spec)
   }
 </script>
 
-<Modal {open} title="Extrair áudio" {onclose}>
-  <div class="modal-section">
-    <h2>Formato</h2>
-    <RadioCardGroup options={codecOptions} selected={codec} name="formato" onchange={selectCodec} />
-  </div>
+<div class="meta-k spacer">formato</div>
+<RadioCardGroup options={codecOptions} selected={codec} name="formato" onchange={selectCodec} />
 
-  <div class="modal-section" class:hidden={lossless}>
-    <h2>
-      Qualidade
-      <InfoTip text="Taxa de bits dos formatos com perda. FLAC, WAV e Copiar não aceitam bitrate: saem sem perda." />
-    </h2>
-    <div class="tune-row">
-      <span class="meta-k">bitrate (kbps)</span>
-      <Stepper value={bitrateKbps} min={32} max={320} step={16} ariaLabel="bitrate" onchange={(v) => (bitrateKbps = v)} />
-    </div>
+{#if !lossless}
+  <div class="tune-row">
+    <span class="meta-k">bitrate (kbps)</span>
+    <Stepper value={bitrateKbps} min={32} max={320} step={16} ariaLabel="bitrate" onchange={(v) => (bitrateKbps = v)} />
   </div>
+{/if}
 
-  <div class="modal-section">
-    <h2>Canais</h2>
-    <RadioCardGroup options={channelOptions} selected={String(channels)} name="canais" onchange={(v) => (channels = Number(v))} />
+<div class="meta-k spacer">canais</div>
+<RadioCardGroup options={channelOptions} selected={String(channels)} name="canais" onchange={(v) => (channels = Number(v))} />
+
+<div class="spacer">
+  <Toggle
+    title="normalizar (EBU R128)"
+    description="loudnorm single-pass para volume consistente"
+    disabled={lossless}
+    checked={normalize}
+    onchange={(v) => (normalize = v)}
+  />
+  <InfoTip text="Normaliza o volume segundo o padrão EBU R128. Não se aplica a Copiar." />
+</div>
+
+<div class="trim-row">
+  <div class="trim-field">
+    <span class="meta-k">início (mm:ss)</span>
+    <input class="text-input mono" value={trimStart} aria-label="início da extração" placeholder="0:00" oninput={(e) => (trimStart = e.currentTarget.value)} />
   </div>
-
-  <div class="modal-section">
-    <h2>Normalizar</h2>
-    <Toggle
-      title="loudness EBU R128"
-      description="af de loudnorm (single-pass) para volume consistente"
-      disabled={lossless}
-      checked={normalize}
-      onchange={(v) => (normalize = v)}
-    />
+  <div class="trim-field">
+    <span class="meta-k">fim (mm:ss)</span>
+    <input class="text-input mono" value={trimEnd} aria-label="fim da extração" placeholder="fim do vídeo" oninput={(e) => (trimEnd = e.currentTarget.value)} />
   </div>
+</div>
 
-  <div class="modal-section">
-    <h2>
-      Janela
-      <InfoTip text="Extrai só o trecho entre início e fim (mm:ss). Deixe tudo vazio para o vídeo inteiro." />
-    </h2>
-    <div class="trim-row">
-      <div class="trim-field">
-        <span class="meta-k">início (mm:ss)</span>
-        <input class="text-input mono" value={trimStart} aria-label="início da extração" placeholder="0:00" oninput={(e) => (trimStart = e.currentTarget.value)} />
-      </div>
-      <div class="trim-field">
-        <span class="meta-k">fim (mm:ss)</span>
-        <input class="text-input mono" value={trimEnd} aria-label="fim da extração" placeholder="fim do vídeo" oninput={(e) => (trimEnd = e.currentTarget.value)} />
-      </div>
-    </div>
-  </div>
-
-  <div class="modal-section">
-    <h2>Destino</h2>
-    <div class="out-row">
-      <span class="out-path mono" class:empty={!outputPath} title={outputPath}>
-        {outputPath || 'escolha o destino do áudio'}
-      </span>
-      <button class="btn subtle small" onclick={pickOutput} disabled={!inputPath}>salvar como…</button>
-    </div>
-  </div>
-
-  {#if modalError || validation}
-    <div class="split-error mono">{modalError || validation}</div>
+<div class="thumb-actions">
+  <button class="btn subtle small" onclick={pickOutput} disabled={!inputPath}>destino…</button>
+  {#if outputPath}
+    <span class="thumb-path mono" title={outputPath}>{outputPath}</span>
   {/if}
+</div>
 
-  <div class="modal-actions">
-    <button class="btn solid" onclick={run} disabled={!inputPath || !!validation}>EXTRAIR ÁUDIO</button>
-  </div>
-</Modal>
+{#if !hasAudio}
+  <div class="hint">este vídeo não tem faixa de áudio</div>
+{/if}
+{#if panelError}
+  <div class="split-error mono">{panelError}</div>
+{/if}
+
+<div class="audio-run">
+  <button class="btn solid" onclick={run} disabled={!inputPath || !!validation}>EXTRAIR ÁUDIO</button>
+</div>
 
 <style>
-  .hidden {
-    display: none;
+  .spacer {
+    margin-top: 14px;
   }
-  .modal-actions {
-    margin-top: 16px;
+  .audio-run {
+    margin-top: 14px;
     display: flex;
     justify-content: flex-end;
   }
