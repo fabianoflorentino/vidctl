@@ -404,7 +404,11 @@ só comprime vídeo; extração é um botão novo no card do arquivo.
 > já carregam `Kind="audio"` (fase 2), então a UI roteia por `jobId` sem
 > mudança de evento. Novo binding `ExtractAudio(spec)`, `SuggestAudioOutput` e
 > `OpenAudioDialog` com filtro pela extensão do formato. A configuração ganhou
-> `AudioSuffix` (default `-audio`).
+> `AudioSuffix` (default `-audio`). Na entrega, a UI passou para um **vídeo por
+> vez**: "Adicionar vídeos…" virou "Trocar vídeo…" (troca a seleção e reseta as
+> opções por arquivo), a fila virou **"Fila de tarefas"** (comprimir + extrair
+> áudio) e as seções ganharam nomes curtos (`Cortar`, `Extrair áudio`,
+> `Ajustes de vídeo`).
 
 > Depende da fase 2 (`Task.Kind="audio"` na fila) e da fase 1 (preferências:
 > caminho de saída, sufixo). O trim reaproveita `-ss/-to` da fase 5.

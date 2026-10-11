@@ -19,13 +19,14 @@ arquivo** (escala, corte, remover áudio, FPS, rotação, thumbnail). 100% offli
   parte é comprimida de forma independente e sai como `nome-part1.mp4`, …
   O `min/parte` aceita fração (ex.: `1.5` = 1 m 30 s) e os contadores têm
   campo editável + setas com **Shift** para ajuste fino
-- **Fila de conversões**: adicione vários vídeos de uma vez ("Adicionar
-  vídeos…" ou arrastando vários arquivos) e o app comprime em sequência; a
-  fila mostra status, progresso e cancelamento por item, com "limpar fila"
-  para os concluídos
+- **Fila de tarefas**: comprimir e extrair áudio entram na mesma fila, que
+  processa **um trabalho por vez** (sequencial); cada item mostra status,
+  progresso e cancelamento, com "limpar fila" para os concluídos. O vídeo
+  atual é único — **"Trocar vídeo…"** substitui a seleção sem enfileirar lote
 - **Drag and drop**: arraste um vídeo para a janela (ou use "Abrir…"); a área
   de seleção vazia vira um alvo destacado quando você passa por cima, e a
-  janela inteira aceita soltar vídeo a qualquer momento
+  janela inteira aceita soltar um vídeo a qualquer momento (o novo vídeo
+  substitui o atual)
 - **Codec H.265 e aceleração de GPU**: no cartão "Avançado" você troca
   H.264 ↔ H.265 e escolhe o codificador por trabalho — NVENC, QSV, AMF ou
   VideoToolbox — com detecção automática (probe de 1 frame) e, no NVENC, preset
@@ -304,26 +305,29 @@ O painel escolhe:
 - O destino é o mesmo da compressão: a pasta preferida ou ao lado do vídeo,
   com o **sufixo** das Preferências (padrão `-audio`): `convite-audio.mp3`.
   Dá para trocar o arquivo com "salvar como…".
-- A extração entra na **mesma fila de conversões** (`Task.Kind = audio`):
+- A extração entra na **mesma fila de tarefas** (`Task.Kind = audio`):
   usa os mesmos eventos, mostra progresso (`EXTRAINDO ÁUDIO`) e permite
   cancelar; ao concluir, o item ganha "abrir pasta".
 - Vídeos **sem faixa de áudio** não mostram a ação e, se tentados, falham com
   "o vídeo não tem faixa de áudio".
 
-## Fila de conversões
+## Fila de tarefas
 
-O botão **"Adicionar vídeos…"** (ou arrastar vários arquivos de uma vez para a
-janela) enfileira um trabalho por arquivo — cada um com o preset/tamanho
-atuais e a saída sugerida ao lado do original. A fila aparece abaixo do vídeo
-com nome, preset, status e barra de progresso do item em execução, e permite
-cancelar item a item ou **limpar fila** (remove concluídos, erros e
-cancelados).
+O vidctl trabalha sobre **um vídeo por vez**: "Trocar vídeo…" (ou arrastar um
+novo arquivo para a janela) substitui a seleção atual e **reseta as opções por
+arquivo** para o padrão (corte, divisão em partes, escala e ajustes). Toda
+operação — comprimir ou extrair áudio — entra na mesma **fila de tarefas**, que
+processa **uma por vez** (sequencial).
 
-- A quantidade de vídeos processando ao mesmo tempo vem de `maxParallel` na
+A fila aparece abaixo do vídeo com nome, tipo (compressão/extrato de áudio),
+status e barra de progresso do item em execução, e permite cancelar item a
+item ou **limpar fila** (remove concluídos, erros e cancelados).
+
+- A quantidade de trabalhos processando ao mesmo tempo vem de `maxParallel` na
   `config.json` (padrão **1** = sequencial); edite o arquivo e reabra o app
-  para valer.
-- "Comprimir…" continua enfileirando o vídeo selecionado na sidebar, e a barra
-  de ações fica sempre disponível — só "Adicionar vídeos…" depende do ffmpeg.
+  para valer. Com o default, compressão e extração de áudio nunca disputam CPU.
+- "Trocar vídeo…" usa o vídeo escolhido como o novo alvo (mesmo comportamento
+  do ⋮ → "trocar arquivo"); a fila não ganha trabalho extra ao trocar.
 - O progresso é por trabalho (`compress:queued`, `compress:start`,
   `compress:progress`, `compress:done`, `compress:error`), então um erro em um
   item não derruba os demais. Cada trabalho mostra o **tempo de conversão**:
@@ -337,9 +341,9 @@ cancelados).
   expandem pelo cabeçalho; `Avançado`, `Cortar`, `Extrair áudio` e `Ajustes de
   vídeo` vêm
   fechados por padrão.
-- **Arrastar e soltar**: a janela principal aceita soltar vídeos em qualquer
+- **Arrastar e soltar**: a janela principal aceita soltar um vídeo em qualquer
   momento (área "arraste um vídeo aqui" + botão "abrir vídeo…"); um arquivo
-  troca a entrada e vários enfileiram.
+  troca a entrada e reseta os ajustes por arquivo.
 
 ## Stack
 

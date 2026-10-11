@@ -4,13 +4,11 @@
     CheckFFmpeg,
     GetPresets,
     OpenInputDialog,
-    OpenMultipleDialog,
     GetMediaInfo,
     GetThumbnail,
     OpenOutputDialog,
     OpenThumbnailDialog,
     Compress as StartCompress,
-    CompressMultiple,
     DebugEnabled,
     DebugLog,
     GetTasks,
@@ -344,6 +342,9 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
       error = msg
       return
     }
+    // Novo vídeo: descarta o ajuste do anterior e volta as opções por arquivo
+    // ao default (corte, split, escala, áudio, codec/hardware).
+    resetPerFileOptions()
     inputPath = path
     outputPath = ''
     error = ''
@@ -368,13 +369,28 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
     }
   }
 
+  function resetPerFileOptions() {
+    scaleMode = 'default'
+    scaleCustom = '1280x720'
+    trimStart = ''
+    trimEnd = ''
+    removeAudio = false
+    fps = 0
+    rotate = 0
+    thumbnailOn = false
+    thumbnailPath = ''
+    splitOn = false
+    splitAxis = 'parts'
+    splitParts = 6
+    splitMinutes = 5
+    codec = 'h264'
+    hardware = ''
+    nvencPreset = 'p4'
+  }
+
   function handleDrop(paths: string[]) {
-    const videos = paths.filter(isVideoPath)
-    if (videos.length > 1) {
-      void enqueuePaths(videos)
-      return
-    }
-    const first = videos[0] ?? paths[0]
+    // Modelo de alvo único: soltar vídeo troca o atual, sem enfileirar lote.
+    const first = paths.find(isVideoPath) ?? paths[0]
     if (first) adoptFile(first)
   }
 
@@ -1041,49 +1057,6 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
     }
   }
 
-  async function enqueuePaths(paths: string[]) {
-    const active = new Set(
-      queue.filter((i) => i.state === 'queued' || i.state === 'running').map((i) => i.inputPath),
-    )
-    const usable = paths.filter(isVideoPath).filter((p) => !active.has(p))
-    if (!usable.length) return
-
-    const parts = jobParts()
-    const jobs = usable.map((p) => buildJob(p, suggestedOutput(p.replace(/\.[^.]+$/, ''))))
-    error = ''
-    dbg(`enqueuePaths ${usable.length} vídeos`)
-    try {
-      const acks = await CompressMultiple(jobs)
-      dbg(`CompressMultiple ok acks=${acks.length}`)
-      if (usable[0]) await adoptFile(usable[0])
-      acks.forEach((ack, idx) => {
-        if (ack.error) {
-          dbg(`ack com erro: ${ack.error}`)
-          error = ack.error
-          return
-        }
-        const job = jobs[idx]
-        createItem({
-          jobId: ack.jobId,
-          label: fileName(job.inputPath),
-          inputPath: job.inputPath,
-          outputPath: job.outputPath,
-          presetId: job.presetId,
-          partsTotal: parts,
-        })
-      })
-    } catch (err) {
-      dbg(`enqueuePaths erro=${String(err)}`)
-      error = String(err)
-    }
-  }
-
-  async function addVideos() {
-    const paths = await OpenMultipleDialog()
-    if (!paths?.length) return
-    await enqueuePaths(paths)
-  }
-
   async function cancelItem(jobId: string) {
     try {
       await CancelJob(jobId)
@@ -1310,7 +1283,9 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
           {#if !info}
             <div class="hint">escolha o vídeo para extrair o áudio</div>
           {:else}
-            <AudioPanel {inputPath} hasAudio={info.hasAudio} onExtract={extractAudio} />
+            {#key inputPath}
+              <AudioPanel {inputPath} hasAudio={info.hasAudio} onExtract={extractAudio} />
+            {/key}
           {/if}
           </Section>
 
@@ -1467,8 +1442,8 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
       {#if queue.length > 0}
         <div class="queue-card">
           <div class="queue-head">
-            <span class="group-card-title">Fila de conversões</span>
-            <span class="queue-count mono">{queue.length} {queue.length === 1 ? 'vídeo' : 'vídeos'}</span>
+            <span class="group-card-title">Fila de tarefas</span>
+            <span class="queue-count mono">{queue.length} {queue.length === 1 ? 'tarefa' : 'tarefas'}</span>
             {#if hasFinished}
               <button class="btn subtle small" onclick={clearFinished}>limpar fila</button>
             {/if}
@@ -1548,7 +1523,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
 
       <div class="actionbar">
         <button class="pill-btn" onclick={compress} disabled={!canRun()}>Comprimir…</button>
-        <button class="btn" onclick={addVideos} disabled={!ffmpegOk}>Adicionar vídeos…</button>
+        <button class="btn" onclick={pickInput} disabled={!ffmpegOk}>Trocar vídeo…</button>
       </div>
     </main>
   </div>
