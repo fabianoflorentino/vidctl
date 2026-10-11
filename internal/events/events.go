@@ -9,7 +9,11 @@ import (
 
 // KindCompress identifies compression payloads; audio and transcription join
 // the queue in later phases with their own kinds.
-const KindCompress = "compress"
+const (
+	KindCompress = "compress"
+	// KindAudio identifies audio-extraction payloads (fase 6).
+	KindAudio = "audio"
+)
 
 // Emitter is a function that dispatches a named event with a payload.
 type Emitter func(name string, data any)
