@@ -30,6 +30,9 @@ operacional dos pacotes.
   no topo do conteúdo foi removida — a troca fica no botão **"Trocar vídeo…"**
   ou soltando um novo arquivo em qualquer lugar da janela; a área só permanece
   na tela vazia.
+- **Tipografia maior**: toda a interface da janela subiu **1px** em cada
+  tamanho de fonte (a hierarquia se mantém; os textos densos do painel e da
+  fila ficam mais confortáveis de ler).
 
 ## [2.2.1] — 2026-10-11
 
