@@ -118,9 +118,9 @@ func (c Config) Validate() error {
 		return fmt.Errorf("%w: maxParallel precisa ser no mínimo 1", ErrInvalidConfig)
 	}
 	switch strings.ToLower(strings.TrimSpace(c.Language)) {
-	case "", "pt", "en":
+	case "", "pt", "en", "es", "zh":
 	default:
-		return fmt.Errorf("%w: language precisa ser pt ou en", ErrInvalidConfig)
+		return fmt.Errorf("%w: language precisa ser pt, en, es ou zh", ErrInvalidConfig)
 	}
 	return nil
 }

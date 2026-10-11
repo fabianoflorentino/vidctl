@@ -3,12 +3,14 @@
   import RadioCardGroup from './RadioCardGroup.svelte'
   import InfoTip from './InfoTip.svelte'
   import type { RadioOption } from './RadioCardGroup.svelte'
+  import { t, LANGS, type LangId } from './i18n.svelte'
 
   type ThemeChoice = 'system' | 'light' | 'dark'
 
   interface Props {
     open: boolean
     theme: ThemeChoice
+    language: LangId
     ffmpegOk: boolean
     ffmpegMsg: string
     outputDir: string
@@ -17,6 +19,7 @@
     audioSuffix: string
     onclose?: () => void
     ontheme?: (theme: ThemeChoice) => void
+    onlanguage?: (lang: LangId) => void
     onRecheck?: () => void
     onoutputdir?: (value: string) => void
     onffmpegpath?: (value: string) => void
@@ -27,6 +30,7 @@
   let {
     open,
     theme,
+    language,
     ffmpegOk,
     ffmpegMsg,
     outputDir,
@@ -35,6 +39,7 @@
     audioSuffix,
     onclose = () => {},
     ontheme,
+    onlanguage,
     onRecheck,
     onoutputdir,
     onffmpegpath,
@@ -42,45 +47,55 @@
     onaudiosuffix,
   }: Props = $props()
 
-  const themeOptions: RadioOption[] = [
-    { id: 'system', title: 'Sistema', description: 'Segue o tema claro/escuro do sistema' },
-    { id: 'light', title: 'Claro', description: 'Tema claro fixo' },
-    { id: 'dark', title: 'Escuro', description: 'Tema escuro fixo' },
-  ]
+  const themeOptions = $derived<RadioOption[]>([
+    { id: 'system', title: t('prefs.themeSystem'), description: t('prefs.themeSystemDesc') },
+    { id: 'light', title: t('prefs.themeLight'), description: t('prefs.themeLightDesc') },
+    { id: 'dark', title: t('prefs.themeDark'), description: t('prefs.themeDarkDesc') },
+  ])
+
+  const languageOptions = $derived<RadioOption[]>(LANGS.map((l) => ({ id: l.id, title: l.label, description: '' })))
 </script>
 
-<Modal {open} title="Preferências" {onclose}>
+<Modal {open} title={t('prefs.title')} {onclose}>
   <div class="modal-section">
-    <h2>Aparência</h2>
+    <h2>
+      {t('prefs.language')}
+      <InfoTip text={t('prefs.languageTip')} />
+    </h2>
+    <RadioCardGroup options={languageOptions} selected={language} name={t('prefs.language')} onchange={(id) => onlanguage?.(id as LangId)} />
+  </div>
+
+  <div class="modal-section">
+    <h2>{t('prefs.appearance')}</h2>
     <RadioCardGroup
       options={themeOptions}
       selected={theme}
-      name="tema"
+      name={t('prefs.appearance')}
       onchange={(id) => ontheme?.(id as ThemeChoice)}
     />
   </div>
 
   <div class="modal-section">
     <h2>
-      Binários
-      <InfoTip text="Deixe em branco para usar o ffmpeg e o ffprobe do PATH do sistema. Preencha apenas se eles estiverem em outro lugar." />
+      {t('prefs.binaries')}
+      <InfoTip text={t('prefs.binariesTip')} />
     </h2>
     <label class="field">
-      <span class="field-label">ffmpeg</span>
+      <span class="field-label">{t('prefs.ffmpeg')}</span>
       <input
         type="text"
         class="input mono"
-        placeholder="procurado no PATH"
+        placeholder={t('prefs.pathPlaceholder')}
         value={ffmpegPath}
         oninput={(e) => onffmpegpath?.(e.currentTarget.value)}
       />
     </label>
     <label class="field">
-      <span class="field-label">ffprobe</span>
+      <span class="field-label">{t('prefs.ffprobe')}</span>
       <input
         type="text"
         class="input mono"
-        placeholder="procurado no PATH"
+        placeholder={t('prefs.pathPlaceholder')}
         value={ffprobePath}
         oninput={(e) => onffprobepath?.(e.currentTarget.value)}
       />
@@ -89,15 +104,15 @@
 
   <div class="modal-section">
     <h2>
-      Saída
-      <InfoTip text="Pasta onde o vídeo comprimido é salvo. Vazio significa ao lado do arquivo original." />
+      {t('prefs.output')}
+      <InfoTip text={t('prefs.outputTip')} />
     </h2>
     <label class="field">
-      <span class="field-label">pasta de destino</span>
+      <span class="field-label">{t('prefs.outputDir')}</span>
       <input
         type="text"
         class="input mono"
-        placeholder="ao lado do vídeo original"
+        placeholder={t('prefs.outputDirPh')}
         value={outputDir}
         oninput={(e) => onoutputdir?.(e.currentTarget.value)}
       />
@@ -106,11 +121,11 @@
 
   <div class="modal-section">
     <h2>
-      Áudio
-      <InfoTip text="Sufixo adicionado ao nome do arquivo quando o áudio é extraído de um vídeo (ex.: convite-audio.mp3)." />
+      {t('prefs.audio')}
+      <InfoTip text={t('prefs.audioTip')} />
     </h2>
     <label class="field">
-      <span class="field-label">sufixo do áudio</span>
+      <span class="field-label">{t('prefs.audioSuffix')}</span>
       <input
         type="text"
         class="input mono"
@@ -122,15 +137,15 @@
   </div>
 
   <div class="modal-section">
-    <h2>ffmpeg</h2>
+    <h2>{t('prefs.ffmpegSection')}</h2>
     <div class="modal-row">
       <span class="toggle-label">
-        <span class="radio-card-title">{ffmpegOk ? 'ffmpeg disponível' : 'ffmpeg ausente'}</span>
+        <span class="radio-card-title">{ffmpegOk ? t('prefs.ffmpegOk') : t('prefs.ffmpegBad')}</span>
         <span class="radio-card-desc">
-          {ffmpegMsg || 'Binários ffmpeg/ffprobe procurados no PATH do sistema.'}
+          {ffmpegMsg || t('prefs.ffmpegDesc')}
         </span>
       </span>
-      <button class="btn small" onclick={onRecheck}>verificar de novo</button>
+      <button class="btn small" onclick={onRecheck}>{t('prefs.recheck')}</button>
     </div>
   </div>
 </Modal>

@@ -377,6 +377,8 @@ func TestValidate(t *testing.T) {
 		{"defaults", Defaults(), false},
 		{"idioma vazio é aceito", Config{PresetID: "custom", MaxParallel: 1}, false},
 		{"idioma en", Config{PresetID: "custom", Language: "en", MaxParallel: 1}, false},
+		{"idioma es", Config{PresetID: "custom", Language: "es", MaxParallel: 1}, false},
+		{"idioma zh", Config{PresetID: "custom", Language: "zh", MaxParallel: 1}, false},
 		{"idioma em maiúsculo", Config{PresetID: "custom", Language: "PT", MaxParallel: 1}, false},
 		{"crf no limite", Config{PresetID: "custom", CRF: MaxCRF, Language: "pt", MaxParallel: 1, AudioSuffix: "-audio"}, false},
 		{"preset em branco", Config{PresetID: "\t", Language: "pt", MaxParallel: 1, AudioSuffix: "-audio"}, true},
