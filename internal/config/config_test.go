@@ -42,6 +42,9 @@ func TestDefaults(t *testing.T) {
 	if cfg.NotifyOnDone || cfg.OpenFolderOnDone {
 		t.Errorf("as notificações devem começar desligadas: %+v", cfg)
 	}
+	if cfg.AudioSuffix != "-audio" {
+		t.Errorf("AudioSuffix = %q, want -audio", cfg.AudioSuffix)
+	}
 }
 
 func TestDir(t *testing.T) {
@@ -152,6 +155,7 @@ func TestSaveLoadRoundtrip(t *testing.T) {
 		MaxParallel:      3,
 		NotifyOnDone:     true,
 		OpenFolderOnDone: true,
+		AudioSuffix:      "-music",
 	}
 	if err := store.Save(want); err != nil {
 		t.Fatalf("Save: %v", err)
@@ -233,11 +237,11 @@ func TestSaveValidatesBeforeWriting(t *testing.T) {
 		cfg     Config
 		wantMsg string
 	}{
-		{"preset vazio", Config{PresetID: "  ", Language: "pt", MaxParallel: 1}, "presetId"},
-		{"size negativo", Config{PresetID: "custom", SizeMB: -1, Language: "pt", MaxParallel: 1}, "sizeMB"},
-		{"size acima do limite", Config{PresetID: "custom", SizeMB: MaxSizeMB + 1, Language: "pt", MaxParallel: 1}, "sizeMB"},
-		{"crf acima do limite", Config{PresetID: "custom", CRF: 52, Language: "pt", MaxParallel: 1}, "crf"},
-		{"crf negativo", Config{PresetID: "custom", CRF: -3, Language: "pt", MaxParallel: 1}, "crf"},
+		{"preset vazio", Config{PresetID: "  ", Language: "pt", MaxParallel: 1, AudioSuffix: "-audio"}, "presetId"},
+		{"size negativo", Config{PresetID: "custom", SizeMB: -1, Language: "pt", MaxParallel: 1, AudioSuffix: "-audio"}, "sizeMB"},
+		{"size acima do limite", Config{PresetID: "custom", SizeMB: MaxSizeMB + 1, Language: "pt", MaxParallel: 1, AudioSuffix: "-audio"}, "sizeMB"},
+		{"crf acima do limite", Config{PresetID: "custom", CRF: 52, Language: "pt", MaxParallel: 1, AudioSuffix: "-audio"}, "crf"},
+		{"crf negativo", Config{PresetID: "custom", CRF: -3, Language: "pt", MaxParallel: 1, AudioSuffix: "-audio"}, "crf"},
 		{"paralelismo zero", Config{PresetID: "custom", Language: "pt", MaxParallel: 0}, "maxParallel"},
 		{"idioma desconhecido", Config{PresetID: "custom", Language: "fr", MaxParallel: 1}, "language"},
 	}
@@ -312,37 +316,47 @@ func TestNormalize(t *testing.T) {
 			// compress.EffectivePreset só aplica o override quando > 0.
 			name: "campos de texto vazios voltam ao default",
 			in:   Config{},
-			want: Config{PresetID: "whatsapp-status", Language: "pt", MaxParallel: 1},
+			want: Config{PresetID: "whatsapp-status", Language: "pt", MaxParallel: 1, AudioSuffix: "-audio"},
 		},
 		{
 			name: "espaços em volta dos caminhos são removidos",
 			in:   Config{PresetID: "youtube", OutputDir: "  /tmp  ", FFmpegPath: " /opt/ffmpeg ", Language: "EN", MaxParallel: 2},
-			want: Config{PresetID: "youtube", OutputDir: "/tmp", FFmpegPath: "/opt/ffmpeg", Language: "en", MaxParallel: 2},
+			want: Config{PresetID: "youtube", OutputDir: "/tmp", FFmpegPath: "/opt/ffmpeg", Language: "en", MaxParallel: 2, AudioSuffix: "-audio"},
 		},
 		{
 			name: "crf acima do limite é limitado",
-			in:   Config{PresetID: "custom", CRF: 99, Language: "pt", MaxParallel: 1},
-			want: Config{PresetID: "custom", CRF: MaxCRF, Language: "pt", MaxParallel: 1},
+			in:   Config{PresetID: "custom", CRF: 99, Language: "pt", MaxParallel: 1, AudioSuffix: "-audio"},
+			want: Config{PresetID: "custom", CRF: MaxCRF, Language: "pt", MaxParallel: 1, AudioSuffix: "-audio"},
 		},
 		{
 			name: "crf negativo é limitado",
-			in:   Config{PresetID: "custom", CRF: -10, Language: "pt", MaxParallel: 1},
-			want: Config{PresetID: "custom", CRF: MinCRF, Language: "pt", MaxParallel: 1},
+			in:   Config{PresetID: "custom", CRF: -10, Language: "pt", MaxParallel: 1, AudioSuffix: "-audio"},
+			want: Config{PresetID: "custom", CRF: MinCRF, Language: "pt", MaxParallel: 1, AudioSuffix: "-audio"},
 		},
 		{
 			name: "size negativo é limitado a zero",
-			in:   Config{PresetID: "custom", SizeMB: -5, Language: "pt", MaxParallel: 1},
-			want: Config{PresetID: "custom", SizeMB: 0, Language: "pt", MaxParallel: 1},
+			in:   Config{PresetID: "custom", SizeMB: -5, Language: "pt", MaxParallel: 1, AudioSuffix: "-audio"},
+			want: Config{PresetID: "custom", SizeMB: 0, Language: "pt", MaxParallel: 1, AudioSuffix: "-audio"},
 		},
 		{
 			name: "size acima do limite é limitado",
-			in:   Config{PresetID: "custom", SizeMB: MaxSizeMB * 4, Language: "pt", MaxParallel: 1},
-			want: Config{PresetID: "custom", SizeMB: MaxSizeMB, Language: "pt", MaxParallel: 1},
+			in:   Config{PresetID: "custom", SizeMB: MaxSizeMB * 4, Language: "pt", MaxParallel: 1, AudioSuffix: "-audio"},
+			want: Config{PresetID: "custom", SizeMB: MaxSizeMB, Language: "pt", MaxParallel: 1, AudioSuffix: "-audio"},
 		},
 		{
 			name: "paralelismo abaixo de 1 vira 1",
 			in:   Config{PresetID: "custom", Language: "pt", MaxParallel: -2},
-			want: Config{PresetID: "custom", Language: "pt", MaxParallel: 1},
+			want: Config{PresetID: "custom", Language: "pt", MaxParallel: 1, AudioSuffix: "-audio"},
+		},
+		{
+			name: "sufixo de áudio vazio volta ao default",
+			in:   Config{PresetID: "custom", Language: "pt", MaxParallel: 1, AudioSuffix: "  "},
+			want: Config{PresetID: "custom", Language: "pt", MaxParallel: 1, AudioSuffix: "-audio"},
+		},
+		{
+			name: "sufixo de áudio personalizado é preservado",
+			in:   Config{PresetID: "custom", Language: "pt", MaxParallel: 1, AudioSuffix: "-music"},
+			want: Config{PresetID: "custom", Language: "pt", MaxParallel: 1, AudioSuffix: "-music"},
 		},
 	}
 	for _, tt := range cases {
@@ -364,8 +378,8 @@ func TestValidate(t *testing.T) {
 		{"idioma vazio é aceito", Config{PresetID: "custom", MaxParallel: 1}, false},
 		{"idioma en", Config{PresetID: "custom", Language: "en", MaxParallel: 1}, false},
 		{"idioma em maiúsculo", Config{PresetID: "custom", Language: "PT", MaxParallel: 1}, false},
-		{"crf no limite", Config{PresetID: "custom", CRF: MaxCRF, Language: "pt", MaxParallel: 1}, false},
-		{"preset em branco", Config{PresetID: "\t", Language: "pt", MaxParallel: 1}, true},
+		{"crf no limite", Config{PresetID: "custom", CRF: MaxCRF, Language: "pt", MaxParallel: 1, AudioSuffix: "-audio"}, false},
+		{"preset em branco", Config{PresetID: "\t", Language: "pt", MaxParallel: 1, AudioSuffix: "-audio"}, true},
 		{"idioma inválido", Config{PresetID: "custom", Language: "de", MaxParallel: 1}, true},
 		{"paralelismo inválido", Config{PresetID: "custom", Language: "pt", MaxParallel: 0}, true},
 	}

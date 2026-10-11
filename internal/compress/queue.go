@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/fabianoflorentino/vidctl/internal/audio"
 	"github.com/fabianoflorentino/vidctl/internal/dlog"
 	"github.com/fabianoflorentino/vidctl/internal/events"
 )
@@ -27,7 +28,11 @@ type Task struct {
 	Kind  string
 	JobID string
 	Label string
-	Job   Job
+	// Job runs a compression when Kind is empty or KindCompress.
+	Job Job
+	// InputPath and Spec carry the payload of an audio task (KindAudio).
+	InputPath string
+	Spec      audio.Spec
 }
 
 // TaskStatus is the snapshot of a task sent to the frontend.
@@ -71,6 +76,7 @@ type Manager struct {
 	maxParallel int
 	seq         int64
 	run         func(ctx context.Context, jobID string, job Job) error
+	runAudio    func(ctx context.Context, jobID string, task Task) error
 }
 
 // NewManager creates a queue manager that runs one job at a time.
@@ -78,7 +84,15 @@ func NewManager() *Manager {
 	return &Manager{
 		maxParallel: 1,
 		run:         Run,
+		runAudio:    runAudioTask,
 	}
+}
+
+// runAudioTask is the default audio worker: it dispatches to the extraction
+// pipeline, which emits its own done/error events.
+func runAudioTask(ctx context.Context, jobID string, task Task) error {
+	_, err := audio.Extract(ctx, jobID, task.InputPath, task.Spec)
+	return err
 }
 
 // Enqueue adds a task to the queue and returns its ID and position in the
@@ -167,7 +181,7 @@ func (m *Manager) List() []TaskStatus {
 			JobID:      e.task.JobID,
 			Kind:       e.task.Kind,
 			Label:      e.task.Label,
-			InputPath:  e.task.Job.InputPath,
+			InputPath:  e.task.InputPath,
 			PresetID:   e.task.Job.PresetID,
 			State:      e.state,
 			Percent:    e.percent,
@@ -177,6 +191,9 @@ func (m *Manager) List() []TaskStatus {
 			PartsTotal: e.partsTotal,
 			PartsDone:  e.partsDone,
 			Error:      e.errMsg,
+		}
+		if e.task.InputPath == "" {
+			status.InputPath = e.task.Job.InputPath
 		}
 		if e.state == StateQueued || e.state == StateRunning {
 			pending++
@@ -277,7 +294,11 @@ func (m *Manager) pump() {
 func (m *Manager) worker(ctx context.Context, e *taskEntry) {
 	var err error
 	if ctx.Err() == nil {
-		err = m.run(ctx, e.task.JobID, e.task.Job)
+		if e.task.Kind == events.KindAudio {
+			err = m.runAudio(ctx, e.task.JobID, e.task)
+		} else {
+			err = m.run(ctx, e.task.JobID, e.task.Job)
+		}
 	} else {
 		err = ctx.Err()
 	}

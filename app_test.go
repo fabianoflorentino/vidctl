@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/fabianoflorentino/vidctl/internal/audio"
 	"github.com/fabianoflorentino/vidctl/internal/cmdutil"
 	"github.com/fabianoflorentino/vidctl/internal/compress"
 	"github.com/fabianoflorentino/vidctl/internal/config"
@@ -839,5 +840,151 @@ func TestCompressRejectsInvalidAdjustments(t *testing.T) {
 	}
 	if _, err := a.Compress(compress.Job{InputPath: "in.mp4", PresetID: "youtube", Rotate: 45}); err == nil {
 		t.Error("esperava erro de rotação inválida no enqueue")
+	}
+}
+
+func TestExtractAudioValidation(t *testing.T) {
+	a := newTestApp(t)
+	if _, err := a.ExtractAudio(audio.Spec{}); err == nil || !strings.Contains(err.Error(), "Nenhum vídeo") {
+		t.Errorf("spec vazio deveria falhar citando o vídeo, got %v", err)
+	}
+	spec := audio.Spec{InputPath: "in.mp4", Codec: "ogg", OutputPath: "out.mp3"}
+	if _, err := a.ExtractAudio(spec); err == nil || !strings.Contains(err.Error(), "formato") {
+		t.Errorf("formato inválido deveria falhar, got %v", err)
+	}
+	spec = audio.Spec{InputPath: "in.mp4", Codec: "mp3", OutputPath: ""}
+	if _, err := a.ExtractAudio(spec); err == nil || !strings.Contains(err.Error(), "destino") {
+		t.Errorf("sem destino deveria falhar, got %v", err)
+	}
+}
+
+func TestExtractAudioEnqueuesAndRuns(t *testing.T) {
+	skipOnWindows(t)
+	dir := t.TempDir()
+	scripts := map[string]string{
+		"ffmpeg": `#!/bin/sh
+out=""
+for a in "$@"; do out="$a"; done
+mkdir -p "$(dirname "$out")"
+printf 'audio' > "$out"
+echo out_time_us=1000000
+exit 0
+`,
+		"ffprobe": `#!/bin/sh
+printf '%s\n' '{"streams":[
+	{"codec_type":"video","codec_name":"h264","width":320,"height":240},
+	{"codec_type":"audio","codec_name":"aac"}
+],"format":{"duration":5.0}}'
+`,
+	}
+	for name, script := range scripts {
+		if err := os.WriteFile(filepath.Join(dir, name), []byte(script), 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	t.Setenv("PATH", dir)
+
+	a := NewApp()
+	events.SetEmitter(func(name string, data any) { a.jobs.Observe(name, data) })
+	defer events.SetEmitter(nil)
+
+	out := filepath.Join(t.TempDir(), "in-audio.mp3")
+	jobID, err := a.ExtractAudio(audio.Spec{InputPath: "in.mp4", Codec: "mp3", BitrateKbps: 128, OutputPath: out})
+	if err != nil || jobID == "" {
+		t.Fatalf("ExtractAudio: jobID=%q err=%v", jobID, err)
+	}
+
+	s := waitTaskTerminal(t, a, jobID)
+	if s.State != compress.StateDone {
+		t.Errorf("estado final = %q; queria done (task=%+v)", s.State, s)
+	}
+	if s.Kind != "audio" {
+		t.Errorf("kind = %q; queria audio", s.Kind)
+	}
+	if s.OutputPath != out {
+		t.Errorf("outputPath = %q; queria %q", s.OutputPath, out)
+	}
+	if s.InputPath != "in.mp4" {
+		t.Errorf("inputPath = %q; queria o caminho da extração", s.InputPath)
+	}
+	if st, err := os.Stat(out); err != nil || st.Size() == 0 {
+		t.Errorf("arquivo de áudio ausente: err=%v", err)
+	}
+}
+
+func TestExtractAudioVideoWithoutAudio(t *testing.T) {
+	skipOnWindows(t)
+	dir := t.TempDir()
+	scripts := map[string]string{
+		"ffprobe": `#!/bin/sh
+printf '%s\n' '{"streams":[
+	{"codec_type":"video","codec_name":"h264","width":320,"height":240}
+],"format":{"duration":5.0}}'
+`,
+	}
+	for name, script := range scripts {
+		if err := os.WriteFile(filepath.Join(dir, name), []byte(script), 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	t.Setenv("PATH", dir)
+
+	a := NewApp()
+	out := filepath.Join(t.TempDir(), "in-audio.mp3")
+	jobID, err := a.ExtractAudio(audio.Spec{InputPath: "in.mp4", Codec: "mp3", OutputPath: out})
+	if err != nil {
+		t.Fatalf("ExtractAudio: %v", err)
+	}
+	s := waitTaskTerminal(t, a, jobID)
+	if s.State != compress.StateError || !strings.Contains(s.Error, "não tem faixa de áudio") {
+		t.Errorf("estado final = %+v; queria erro de faixa ausente", s)
+	}
+}
+
+func TestSuggestAudioOutput(t *testing.T) {
+	a := newTestApp(t)
+
+	if _, err := a.SuggestAudioOutput("", "mp3"); err == nil {
+		t.Error("sem entrada deveria falhar")
+	}
+	if _, err := a.SuggestAudioOutput("/tmp/video.mp4", "ogg"); err == nil {
+		t.Error("formato inválido deveria falhar")
+	}
+
+	got, err := a.SuggestAudioOutput(filepath.Join("videos", "meu video.mov"), "flac")
+	if err != nil {
+		t.Fatalf("SuggestAudioOutput: %v", err)
+	}
+	// Sem outputDir na config, o destino é a pasta do vídeo.
+	want := filepath.Join("videos", "meu video-audio.flac")
+	if got != want {
+		t.Errorf("SuggestAudioOutput = %q, want %q", got, want)
+	}
+
+	saved := config.Defaults()
+	saved.OutputDir = filepath.Join("destino")
+	if err := a.SaveConfig(saved); err != nil {
+		t.Fatalf("SaveConfig: %v", err)
+	}
+	got, err = a.SuggestAudioOutput(filepath.Join("videos", "a.mp4"), "mp3")
+	if err != nil {
+		t.Fatalf("SuggestAudioOutput com outputDir: %v", err)
+	}
+	if want := filepath.Join("destino", "a-audio.mp3"); got != want {
+		t.Errorf("SuggestAudioOutput = %q, want %q", got, want)
+	}
+
+	custom := config.Defaults()
+	custom.OutputDir = ""
+	custom.AudioSuffix = "-triha"
+	if err := a.SaveConfig(custom); err != nil {
+		t.Fatalf("SaveConfig: %v", err)
+	}
+	got, err = a.SuggestAudioOutput("/tmp/x.mkv", "opus")
+	if err != nil {
+		t.Fatalf("SuggestAudioOutput com sufixo custom: %v", err)
+	}
+	if want := filepath.Join("/tmp", "x-triha.opus"); got != want {
+		t.Errorf("SuggestAudioOutput = %q, want %q", got, want)
 	}
 }
