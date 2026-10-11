@@ -7,7 +7,9 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 
+	"github.com/fabianoflorentino/vidctl/internal/audio"
 	"github.com/fabianoflorentino/vidctl/internal/cmdutil"
 	"github.com/fabianoflorentino/vidctl/internal/compress"
 	"github.com/fabianoflorentino/vidctl/internal/config"
@@ -310,6 +312,27 @@ func (a *App) OpenThumbnailDialog(suggestedName string) (string, error) {
 	return path, nil
 }
 
+// OpenAudioDialog opens the native save dialog for an extracted track, with a
+// filter matching the chosen format's extension.
+func (a *App) OpenAudioDialog(suggestedName, codec string) (string, error) {
+	ext, err := audio.Extension(codec)
+	if err != nil {
+		return "", err
+	}
+	path, err := wailsruntime.SaveFileDialog(a.ctx, wailsruntime.SaveDialogOptions{
+		Title:           "Salvar áudio",
+		DefaultFilename: suggestedName,
+		Filters: []wailsruntime.FileFilter{{
+			DisplayName: "Áudio",
+			Pattern:     "*." + ext,
+		}},
+	})
+	if err != nil {
+		return "", fmt.Errorf("falha ao abrir o seletor de arquivos: %w", err)
+	}
+	return path, nil
+}
+
 // GetMediaInfo probes a media file and returns its metadata.
 func (a *App) GetMediaInfo(path string) (media.Info, error) {
 	info, err := media.Probe(path)
@@ -381,6 +404,48 @@ func newTask(job compress.Job) compress.Task {
 		Label: filepath.Base(job.InputPath),
 		Job:   job,
 	}
+}
+
+func newAudioTask(spec audio.Spec) compress.Task {
+	return compress.Task{
+		Kind:      events.KindAudio,
+		Label:     filepath.Base(spec.InputPath),
+		InputPath: spec.InputPath,
+		Spec:      spec,
+	}
+}
+
+// ExtractAudio validates the request and enqueues an audio-extraction task,
+// returning its job ID. Failures inside the worker (missing audio track,
+// ffmpeg errors) surface as the item's error event.
+func (a *App) ExtractAudio(req audio.Spec) (string, error) {
+	if strings.TrimSpace(req.InputPath) == "" {
+		return "", errors.New("Nenhum vídeo selecionado")
+	}
+	if err := req.Validate(); err != nil {
+		return "", err
+	}
+	jobID, _ := a.jobs.Enqueue(newAudioTask(req))
+	dlog.Printf("[app] ExtractAudio input=%q codec=%q out=%q job=%s", req.InputPath, req.Codec, req.OutputPath, jobID)
+	return jobID, nil
+}
+
+// SuggestAudioOutput proposes the output path of an extraction, in the saved
+// output directory or next to the input, using the configured suffix.
+func (a *App) SuggestAudioOutput(inputPath, codec string) (string, error) {
+	if strings.TrimSpace(inputPath) == "" {
+		return "", errors.New("Nenhum vídeo selecionado")
+	}
+	cfg := a.loadConfig()
+	name, err := audio.SuggestOutput(inputPath, codec, cfg.AudioSuffix)
+	if err != nil {
+		return "", err
+	}
+	dir := strings.TrimSpace(cfg.OutputDir)
+	if dir == "" {
+		dir = filepath.Dir(inputPath)
+	}
+	return filepath.Join(dir, name), nil
 }
 
 // GetTasks returns the status snapshot of every task in the queue.

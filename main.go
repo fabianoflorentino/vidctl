@@ -30,8 +30,8 @@ func main() {
 	// Create application with options
 	err := wails.Run(&options.App{
 		Title:     "vidctl — compressor de vídeo",
-		Width:     1000,
-		Height:    700,
+		Width:     1360,
+		Height:    768,
 		MinWidth:  720,
 		MinHeight: 600,
 		AssetServer: &assetserver.Options{

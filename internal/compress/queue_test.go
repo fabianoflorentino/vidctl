@@ -154,6 +154,34 @@ func TestCancelRunningTaskStopsRun(t *testing.T) {
 	waitState(t, m, id, StateCanceled)
 }
 
+func TestManagerDispatchesAudioTasks(t *testing.T) {
+	m := NewManager()
+	var audioCalled bool
+	m.run = func(context.Context, string, Job) error {
+		t.Error("tarefa de áudio não deveria passar pelo runner de compressão")
+		return nil
+	}
+	m.runAudio = func(_ context.Context, jobID string, task Task) error {
+		audioCalled = true
+		if task.Kind != events.KindAudio {
+			t.Errorf("kind no runner = %q; queria audio", task.Kind)
+		}
+		if jobID == "" || task.InputPath == "" {
+			t.Errorf("runner deveria receber jobID e input: %q %+v", jobID, task)
+		}
+		return nil
+	}
+
+	id, _ := m.Enqueue(Task{Kind: events.KindAudio, InputPath: "/videos/a.mp4"})
+	s := waitState(t, m, id, StateDone)
+	if !audioCalled {
+		t.Error("runAudio não foi chamado para a tarefa de áudio")
+	}
+	if s.Kind != events.KindAudio || s.InputPath != "/videos/a.mp4" {
+		t.Errorf("status = %+v; queria kind audio e o caminho de entrada", s)
+	}
+}
+
 func TestSetMaxParallel(t *testing.T) {
 	release := make(chan struct{})
 	started := make(chan string, 4)

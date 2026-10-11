@@ -14,25 +14,30 @@ arquivo** (escala, corte, remover áudio, FPS, rotação, thumbnail). 100% offli
 
 - Presets exatos por plataforma (WhatsApp 10/16 MB, Instagram 16 MB, Shorts
   30 MB, YouTube CRF, ou um tamanho livre definido por você)
-- **Corte em partes**: divide o vídeo por tempo — N partes iguais ou X minutos
+- **Cortar**: divide o vídeo por tempo — N partes iguais ou X minutos
   por parte (ex.: 30 min → 6 × 5 min) — com mínimo de 1 min por parte; cada
   parte é comprimida de forma independente e sai como `nome-part1.mp4`, …
   O `min/parte` aceita fração (ex.: `1.5` = 1 m 30 s) e os contadores têm
   campo editável + setas com **Shift** para ajuste fino
-- **Fila de conversões**: adicione vários vídeos de uma vez ("Adicionar
-  vídeos…" ou arrastando vários arquivos) e o app comprime em sequência; a
-  fila mostra status, progresso e cancelamento por item, com "limpar fila"
-  para os concluídos
-- **Drag and drop**: arraste um vídeo para a janela (ou use "Abrir…"); a área
-  de seleção vazia vira um alvo destacado quando você passa por cima, e a
-  janela inteira aceita soltar vídeo a qualquer momento
+- **Fila de tarefas**: comprimir e extrair áudio entram na mesma fila, que
+  processa **um trabalho por vez** (sequencial); cada item mostra status,
+  progresso e cancelamento, com "limpar fila" para os concluídos. O vídeo
+  atual é único — **"Trocar vídeo…"** substitui a seleção sem enfileirar lote
+- **Drag and drop**: na tela vazia, arraste um vídeo para a janela ou use
+  "Abrir…" — a área de seleção vira um alvo em destaque quando você passa por
+  cima. Com vídeo carregado, solte um novo arquivo em qualquer lugar da janela
+  (ou use **"Trocar vídeo…"**) para substituir a seleção
 - **Codec H.265 e aceleração de GPU**: no cartão "Avançado" você troca
   H.264 ↔ H.265 e escolhe o codificador por trabalho — NVENC, QSV, AMF ou
   VideoToolbox — com detecção automática (probe de 1 frame) e, no NVENC, preset
   de velocidade/qualdade `p1`–`p7`
-- **Ajustes por arquivo**: escala (padrão/original/personalizada), corte por
+- **Ajustes de vídeo**: escala (padrão/original/personalizada), corte por
   janela em `mm:ss`, remover áudio, FPS, rotação e geração de thumbnail —
   aplicados por trabalho, além do preset
+- **Extrair áudio**: a seção **"Extrair áudio"** da barra lateral tira a faixa
+  de áudio sem reencodar o vídeo, escolhendo formato (mp3/opus/aac/flac/wav ou
+  copiar), qualidade, canais e normalização — a extração entra na mesma fila
+  de conversões
 - **Sidebar colapsável + tempo de conversão**: os grupos de configuração
   colapsam e expandem (acordeão, um por vez) e cada conversão mostra o tempo
   decorrido e o total ao concluir, facilitando comparar presets e encoders
@@ -43,8 +48,11 @@ arquivo** (escala, corte, remover áudio, FPS, rotação, thumbnail). 100% offli
 - Progresso em tempo real com cancelamento a qualquer momento
 - Painel de progresso abaixo do vídeo com leitura de carga do sistema
   (CPU, memória, processo do ffmpeg e GPU NVIDIA quando disponível)
-- Desktop nativo para **Linux, Windows e macOS** (Wails v2 + WebKit/WebView2)
-- Tema claro/escuro: segue o sistema por padrão e pode ser fixado no botão de
+- Desktop nativo para **Linux, Windows e macOS** (Wails v2 + WebKit/WebView2),
+  abre numa janela de **1360×768** por padrão
+- Tema claro/escuro: **"Sistema"** segue o tema real do desktop (lê o GTK no
+  Linux, `AppleInterfaceStyle` no macOS e o registro no Windows — o WebKit
+  nem sempre reporta o tema certo), e dá para fixar claro/escuro no botão de
   sol/lua no topo (a escolha persiste entre execuções)
 - Visual no padrão **Constrict**: tema escuro fosco com accent slate, tema
   claro derivado e ícone próprio nos instaladores de todas as plataformas
@@ -195,7 +203,7 @@ e o botão "verificar de novo" confere o resultado.
 
 ## Estimativa de tamanho
 
-Antes de comprimir, o vidctl mostra no painel "Tamanho alvo" o tamanho que a
+Antes de comprimir, o vidctl mostra no painel "Tamanho" o tamanho que a
 saída deve ter (badge "esperado ≈ X MB") e a economia em relação ao arquivo
 original, quando o alvo é menor. No modo `size` a previsão é exata: ela usa o
 mesmo orçamento de bits do encode 2-pass (alvo × 0,95 de overhead − áudio,
@@ -247,9 +255,9 @@ para aquele trabalho, sem alterar o preset salvo:
   `p7` prioriza a qualidade. O trade-off é leve no modo tamanho (eficiência de
   compressão).
 
-## Corte em partes (split por tempo)
+## Cortar (split por tempo)
 
-Na barra lateral, o grupo **"Cortar em partes"** divide o vídeo antes de
+Na barra lateral, o grupo **"Cortar"** divide o vídeo antes de
 comprimir — útil quando o destino tem limite de tamanho/duração (ex.: status
 de 60 s) ou quando você quer publicar o conteúdo fatiado.
 
@@ -265,9 +273,9 @@ gera um arquivo `saída-partN.mp4` (índice com zero à esquerda quando são 10+
 partes). O progresso mostra `parte X/N` e, ao final, o app resume a economia
 total sobre o arquivo original.
 
-## Ajustes por arquivo
+## Ajustes de vídeo
 
-O grupo **"Ajustes por arquivo"** aplica controles extras ao vídeo *depois* do
+O grupo **"Ajustes de vídeo"** aplica controles extras ao vídeo *depois* do
 preset, também por trabalho:
 
 | Controle | Comportamento |
@@ -280,23 +288,53 @@ preset, também por trabalho:
 | **Thumbnail** | após o encode, extrai um quadro do vídeo de saída para o arquivo escolhido (`ffmpeg -ss <meio> -frames:v 1`) |
 
 A ordem dos filtros de vídeo é sempre `transpose → scale → fps`. Corte manual
-e **"Cortar em partes"** não podem ser combinados. Formatos de tempo aceitos:
+e **"Cortar"** não podem ser combinados. Formatos de tempo aceitos:
 `90` (segundos), `1:30` (minutos:segundos) e `1:02:30` (horas).
 
-## Fila de conversões
+## Extrair áudio
 
-O botão **"Adicionar vídeos…"** (ou arrastar vários arquivos de uma vez para a
-janela) enfileira um trabalho por arquivo — cada um com o preset/tamanho
-atuais e a saída sugerida ao lado do original. A fila aparece abaixo do vídeo
-com nome, preset, status e barra de progresso do item em execução, e permite
-cancelar item a item ou **limpar fila** (remove concluídos, erros e
-cancelados).
+As **opções** de extração ficam na seção **"Extrair áudio"** da barra lateral
+(formato, qualidade, canais, normalização e janela); o **botão para extrair**
+vive no cartão do vídeo, num caixa igual à do destino (abaixo do "salvar
+como…"), mostrando o caminho do áudio com a extensão do formato escolhido.
+Sem reencodar o vídeo:
 
-- A quantidade de vídeos processando ao mesmo tempo vem de `maxParallel` na
+| Opção | Detalhe |
+|---|---|
+| **Formato** | `mp3`, `opus`, `aac`, `flac`, `wav` ou **copiar** (sinalização, só remux para `.mka` sem recodificar) |
+| **Qualidade** | `kbps` para formatos com perda (32–320); `flac`/`wav`/`copiar` não aceitam bitrate — saem sem perda |
+| **Canais** | manter, mono (`-ac 1`) ou estéreo (`-ac 2`) |
+| **Normalizar** | `-af loudnorm=I=-16:LRA=11:TP=-1.5` (EBU R128, single-pass); não aplicável a `copiar` |
+| **Janela** | extrai só o trecho `início`–`fim` em `mm:ss` (ex.: `1:30`–`3:00`), com seek antes do decode |
+
+- O destino é automático, na pasta preferida ou ao lado do vídeo, com o
+  **sufixo** das Preferências (padrão `-audio`): `convite-audio.mp3`. A caixa
+  de áudio embaixo do destino do vídeo mostra esse caminho (com a extensão do
+  formato selecionado, exemplo `convite-audio.flac`), além do botão
+  **"extrair áudio"** e do **"salvar como…"** para escolher outro destino.
+- A extração entra na **mesma fila de tarefas** (`Task.Kind = audio`):
+  usa os mesmos eventos, mostra progresso (`EXTRAINDO ÁUDIO`) e permite
+  cancelar; ao concluir, o item ganha "abrir pasta".
+- Vídeos **sem faixa de áudio** não mostram a ação e, se tentados, falham com
+  "o vídeo não tem faixa de áudio".
+
+## Fila de tarefas
+
+O vidctl trabalha sobre **um vídeo por vez**: "Trocar vídeo…" (ou arrastar um
+novo arquivo para a janela) substitui a seleção atual e **reseta as opções por
+arquivo** para o padrão (corte, divisão em partes, escala e ajustes). Toda
+operação — comprimir ou extrair áudio — entra na mesma **fila de tarefas**, que
+processa **uma por vez** (sequencial).
+
+A fila aparece abaixo do vídeo com nome, tipo (compressão/extrato de áudio),
+status e barra de progresso do item em execução, e permite cancelar item a
+item ou **limpar fila** (remove concluídos, erros e cancelados).
+
+- A quantidade de trabalhos processando ao mesmo tempo vem de `maxParallel` na
   `config.json` (padrão **1** = sequencial); edite o arquivo e reabra o app
-  para valer.
-- "Comprimir…" continua enfileirando o vídeo selecionado na sidebar, e a barra
-  de ações fica sempre disponível — só "Adicionar vídeos…" depende do ffmpeg.
+  para valer. Com o default, compressão e extração de áudio nunca disputam CPU.
+- "Trocar vídeo…" usa o vídeo escolhido como o novo alvo (mesmo comportamento
+  do ⋮ → "trocar arquivo"); a fila não ganha trabalho extra ao trocar.
 - O progresso é por trabalho (`compress:queued`, `compress:start`,
   `compress:progress`, `compress:done`, `compress:error`), então um erro em um
   item não derruba os demais. Cada trabalho mostra o **tempo de conversão**:
@@ -305,13 +343,16 @@ cancelados).
 
 ## Usabilidade
 
-- **Sidebar colapsável**: os cartões de configuração (`Tamanho alvo`/`Qualidade`,
-  `Avançado`, `Presets`, `Cortar em partes`, `Ajustes por arquivo`) colapsam e
-  expandem pelo cabeçalho; `Avançado`, `Cortar em partes` e `Ajustes` vêm
+- **Sidebar colapsável**: os cartões de configuração (`Tamanho`/`Qualidade`,
+  `Avançado`, `Presets`, `Cortar`, `Extrair áudio`, `Ajustes de vídeo`) colapsam e
+  expandem pelo cabeçalho; `Avançado`, `Cortar`, `Extrair áudio` e `Ajustes de
+  vídeo` vêm
   fechados por padrão.
-- **Arrastar e soltar**: a janela principal aceita soltar vídeos em qualquer
-  momento (área "arraste um vídeo aqui" + botão "abrir vídeo…"); um arquivo
-  troca a entrada e vários enfileiram.
+- **Arrastar e soltar**: a janela inteira aceita soltar um vídeo em qualquer
+  momento — na tela vazia há a área de seleção com "abrir vídeo…", e com o
+  vídeo carregado o alvo superior foi removido (o botão da barra de ações
+  **"Trocar vídeo…"** já faz a troca, e um arquivo solto na janela substitui a
+  entrada e reseta os ajustes por arquivo).
 
 ## Stack
 

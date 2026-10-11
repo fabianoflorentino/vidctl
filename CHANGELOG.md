@@ -11,7 +11,40 @@ operacional dos pacotes.
 
 ## [Unreleased]
 
-Nada ainda — em desenvolvimento.
+- **Extrair áudio de um vídeo** (fase 6): a nova seção **"Extrair áudio"** da
+  barra lateral extrai a faixa sem reencodar o vídeo, escolhendo formato (mp3,
+  opus, aac, flac, wav ou copiar — sinalização de stream, só remux), qualidade
+  (kbps), canais (mono/estéreo), normalização EBU R128 (loudnorm) e uma janela
+  de tempo (mm:ss). A extração entra na mesma fila de tarefas, com progresso,
+  cancelamento e abrir pasta ao concluir. O sufixo do arquivo de saída é
+  configurável nas Preferências (`-audio` por padrão).
+- **Nomes da barra lateral**: "Cortar em partes" virou **"Cortar"** e "Ajustes
+  por arquivo" virou **"Ajustes de vídeo"**, deixando claro o que pertence a
+  áudio (extração) e o que pertence ao vídeo (escala, corte, FPS, rotação…)
+- **Um vídeo por vez**: "Adicionar vídeos…" virou **"Trocar vídeo…"** — trocar
+  o vídeo substitui a seleção, **reseta as opções por arquivo** ao padrão e
+  não enfileira mais lote (o app processa um trabalho por vez, sequencial).
+- **Fila de conversões → Fila de tarefas**: a fila passou a listar qualquer
+  trabalho (comprimir ou extrair áudio), com contador de tarefas.
+- **Menos redundância**: com o vídeo carregado, a área de destino (drop-target)
+  no topo do conteúdo foi removida — a troca fica no botão **"Trocar vídeo…"**
+  ou soltando um novo arquivo em qualquer lugar da janela; a área só permanece
+  na tela vazia.
+- **Tipografia maior**: toda a interface da janela subiu **1px** em cada
+  tamanho de fonte (a hierarquia se mantém; os textos densos do painel e da
+  fila ficam mais confortáveis de ler).
+- **Botão "extrair áudio" no cartão do vídeo**: as opções de áudio continuam na
+  sidebar, mas o botão de extrair agora vive num cartão próprio abaixo do
+  destino do vídeo (mesma aparência do "salvar como…"), com o caminho do áudio
+  mostrando a extensão do formato selecionado (`.mp3`, `.flac`, `.wav`…) e um
+  **"salvar como…"** para escolher outro destino.
+- **Janela maior por padrão**: a janela abre em **1360×768** (antes 1000×700).
+- **"Tamanho alvo" → "Tamanho"**: a seção da sidebar ficou só **Tamanho** e o
+  rótulo do controle virou **megabytes** (sem a ambiguidade de MB = mega-bit).
+- **Tema "sistema" fiel**: a opção de aparência "Sistema" agora lê o tema real
+  do desktop (gsettings/GTK no Linux, `AppleInterfaceStyle` no macOS, registro
+  no Windows) em vez de confiar no `prefers-color-scheme` do WebKit, que no
+  Linux reportava "claro" mesmo com o sistema escuro.
 
 ## [2.2.1] — 2026-10-11
 

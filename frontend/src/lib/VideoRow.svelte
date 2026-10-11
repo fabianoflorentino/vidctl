@@ -31,10 +31,10 @@
 
   const orientation = $derived(info.width > info.height ? '16:9' : '9:16')
 
-  const kebabItems: KebabItem[] = [
+  const kebabItems = $derived<KebabItem[]>([
     { id: 'switch', label: 'trocar arquivo' },
     { id: 'clear', label: 'limpar' },
-  ]
+  ])
 
   function onKebab(id: string) {
     if (id === 'switch') onSwitch()

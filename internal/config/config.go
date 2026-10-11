@@ -46,6 +46,8 @@ type Config struct {
 	MaxParallel      int     `json:"maxParallel"`
 	NotifyOnDone     bool    `json:"notifyOnDone"`
 	OpenFolderOnDone bool    `json:"openFolderOnDone"`
+	// AudioSuffix is appended to the file name of an extracted track.
+	AudioSuffix string `json:"audioSuffix"`
 }
 
 // Defaults returns the configuration used on a fresh install.
@@ -58,6 +60,7 @@ func Defaults() Config {
 		MaxParallel:      1,
 		NotifyOnDone:     false,
 		OpenFolderOnDone: false,
+		AudioSuffix:      "-audio",
 	}
 }
 
@@ -85,6 +88,10 @@ func (c Config) Normalize() Config {
 	out.Language = strings.ToLower(strings.TrimSpace(out.Language))
 	if out.Language == "" {
 		out.Language = Defaults().Language
+	}
+	out.AudioSuffix = strings.TrimSpace(out.AudioSuffix)
+	if out.AudioSuffix == "" {
+		out.AudioSuffix = Defaults().AudioSuffix
 	}
 	out.SizeMB = clamp(out.SizeMB, 0, MaxSizeMB)
 	out.CRF = clamp(out.CRF, MinCRF, MaxCRF)

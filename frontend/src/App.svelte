@@ -4,13 +4,11 @@
     CheckFFmpeg,
     GetPresets,
     OpenInputDialog,
-    OpenMultipleDialog,
     GetMediaInfo,
     GetThumbnail,
     OpenOutputDialog,
     OpenThumbnailDialog,
     Compress as StartCompress,
-    CompressMultiple,
     DebugEnabled,
     DebugLog,
     GetTasks,
@@ -24,9 +22,12 @@
     SaveConfig,
     GetEncoders,
     RefreshEncoders,
+    ExtractAudio,
+    OpenAudioDialog,
+    SystemTheme,
   } from '../wailsjs/go/main/App.js'
   import { EventsOn, EventsOff, OnFileDrop, OnFileDropOff, Environment } from '../wailsjs/runtime/runtime.js'
-  import type { main, presets, media, config, encode } from '../wailsjs/go/models.js'
+  import type { main, presets, media, config, encode, audio } from '../wailsjs/go/models.js'
   import { compress as bindings, config as configBindings } from '../wailsjs/go/models.js'
   import StatusPage from './lib/StatusPage.svelte'
   import VideoRow from './lib/VideoRow.svelte'
@@ -34,8 +35,8 @@
 import RadioCardGroup from './lib/RadioCardGroup.svelte'
   import Toggle from './lib/Toggle.svelte'
   import Section from './lib/Section.svelte'
-  import DropTarget from './lib/DropTarget.svelte'
   import PreferencesModal from './lib/PreferencesModal.svelte'
+  import AudioPanel from './lib/AudioPanel.svelte'
   import { stageLabel } from './lib/stages'
 
   type ProgressEv = { jobId: string; stage: string; percent: number }
@@ -46,6 +47,8 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   type QueueState = 'queued' | 'running' | 'done' | 'error' | 'canceled'
   type QueueItem = {
     jobId: string
+    kind: 'compress' | 'audio'
+    meta: string
     label: string
     inputPath: string
     outputPath: string
@@ -68,21 +71,34 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   let ffmpegMsg = $state('')
 
   let theme = $state<ThemeChoice>('system')
+  let systemDark = $state(false)
+  let systemResolved = $state(false)
 
   try {
     const saved = localStorage.getItem('vidctl-theme')
     if (saved === 'light' || saved === 'dark') {
       theme = saved
-      document.documentElement.dataset.theme = saved
     }
   } catch {
-    /* localStorage indisponível: segue o tema do sistema */
+    /* localStorage indisponível: segue o sistema */
   }
+
+  // O WebKitGTK (Linux) costuma reportar prefers-color-scheme: light mesmo com
+  // o desktop escuro; o tema real vem do backend (gsettings/registry/defaults)
+  // e o matchMedia só acompanha mudanças ao vivo.
+  $effect(() => {
+    if (theme !== 'system') return
+    if (!systemResolved) return
+    document.documentElement.dataset.theme = systemDark ? 'dark' : 'light'
+  })
 
   function setTheme(next: ThemeChoice) {
     theme = next
-    if (next === 'system') delete document.documentElement.dataset.theme
-    else document.documentElement.dataset.theme = next
+    if (next === 'system') {
+      document.documentElement.dataset.theme = systemDark ? 'dark' : 'light'
+    } else {
+      document.documentElement.dataset.theme = next
+    }
     try {
       localStorage.setItem('vidctl-theme', next)
     } catch {
@@ -106,6 +122,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   let outputDir = $state('')
   let ffmpegPath = $state('')
   let ffprobePath = $state('')
+  let audioSuffix = $state('-audio')
   let configReady = $state(false)
   let saveTimer: ReturnType<typeof setTimeout> | undefined
 
@@ -120,6 +137,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
     maxParallel: 1,
     notifyOnDone: false,
     openFolderOnDone: false,
+    audioSuffix: '-audio',
   })
 
   function currentConfig(): config.Config {
@@ -131,6 +149,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
       outputDir,
       ffmpegPath,
       ffprobePath,
+      audioSuffix,
     })
   }
 
@@ -228,6 +247,8 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
 
   function createItem(fields: Partial<QueueItem> & { jobId: string; inputPath: string; presetId: string }) {
     const item: QueueItem = {
+      kind: 'compress',
+      meta: '',
       label: '',
       outputPath: '',
       state: 'queued',
@@ -254,6 +275,8 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   function fromTask(t: bindings.TaskStatus): QueueItem {
     return {
       jobId: t.jobId,
+      kind: t.kind === 'audio' ? 'audio' : 'compress',
+      meta: '',
       label: t.label,
       inputPath: t.inputPath,
       outputPath: t.outputPath,
@@ -301,7 +324,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
     }
   }
 
-  const previewItem = $derived(queue.filter((i) => i.inputPath === inputPath).at(-1) ?? null)
+  const previewItem = $derived(queue.filter((i) => i.kind === 'compress' && i.inputPath === inputPath).at(-1) ?? null)
   const previewState = $derived(previewItem?.state ?? 'idle')
   const previewBusy = $derived(previewState === 'queued' || previewState === 'running')
   const previewDone = $derived(previewState === 'done')
@@ -316,6 +339,10 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   })
 
   let prefsOpen = $state(false)
+  let audioSpec = $state<audio.Spec | undefined>(undefined)
+  let audioInvalid = $state('')
+  let audioOutputPath = $state('')
+  let audioManual = $state(false)
   let dragging = $state(false)
   let nativeFileDrop = true
 
@@ -333,6 +360,9 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
       error = msg
       return
     }
+    // Novo vídeo: descarta o ajuste do anterior e volta as opções por arquivo
+    // ao default (corte, split, escala, áudio, codec/hardware).
+    resetPerFileOptions()
     inputPath = path
     outputPath = ''
     error = ''
@@ -357,13 +387,30 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
     }
   }
 
+  function resetPerFileOptions() {
+    scaleMode = 'default'
+    scaleCustom = '1280x720'
+    trimStart = ''
+    trimEnd = ''
+    removeAudio = false
+    fps = 0
+    rotate = 0
+    thumbnailOn = false
+    thumbnailPath = ''
+    splitOn = false
+    splitAxis = 'parts'
+    splitParts = 6
+    splitMinutes = 5
+    codec = 'h264'
+    hardware = ''
+    nvencPreset = 'p4'
+    audioOutputPath = ''
+    audioManual = false
+  }
+
   function handleDrop(paths: string[]) {
-    const videos = paths.filter(isVideoPath)
-    if (videos.length > 1) {
-      void enqueuePaths(videos)
-      return
-    }
-    const first = videos[0] ?? paths[0]
+    // Modelo de alvo único: soltar vídeo troca o atual, sem enfileirar lote.
+    const first = paths.find(isVideoPath) ?? paths[0]
     if (first) adoptFile(first)
   }
 
@@ -550,6 +597,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
     presets: false,
     split: false,
     ajustes: false,
+    audio: false,
   })
 
   function toggleSection(key: keyof typeof sectionState) {
@@ -796,6 +844,21 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   )
 
   onMount(() => {
+    const mq = window.matchMedia('(prefers-color-scheme: dark)')
+    const onMode = () => {
+      if (systemResolved) systemDark = mq.matches
+    }
+    if (mq.addEventListener) mq.addEventListener('change', onMode)
+    SystemTheme()
+      .then((t) => {
+        systemDark = t === 'dark'
+        systemResolved = true
+      })
+      .catch(() => {
+        systemDark = !!mq.matches
+        systemResolved = true
+      })
+
     load()
     Environment()
       .then((env) => (nativeFileDrop = env.platform !== 'linux'))
@@ -943,6 +1006,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
       outputDir = saved.outputDir ?? ''
       ffmpegPath = saved.ffmpegPath ?? ''
       ffprobePath = saved.ffprobePath ?? ''
+      audioSuffix = saved.audioSuffix ?? '-audio'
 
       const p = presetList.find((x) => x.id === selectedPresetId)
       if (p?.mode === 'size' && !hasSavedSize) sizeMB = p.sizeMB
@@ -1028,49 +1092,6 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
     }
   }
 
-  async function enqueuePaths(paths: string[]) {
-    const active = new Set(
-      queue.filter((i) => i.state === 'queued' || i.state === 'running').map((i) => i.inputPath),
-    )
-    const usable = paths.filter(isVideoPath).filter((p) => !active.has(p))
-    if (!usable.length) return
-
-    const parts = jobParts()
-    const jobs = usable.map((p) => buildJob(p, suggestedOutput(p.replace(/\.[^.]+$/, ''))))
-    error = ''
-    dbg(`enqueuePaths ${usable.length} vídeos`)
-    try {
-      const acks = await CompressMultiple(jobs)
-      dbg(`CompressMultiple ok acks=${acks.length}`)
-      if (usable[0]) await adoptFile(usable[0])
-      acks.forEach((ack, idx) => {
-        if (ack.error) {
-          dbg(`ack com erro: ${ack.error}`)
-          error = ack.error
-          return
-        }
-        const job = jobs[idx]
-        createItem({
-          jobId: ack.jobId,
-          label: fileName(job.inputPath),
-          inputPath: job.inputPath,
-          outputPath: job.outputPath,
-          presetId: job.presetId,
-          partsTotal: parts,
-        })
-      })
-    } catch (err) {
-      dbg(`enqueuePaths erro=${String(err)}`)
-      error = String(err)
-    }
-  }
-
-  async function addVideos() {
-    const paths = await OpenMultipleDialog()
-    if (!paths?.length) return
-    await enqueuePaths(paths)
-  }
-
   async function cancelItem(jobId: string) {
     try {
       await CancelJob(jobId)
@@ -1082,6 +1103,55 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
       i.state = 'canceled'
       i.stage = ''
     })
+  }
+
+  async function extractAudio(spec: audio.Spec) {
+    try {
+      const jobId = await ExtractAudio(spec)
+      dbg(`ExtractAudio ok job=${jobId} codec=${spec.codec}`)
+      createItem({
+        jobId,
+        kind: 'audio',
+        meta: spec.codec,
+        label: fileName(spec.inputPath),
+        inputPath: spec.inputPath,
+        presetId: '',
+        outputPath: spec.outputPath,
+      })
+    } catch (err) {
+      dbg(`ExtractAudio erro=${String(err)}`)
+      error = String(err)
+    }
+  }
+
+  const AUDIO_EXTS: Record<string, string> = { mp3: 'mp3', opus: 'opus', aac: 'aac', flac: 'flac', wav: 'wav', copy: 'mka' }
+
+  function canExtractAudio(): boolean {
+    return !!ffmpegOk && !!info?.hasAudio && !!audioSpec && !audioInvalid && !!audioSpec.outputPath
+  }
+
+  // Rótulo da caixa de áudio: usa o caminho sugerido pelo backend e, enquanto
+  // ele não chega, um placeholder com a mesma convenção (pasta + sufixo + ext).
+  function audioOutputLabel(): string {
+    if (audioSpec?.outputPath) return audioSpec.outputPath
+    const codec = audioSpec?.codec ?? 'mp3'
+    const base = (inputPath.split(/[\\/]/).pop() || 'video').replace(/\.[^.]+$/, '')
+    return targetDir() + base + (audioSuffix || '-audio') + '.' + (AUDIO_EXTS[codec] ?? 'mp3')
+  }
+
+  function extractAudioNow() {
+    if (!canExtractAudio() || !audioSpec) return
+    void extractAudio(audioSpec)
+  }
+
+  async function pickAudioOutput() {
+    const codec = audioSpec?.codec ?? 'mp3'
+    const suggested = (audioSpec?.outputPath || audioOutputLabel()).split(/[\\/]/).pop() || `audio.${AUDIO_EXTS[codec] ?? 'mp3'}`
+    const path = await OpenAudioDialog(suggested, codec)
+    if (path) {
+      audioOutputPath = path
+      audioManual = true
+    }
   }
 
   async function clearFinished() {
@@ -1147,9 +1217,9 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
       onmouseleave={() => (sbHover = false)}
     >
       {#if selectedPreset?.mode === 'size'}
-        <Section title="Tamanho alvo" open={sectionState.config} onchange={() => toggleSection("config")} infoTip="Presets de tamanho fazem o ffmpeg calcular o bitrate pela duração para caber no alvo (encode 2-pass).">
+        <Section title="Tamanho" open={sectionState.config} onchange={() => toggleSection("config")} infoTip="Presets de tamanho fazem o ffmpeg calcular o bitrate pela duração para caber no alvo (encode 2-pass).">
           <div class="tune-row">
-            <span class="meta-k">tamanho (MB)</span>
+            <span class="meta-k">megabytes</span>
             <Stepper value={sizeMB} min={2} max={100} digits={1} ariaLabel="tamanho alvo" onchange={(v) => (sizeMB = v)} />
           </div>
             {#if sizeEstimate?.available}
@@ -1242,7 +1312,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
           <RadioCardGroup options={presetOptions} selected={selectedPresetId} name="presets" onchange={selectPresetById} />
           </Section>
 
-      <Section title="Cortar em partes" open={sectionState.split} onchange={() => toggleSection("split")} infoTip="Divide o vídeo em partes sequenciais de duração fixa. Cada parte passa pela compressão escolhida. Mínimo de 1 minuto por parte; a última pode ficar menor ou levar a sobra. Ajuste um dos contadores para ativar o corte.">
+      <Section title="Cortar" open={sectionState.split} onchange={() => toggleSection("split")} infoTip="Divide o vídeo em partes sequenciais de duração fixa. Cada parte passa pela compressão escolhida. Mínimo de 1 minuto por parte; a última pode ficar menor ou levar a sobra. Ajuste um dos contadores para ativar o corte.">
           <div class="split-head">
             <div class="split-toggle">
               <button class="btn small" class:solid={!splitOn} onclick={() => (splitOn = false)}>
@@ -1274,7 +1344,24 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
           {/if}
           </Section>
 
-      <Section title="Ajustes por arquivo" open={sectionState.ajustes} onchange={() => toggleSection("ajustes")} infoTip="Escala, corte por janela (mm:ss), remoção de áudio, FPS, rotação e geração de thumbnail — aplicados além do preset, por trabalho.">
+      <Section title="Extrair áudio" open={sectionState.audio} onchange={() => toggleSection("audio")} infoTip="Opções da extração de áudio (formato, qualidade, canais, normalização e janela). A extração é disparada pelo botão na caixa do vídeo, abaixo do destino.">
+          {#if !info}
+            <div class="hint">escolha o vídeo para extrair o áudio</div>
+          {:else}
+            {#key inputPath}
+              <AudioPanel
+                {inputPath}
+                hasAudio={info.hasAudio}
+                bind:spec={audioSpec}
+                bind:invalid={audioInvalid}
+                bind:outputPath={audioOutputPath}
+                bind:manual={audioManual}
+              />
+            {/key}
+          {/if}
+          </Section>
+
+      <Section title="Ajustes de vídeo" open={sectionState.ajustes} onchange={() => toggleSection("ajustes")} infoTip="Escala, corte por janela (mm:ss), remoção de áudio, FPS, rotação e geração de thumbnail — aplicados além do preset, por trabalho.">
           <div class="meta-k">escala</div>
             <RadioCardGroup options={scaleOptions} selected={scaleMode} name="scale" onchange={(v) => (scaleMode = v as ScaleMode)} />
             {#if scaleMode === 'custom'}
@@ -1349,7 +1436,6 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
     </aside>
 
     <main class="content dropzone" class:hot={dragging}>
-      <DropTarget hot={dragging} onOpen={pickInput} />
       <div class="sources-head">
         <span class="group-card-title">Fontes de vídeo</span>
         {#if info}
@@ -1375,6 +1461,17 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
                 {outputPath || 'escolha o vídeo para gerar o caminho de saída'}
               </span>
               <button class="btn subtle small" onclick={pickOutput} disabled={!inputPath}>salvar como…</button>
+            </div>
+          </div>
+        </div>
+        <div class="out-card group-card">
+          <div class="group-card-body">
+            <div class="out-row">
+              <button class="btn solid small" onclick={extractAudioNow} disabled={!canExtractAudio()}>extrair áudio</button>
+              <span class="out-path mono" class:empty={!audioSpec?.outputPath} title={audioOutputLabel()}>
+                {audioOutputLabel()}
+              </span>
+              <button class="btn subtle small" onclick={pickAudioOutput} disabled={!info?.hasAudio}>salvar como…</button>
             </div>
           </div>
         </div>
@@ -1427,8 +1524,8 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
       {#if queue.length > 0}
         <div class="queue-card">
           <div class="queue-head">
-            <span class="group-card-title">Fila de conversões</span>
-            <span class="queue-count mono">{queue.length} {queue.length === 1 ? 'vídeo' : 'vídeos'}</span>
+            <span class="group-card-title">Fila de tarefas</span>
+            <span class="queue-count mono">{queue.length} {queue.length === 1 ? 'tarefa' : 'tarefas'}</span>
             {#if hasFinished}
               <button class="btn subtle small" onclick={clearFinished}>limpar fila</button>
             {/if}
@@ -1440,7 +1537,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
                 <div class="qi-body">
                   <div class="qi-line">
                     <span class="qi-label" title={item.inputPath}>{item.label}</span>
-                    <span class="qi-preset mono">{presetName(item.presetId)}</span>
+                    <span class="qi-preset mono">{item.kind === 'audio' ? (item.meta || 'áudio').toUpperCase() : presetName(item.presetId)}</span>
                     <span class="qi-state mono">{stateLabel(item)}</span>
                   </div>
                   {#if item.state === 'running' && item.jobId !== previewItem?.jobId}
@@ -1450,7 +1547,9 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
                     <div class="qi-error mono">{item.error}</div>
                   {/if}
                 </div>
-                {#if item.state === 'queued' || item.state === 'running'}
+                {#if item.state === 'done' && item.kind === 'audio' && item.outputPath}
+                  <button class="btn subtle small" onclick={() => OpenFolder(item.outputPath)}>abrir pasta</button>
+                {:else if item.state === 'queued' || item.state === 'running'}
                   <button class="btn subtle small" onclick={() => cancelItem(item.jobId)}>cancelar</button>
                 {/if}
               </li>
@@ -1506,7 +1605,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
 
       <div class="actionbar">
         <button class="pill-btn" onclick={compress} disabled={!canRun()}>Comprimir…</button>
-        <button class="btn" onclick={addVideos} disabled={!ffmpegOk}>Adicionar vídeos…</button>
+        <button class="btn" onclick={pickInput} disabled={!ffmpegOk}>Trocar vídeo…</button>
       </div>
     </main>
   </div>
@@ -1524,10 +1623,12 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   {outputDir}
   {ffmpegPath}
   {ffprobePath}
+  {audioSuffix}
   onclose={() => (prefsOpen = false)}
   ontheme={setTheme}
   onRecheck={checkFFmpeg}
   onoutputdir={(v) => (outputDir = v)}
   onffmpegpath={(v) => (ffmpegPath = v)}
   onffprobepath={(v) => (ffprobePath = v)}
+  onaudiosuffix={(v) => (audioSuffix = v)}
 />

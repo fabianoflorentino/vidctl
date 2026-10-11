@@ -87,7 +87,7 @@ compilando e o fluxo atual funcionando; merge só com aceite visual do usuário.
 ### Fase 3 — Layout + drag and drop (1–1,5 d)
 
 - `App.svelte`: topbar mínima (título + hambúrguer → Preferências); sidebar em
-  cards (Tamanho alvo, Presets, Corte, Saída) usando os componentes da Fase 2;
+  cards (Tamanho, Presets, Corte, Saída) usando os componentes da Fase 2;
   main com lista estilo "Video Sources" (linha do vídeo ativo + header com
   limpar); pill "Comprimir…" no rodapé substituindo a actionbar.
 - `StatusPage.svelte` vira o empty state do checklist §1 (ícone, textos, pill

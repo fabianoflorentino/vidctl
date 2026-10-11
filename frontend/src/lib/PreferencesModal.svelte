@@ -14,12 +14,14 @@
     outputDir: string
     ffmpegPath: string
     ffprobePath: string
+    audioSuffix: string
     onclose?: () => void
     ontheme?: (theme: ThemeChoice) => void
     onRecheck?: () => void
     onoutputdir?: (value: string) => void
     onffmpegpath?: (value: string) => void
     onffprobepath?: (value: string) => void
+    onaudiosuffix?: (value: string) => void
   }
 
   let {
@@ -30,12 +32,14 @@
     outputDir,
     ffmpegPath,
     ffprobePath,
+    audioSuffix,
     onclose = () => {},
     ontheme,
     onRecheck,
     onoutputdir,
     onffmpegpath,
     onffprobepath,
+    onaudiosuffix,
   }: Props = $props()
 
   const themeOptions: RadioOption[] = [
@@ -96,6 +100,23 @@
         placeholder="ao lado do vídeo original"
         value={outputDir}
         oninput={(e) => onoutputdir?.(e.currentTarget.value)}
+      />
+    </label>
+  </div>
+
+  <div class="modal-section">
+    <h2>
+      Áudio
+      <InfoTip text="Sufixo adicionado ao nome do arquivo quando o áudio é extraído de um vídeo (ex.: convite-audio.mp3)." />
+    </h2>
+    <label class="field">
+      <span class="field-label">sufixo do áudio</span>
+      <input
+        type="text"
+        class="input mono"
+        placeholder="-audio"
+        value={audioSuffix}
+        oninput={(e) => onaudiosuffix?.(e.currentTarget.value)}
       />
     </label>
   </div>

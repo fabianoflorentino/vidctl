@@ -613,7 +613,8 @@ a {
 .apick,
 .abar,
 .aout,
-.asum {
+.asum,
+.aq {
   display: none;
 }
 
@@ -643,6 +644,155 @@ a {
 
 .demo.st-pick .apick {
   display: flex;
+}
+
+/* demo: extração de áudio (tela própria com fila de tarefas) */
+.demo.st-audio-run .avideo,
+.demo.st-audio-done .avideo,
+.demo.st-audio-run .aq,
+.demo.st-audio-done .aq {
+  display: flex;
+}
+
+.demo.st-audio-run .abar,
+.demo.st-audio-done .abar {
+  display: none;
+}
+
+.aq {
+  flex-direction: column;
+  gap: 10px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+}
+
+.aaudio {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+}
+
+.obtn.solid {
+  background: var(--acc);
+  border-color: var(--acc);
+  color: var(--acc-ink);
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.demo.st-audio-run .aaudio,
+.demo.st-audio-done .aaudio {
+  display: flex;
+}
+
+.aqhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.aqhead .aqcount {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--dim);
+}
+
+.aq-run {
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 2px;
+}
+
+.aq-done {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.aq-run {
+  display: none;
+}
+
+.aq-done {
+  display: none;
+}
+
+.demo.st-audio-run .aq-run {
+  display: flex;
+}
+
+.demo.st-audio-done .aq-done {
+  display: flex;
+}
+
+.aqrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.aqdot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--acc);
+}
+
+.aqname {
+  flex: 0 1 auto;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.aqtag {
+  flex: none;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 1px 8px;
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--dim);
+}
+
+.aqstate {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  color: var(--dim);
+}
+
+.aqstate b {
+  color: var(--acc);
+}
+
+.aqres {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ok);
+}
+
+.aqres b {
+  color: var(--ok);
 }
 
 /* demo: acordeão e cartões novos */

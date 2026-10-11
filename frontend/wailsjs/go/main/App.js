@@ -34,6 +34,10 @@ export function EstimateSize(arg1) {
   return window['go']['main']['App']['EstimateSize'](arg1);
 }
 
+export function ExtractAudio(arg1) {
+  return window['go']['main']['App']['ExtractAudio'](arg1);
+}
+
 export function GetAdvice(arg1) {
   return window['go']['main']['App']['GetAdvice'](arg1);
 }
@@ -66,6 +70,10 @@ export function GetUsage() {
   return window['go']['main']['App']['GetUsage']();
 }
 
+export function OpenAudioDialog(arg1, arg2) {
+  return window['go']['main']['App']['OpenAudioDialog'](arg1, arg2);
+}
+
 export function OpenFolder(arg1) {
   return window['go']['main']['App']['OpenFolder'](arg1);
 }
@@ -92,4 +100,12 @@ export function RefreshEncoders() {
 
 export function SaveConfig(arg1) {
   return window['go']['main']['App']['SaveConfig'](arg1);
+}
+
+export function SuggestAudioOutput(arg1, arg2) {
+  return window['go']['main']['App']['SuggestAudioOutput'](arg1, arg2);
+}
+
+export function SystemTheme() {
+  return window['go']['main']['App']['SystemTheme']();
 }

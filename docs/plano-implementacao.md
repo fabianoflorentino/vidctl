@@ -34,8 +34,8 @@ Branch            | Fase | PR
 `feat/fila`       | 2 — Fila de conversões | aberto
 `feat/estimativa` | 3 — Estimativa de tamanho | mergeado
 `feat/hevc`       | 4 — HEVC/x265 + GPU (hardware) | mergeado
-`feat/ajustes`    | 5 — Ajustes por arquivo | aberto
-`feat/audio`      | 6 — Extração de áudio | pendente
+`feat/ajustes`    | 5 — Ajustes por arquivo | mergeado
+`feat/audio`      | 6 — Extração de áudio | aberto
 `feat/notificacao`| 7 — Notificação + abrir pasta | pendente
 `feat/updates`    | 8 — Verificação de atualização | pendente
 `feat/presets`    | 9 — Presets personalizados | pendente
@@ -57,7 +57,7 @@ Branch            | Fase | PR
 | 3 | Estimativa de tamanho antes do encode | §3 | M |
 | 4 | Codec HEVC/x265 + aceleração de GPU (NVENC/AMF/QSV/VideoToolbox) | §4 | G |
 | 5 | Ajustes por arquivo (escala, corte, áudio, FPS, thumbnail) | §5 | G |
-| 6 | Extração de áudio com opções (mp3/opus/aac/flac/wav/copiar) | §6 | M |
+| 6 | Extração de áudio com opções (mp3/opus/aac/flac/wav/copiar) | §6 | M | ✅ |
 | 7 | Notificação ao concluir + abrir pasta | §7 | P |
 | 8 | Verificação de atualização no app | §8 | M |
 | 9 | Presets personalizados pelo usuário | §9 | M |
@@ -396,6 +396,20 @@ VideoToolbox) com detecção de disponibilidade e fallback para software.
 escolhas explícitas de formato, qualidade, canais e normalização. Hoje o app
 só comprime vídeo; extração é um botão novo no card do arquivo.
 
+> **Status: ✅ implementada** — ver `feat/audio`. O `Spec` ganhou um campo
+> `InputPath` (o modal é aberto a partir do vídeo atual, então a entrada vem
+> junto do pedido, não separada). A fila ganhou despacho por `Kind`: o
+> `compress.Manager` roda `audio.Extract` para `Task.Kind = "audio"` e continua
+> usando `compress.Run` para compressão; os eventos `done`/`progress`/`error`
+> já carregam `Kind="audio"` (fase 2), então a UI roteia por `jobId` sem
+> mudança de evento. Novo binding `ExtractAudio(spec)`, `SuggestAudioOutput` e
+> `OpenAudioDialog` com filtro pela extensão do formato. A configuração ganhou
+> `AudioSuffix` (default `-audio`). Na entrega, a UI passou para um **vídeo por
+> vez**: "Adicionar vídeos…" virou "Trocar vídeo…" (troca a seleção e reseta as
+> opções por arquivo), a fila virou **"Fila de tarefas"** (comprimir + extrair
+> áudio) e as seções ganharam nomes curtos (`Cortar`, `Extrair áudio`,
+> `Ajustes de vídeo`).
+
 > Depende da fase 2 (`Task.Kind="audio"` na fila) e da fase 1 (preferências:
 > caminho de saída, sufixo). O trim reaproveita `-ss/-to` da fase 5.
 
@@ -463,17 +477,21 @@ só comprime vídeo; extração é um botão novo no card do arquivo.
 
 ### Frontend
 
-- `VideoRow.svelte`: item novo no `KebabMenu` ("extrair áudio…") ao lado de
-  "trocar arquivo"/"limpar" — ou card de ação no `StatusPage` quando não há
-  vídeo ainda.
-- Modal novo `AudioModal.svelte` reaproveitando o design system (`Modal`,
-  `RadioCardGroup`, `Stepper`, `Toggle` já existentes em `frontend/src/lib/`):
+- Seção nova **"Extrair áudio"** na barra lateral (`App.svelte`, passo 02), com
+  o painel `AudioPanel.svelte` reaproveitando o design system (`RadioCardGroup`,
+  `Stepper`, `Toggle`, `InfoTip` já existentes em `frontend/src/lib/`):
   - formato: `RadioCardGroup` (MP3/Opus/AAC/FLAC/WAV/copiar);
   - qualidade: `Stepper`/select de kbps, **oculto** para `flac`/`wav`/`copy`;
   - canais: `RadioCardGroup` manter/mono/estéreo;
   - normalizar: `Toggle` com `InfoTip` explicando o EBU R128;
-  - janela: dois `Stepper` `mm:ss` reaproveitando o do split (fase 11);
-  - prévia do nome de saída (`SuggestOutput`) e botão "EXTRAIR ÁUDIO".
+  - janela: dois textos `mm:ss` (mesmo formato do trim de ajustes).
+- O painel expõe o `Spec` e a validação para cima (`bind:spec`/`bind:invalid`);
+  o **botão "extrair áudio"** fica num cartão próprio (mesma aparência do
+  cartão de destino/salvar) abaixo do vídeo, com o caminho do áudio seguindo a
+  extensão do formato escolhido — a sidebar fica só com as opções.
+- A seção entra no acordeão da sidebar junto com `Cortar` e `Ajustes de vídeo`
+  (nomes encurtados na mesma leva, para separar áudio de vídeo); a extração
+  aparece desabilitada quando o vídeo não tem faixa de áudio.
 - Ao concluir, o item da fila mostra formato + tamanho + `OpenFolder` (mesmo
   card de resultado da compressão).
 
@@ -762,7 +780,7 @@ cresceu com os recursos das fases 4 e 5 (Avançado, Cortar em partes, Ajustes).
 
 ### Comportamento
 
-- Cada grupo da sidebar (`Tamanho alvo`/`Qualidade`, `Avançado`, `Presets`,
+- Cada grupo da sidebar (`Tamanho`/`Qualidade`, `Avançado`, `Presets`,
   `Cortar em partes`, `Ajustes por arquivo`) ganha um **cabeçalho colapsável**
   (título + chevron `▾/▸`, clique ou Enter/Espaço alterna).
 - Padrão: o cartão ativo da configuração e `Presets` abertos; `Avançado`,
@@ -802,6 +820,11 @@ e configurações (software vs. GPU, preset NVENC p1–p7 etc.).
 **Objetivo:** manter a janela principal sempre pronta para receber vídeo pelo
 "arrasta e solta" **junto** da opção de abrir pelo seletor — no estilo de
 import de mídia de um compositor (ex.: DaVinci Resolve).
+
+> Ajuste pós-entrega (junto da fase 6): com o vídeo **já carregado**, a área
+> de destino no topo foi removida — o botão **"Trocar vídeo…"** da barra de
+> ações e o drop em qualquer ponto da janela já fazem a troca. A área de
+> destino só permanece na **tela vazia** (estado inicial).
 
 ### Comportamento
 
