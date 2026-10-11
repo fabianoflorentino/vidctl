@@ -773,15 +773,6 @@ a {
 }
 
 /* grupo Extrair áudio da sidebar do mock */
-.aqout {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 7px 10px;
-}
-
 .aarun {
   text-align: center;
   background: var(--acc);

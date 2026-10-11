@@ -4,7 +4,7 @@
   import Toggle from './Toggle.svelte'
   import InfoTip from './InfoTip.svelte'
   import type { RadioOption } from './RadioCardGroup.svelte'
-  import { OpenAudioDialog, SuggestAudioOutput } from '../../wailsjs/go/main/App.js'
+  import { SuggestAudioOutput } from '../../wailsjs/go/main/App.js'
   import type { audio } from '../../wailsjs/go/models.js'
 
   interface Props {
@@ -34,8 +34,6 @@
   let normalize = $state(false)
   let trimStart = $state('')
   let trimEnd = $state('')
-  let outputPath = $state('')
-  let manual = $state(false)
   let panelError = $state('')
 
   const codecOptions: RadioOption[] = FORMATS.map((f) => ({ id: f.id, title: f.title, description: f.description }))
@@ -70,11 +68,29 @@
     if (trimStartSec > 0 && trimEndSec > 0 && trimEndSec <= trimStartSec) {
       return 'o fim da janela deve ser maior que o início'
     }
-    if (!outputPath) return 'escolha o destino do áudio'
     return ''
   })
 
-  const spec = $derived<audio.Spec>({
+  let suggestedOutput = $state('')
+
+  // O destino segue a pasta da configuração e o sufixo das Preferências; o
+  // painel não repete o "salvar como…" já presente no cartão principal.
+  $effect(() => {
+    const path = inputPath
+    const fmt = codec
+    if (!path) return
+    let cancelled = false
+    SuggestAudioOutput(path, fmt)
+      .then((p) => {
+        if (!cancelled && codec === fmt) suggestedOutput = p
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  })
+
+  const spec = $derived.by<audio.Spec>(() => ({
     inputPath,
     codec,
     bitrateKbps: lossless ? 0 : bitrateKbps,
@@ -83,48 +99,13 @@
     trimStartSec: trimStartSec > 0 ? trimStartSec : 0,
     trimEndSec: trimEndSec > 0 ? trimEndSec : 0,
     normalize: normalize && !lossless,
-    outputPath,
-  })
+    outputPath: suggestedOutput ?? '',
+  }))
 
   $effect(() => {
     if (lossless) bitrateKbps = DEFAULT_BITRATE[codec] ?? 0
     if (codec === 'copy') normalize = false
   })
-
-  $effect(() => {
-    const path = inputPath
-    if (!path) return
-    manual = false
-  })
-
-  $effect(() => {
-    const path = inputPath
-    const fmt = codec
-    if (!path || manual) return
-    let cancelled = false
-    SuggestAudioOutput(path, fmt)
-      .then((p) => {
-        if (!cancelled && codec === fmt) outputPath = p
-      })
-      .catch(() => {})
-    return () => {
-      cancelled = true
-    }
-  })
-
-  async function pickOutput() {
-    const name = outputPath.split(/[\\/]/).pop() || `audio-${codec}.${ext(codec)}`
-    const path = await OpenAudioDialog(name, codec)
-    if (path) {
-      outputPath = path
-      manual = true
-    }
-  }
-
-  function ext(codec: string): string {
-    const map: Record<string, string> = { mp3: 'mp3', opus: 'opus', aac: 'aac', flac: 'flac', wav: 'wav', copy: 'mka' }
-    return map[codec] ?? 'mp3'
-  }
 
   function selectCodec(id: string) {
     codec = id
@@ -174,13 +155,6 @@
     <span class="meta-k">fim (mm:ss)</span>
     <input class="text-input mono" value={trimEnd} aria-label="fim da extração" placeholder="fim do vídeo" oninput={(e) => (trimEnd = e.currentTarget.value)} />
   </div>
-</div>
-
-<div class="thumb-actions">
-  <button class="btn subtle small" onclick={pickOutput} disabled={!inputPath}>destino…</button>
-  {#if outputPath}
-    <span class="thumb-path mono" title={outputPath}>{outputPath}</span>
-  {/if}
 </div>
 
 {#if !hasAudio}

@@ -485,8 +485,9 @@ só comprime vídeo; extração é um botão novo no card do arquivo.
   - canais: `RadioCardGroup` manter/mono/estéreo;
   - normalizar: `Toggle` com `InfoTip` explicando o EBU R128;
   - janela: dois textos `mm:ss` (mesmo formato do trim de ajustes);
-  - prévia do nome de saída (`SuggestAudioOutput`) + botão "salvar como…"
-    (`OpenAudioDialog`) e "EXTRAIR ÁUDIO".
+  - destino automático (pasta preferida + sufixo) — sem "salvar como…" no
+    painel, já que o cartão principal da janela cuida do destino; e o botão
+    "EXTRAIR ÁUDIO".
 - A seção entra no acordeão da sidebar junto com `Cortar` e `Ajustes de vídeo`
   (nomes encurtados na mesma leva, para separar áudio de vídeo); a extração
   aparece desabilitada quando o vídeo não tem faixa de áudio.

@@ -302,9 +302,10 @@ O painel escolhe:
 | **Normalizar** | `-af loudnorm=I=-16:LRA=11:TP=-1.5` (EBU R128, single-pass); não aplicável a `copiar` |
 | **Janela** | extrai só o trecho `início`–`fim` em `mm:ss` (ex.: `1:30`–`3:00`), com seek antes do decode |
 
-- O destino é o mesmo da compressão: a pasta preferida ou ao lado do vídeo,
-  com o **sufixo** das Preferências (padrão `-audio`): `convite-audio.mp3`.
-  Dá para trocar o arquivo com "salvar como…".
+- O destino é automático, na pasta preferida ou ao lado do vídeo, com o
+  **sufixo** das Preferências (padrão `-audio`): `convite-audio.mp3`. O painel
+  de extração não repete o "salvar como…" — o cartão principal da janela já
+  cuida do destino do trabalho.
 - A extração entra na **mesma fila de tarefas** (`Task.Kind = audio`):
   usa os mesmos eventos, mostra progresso (`EXTRAINDO ÁUDIO`) e permite
   cancelar; ao concluir, o item ganha "abrir pasta".
