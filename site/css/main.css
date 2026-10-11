@@ -603,7 +603,9 @@ a {
 .aprog,
 .ares,
 .apick,
-.abar {
+.abar,
+.aout,
+.asum {
   display: none;
 }
 
@@ -611,16 +613,129 @@ a {
   display: none;
 }
 
-.demo.st-pick .apick,
+/* novos painéis surgem junto do vídeo/cartões */
 .demo.st-file .avideo,
+.demo.st-file .aout,
+.demo.st-file .asum,
 .demo.st-file .abar,
 .demo.st-split .avideo,
+.demo.st-split .aout,
+.demo.st-split .asum,
 .demo.st-split .abar,
 .demo.st-run .avideo,
+.demo.st-run .aout,
+.demo.st-run .asum,
 .demo.st-run .aprog,
 .demo.st-done .avideo,
+.demo.st-done .aout,
+.demo.st-done .asum,
 .demo.st-done .ares {
   display: flex;
+}
+
+.demo.st-pick .apick {
+  display: flex;
+}
+
+/* demo: acordeão e cartões novos */
+.sect .sect-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--ink);
+}
+
+.sect .sect-head .sect-val {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--acc);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sect .sect-head .chev::after {
+  content: "▸";
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--dim);
+}
+
+.sect.open .sect-head .chev::after {
+  content: "▾";
+}
+
+.sect .sect-body {
+  display: none;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.sect.open .sect-body {
+  display: flex;
+}
+
+.meta {
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.chip {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 10px;
+  font-family: var(--mono);
+  color: var(--dim);
+}
+
+.chip.picked {
+  background: var(--acc-bg);
+  border-color: var(--acc);
+  color: var(--acc);
+}
+
+.chip.dim {
+  opacity: 0.5;
+}
+
+.aout {
+  align-items: center;
+  gap: 8px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+}
+
+.asum {
+  flex-direction: column;
+  gap: 2px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+}
+
+.asum .trow {
+  padding: 2px 0;
+}
+
+.asum .sect-val {
+  margin-left: auto;
 }
 
 /* corte: visível/ativo só a partir do estado st-split */

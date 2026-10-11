@@ -61,7 +61,7 @@
           class="demo st-pick"
           id="demo"
           role="img"
-          aria-label="Demonstração animada da nova interface do vidctl: tela inicial sem barra lateral, escolha do vídeo, compressão no preset WhatsApp Status com corte em 6 partes de 5 minutos, métricas de CPU e memória em tema escuro e, no fim, a tela inicial em tema claro."
+          aria-label="Demonstração animada do vidctl: barra lateral em acordeão (Avançado aberto com H.265, NVENC e preset p4; Presets, Cortar em partes, Ajustes por arquivo e Tamanho alvo colapsados), cartão de saída ao lado do vídeo, compressão no preset WhatsApp Status com corte em 6 partes de 5 minutos, métricas de CPU/RAM/ffmpeg/GPU e tempo em tempo real e, no fim, a tela inicial em tema claro."
         >
           <div class="wbar">
             <i></i><i></i><i></i>
@@ -78,30 +78,52 @@
             </header>
             <div class="abody">
               <aside class="aside">
-                <div class="grp">
-                  <h4>Presets</h4>
-                  <div class="prow picked"><span class="pn">WhatsApp Status<small>status e conversas</small></span><span class="pv">10 MB</span></div>
-                  <div class="prow"><span class="pn">Instagram<small>reels &amp; stories</small></span><span class="pv">16 MB</span></div>
-                  <div class="prow"><span class="pn">Shorts<small>vertical 9:16</small></span><span class="pv">30 MB</span></div>
-                  <div class="prow"><span class="pn">YouTube<small>qualidade primeiro</small></span><span class="pv">CRF 23</span></div>
-                </div>
-                <div class="grp">
-                  <h4>Tamanho alvo</h4>
-                  <div class="trow"><span>tamanho</span><span class="sl"><span class="th" style="left:34%"></span></span><span class="num">10</span><span class="unit">MB</span></div>
-                  <div class="hint">≈ vídeo 169 kbps · áudio 96k por parte</div>
-                </div>
-                <div class="grp">
-                  <h4>Cortar em partes</h4>
-                  <div class="shead">
-                    <span class="obtn snocut">sem corte</span>
-                    <span class="stag">6 × ~5:00</span>
+                <div class="grp sect open">
+                  <div class="sect-head"><span>Avançado</span><b class="chev"></b></div>
+                  <div class="sect-body">
+                    <div class="meta">codec de vídeo</div>
+                    <div class="chips">
+                      <span class="chip">H.264</span><span class="chip picked">H.265 / HEVC</span>
+                    </div>
+                    <div class="meta">codificador</div>
+                    <div class="chips">
+                      <span class="chip picked">NVENC</span><span class="chip dim">QSV</span><span class="chip dim">AMF</span>
+                    </div>
+                    <div class="meta">preset NVENC</div>
+                    <div class="chips">
+                      <span class="chip">mais rápido</span><span class="chip picked">equilíbrio p4</span><span class="chip">máx. qualidade</span>
+                    </div>
+                    <div class="hint">2 backend(s) de hardware · GPU no painel</div>
                   </div>
-                  <div class="trow on split-row"><span>partes</span><span class="sl"><span class="th" style="left:22%"></span></span><span class="num">6</span></div>
-                  <div class="trow split-row"><span>min/parte</span><span class="sl"><span class="th" style="left:10%"></span></span><span class="num">5</span></div>
                 </div>
-                <div class="grp">
-                  <h4>Saída</h4>
-                  <div class="out"><span class="opath">…/palestra-compressed.mp4</span><span class="obtn">salvar como…</span></div>
+                <div class="grp sect">
+                  <div class="sect-head"><span>Presets</span><span class="sect-val">WhatsApp Status</span><b class="chev"></b></div>
+                  <div class="sect-body">
+                    <div class="prow picked"><span class="pn">WhatsApp Status<small>status e conversas</small></span><span class="pv">10 MB</span></div>
+                    <div class="prow"><span class="pn">Instagram<small>reels &amp; stories</small></span><span class="pv">16 MB</span></div>
+                  </div>
+                </div>
+                <div class="grp sect">
+                  <div class="sect-head"><span>Cortar em partes</span><span class="sect-val">6 × ~5:00</span><b class="chev"></b></div>
+                  <div class="sect-body">
+                    <div class="trow on"><span>partes</span><span class="sl"><span class="th" style="left:22%"></span></span><span class="num">6</span></div>
+                    <div class="trow"><span>min/parte</span><span class="sl"><span class="th" style="left:10%"></span></span><span class="num">5</span></div>
+                  </div>
+                </div>
+                <div class="grp sect">
+                  <div class="sect-head"><span>Ajustes por arquivo</span><span class="sect-val">corte 1:00–3:30</span><b class="chev"></b></div>
+                  <div class="sect-body">
+                    <div class="trow"><span>escala</span><span class="sect-val">Original</span></div>
+                    <div class="trow"><span>remover áudio</span><span class="sect-val">off</span></div>
+                    <div class="trow"><span>thumbnail</span><span class="sect-val">on</span></div>
+                  </div>
+                </div>
+                <div class="grp sect">
+                  <div class="sect-head"><span>Tamanho alvo</span><span class="sect-val">10 MB</span><b class="chev"></b></div>
+                  <div class="sect-body">
+                    <div class="trow"><span>tamanho</span><span class="sl"><span class="th" style="left:34%"></span></span><span class="num">10</span><span class="unit">MB</span></div>
+                    <div class="hint">≈ vídeo 169 kbps · áudio 96k por parte</div>
+                  </div>
                 </div>
               </aside>
               <main class="amain">
@@ -112,17 +134,26 @@
                   <b>Comprimir Vídeos</b>
                   <small>arraste um arquivo aqui ou use “escolher vídeo…”</small>
                 </div>
+                <div class="aout">
+                  <span class="opath">…/palestra-compressed-part1.mp4</span>
+                  <span class="obtn">salvar como…</span>
+                </div>
                 <div class="avideo">
                   <span class="athumb">1920×1080</span>
                   <span class="ainfo"><b>palestra-open-source.mp4</b><small id="file-meta">16:9 · 30:00 · 420.0 MB · h264</small></span>
                   <span class="astat">✔</span>
                 </div>
+                <div class="asum">
+                  <div class="trow"><span>configuração</span><span class="sect-val">WhatsApp Status · 10 MB</span></div>
+                  <div class="trow"><span>corte</span><span class="sect-val">6 × ~5:00</span></div>
+                  <div class="trow"><span>encode</span><span class="sect-val">H.265 · NVENC · p4</span></div>
+                </div>
                 <div class="aprog">
-                  <div class="aphead"><span id="stage-label">ANALISANDO (1/2) · parte 1/6</span><span id="demo-pct">0%</span></div>
+                  <div class="aphead"><span id="stage-label">H.265 · NVENC p4 · parte 1/6</span><span id="demo-pct">0%</span></div>
                   <div class="atrack"><div class="afill" id="demo-fill"></div></div>
                   <div class="afoot">
                     <span class="acancel">cancelar</span>
-                    <span class="ametrics" id="demo-metrics">CPU <b>—</b> · RAM <b>—</b> · ffmpeg <b>—</b></span>
+                    <span class="ametrics" id="demo-metrics">CPU <b>—</b> · RAM <b>—</b> · ffmpeg <b>—</b> · GPU <b>—</b> · ⏱ <b>0s</b></span>
                   </div>
                 </div>
                 <div class="ares">
@@ -139,7 +170,7 @@
           </div>
         </div>
 
-        <p class="note">30:00 · 1080p · 420 MB → 6 partes de ~5 min somando 59,4 MB (−86%) no preset WhatsApp Status (10 MB por parte) — no fim, a tela inicial aparece em tema claro (botão sol/lua do app)</p>
+        <p class="note">30:00 · 1080p · 420 MB → 6 partes de ~5 min somando 59,4 MB (−86%) no preset WhatsApp Status (10 MB por parte), com H.265 + NVENC (preset p4) — no fim, a tela inicial aparece em tema claro (botão sol/lua do app)</p>
       </section>
 
       <section id="recursos" class="section">
@@ -302,19 +333,19 @@
         var pill = document.getElementById("theme-pill");
         var arun = document.getElementById("arun-btn");
 
-        function setMetrics(cpu, ram, ff) {
+        function setMetrics(cpu, ram, ff, gpu, t) {
           metrics.innerHTML =
-            "CPU <b>" + cpu + "%</b> · RAM <b>" + ram + "/15.6 GB</b> · ffmpeg <b>" + ff + "%</b>";
+            "CPU <b>" + cpu + "%</b> · RAM <b>" + ram + "/15.6 GB</b> · ffmpeg <b>" + ff + "%</b> · GPU <b>" + gpu + "%</b> · ⏱ <b>" + t + "</b>";
         }
 
         var schedule = [
           { name: "st-pick", dur: 1800 },
           { name: "st-file", dur: 1700, btn: "COMPRIMIR → WHATSAPP STATUS" },
-          { name: "st-split", dur: 2100, btn: "COMPRIMIR → 6 PARTES" },
-          { name: "st-run", dur: 1900, from: 2, to: 24, label: "ANALISANDO (1/2) · parte 1/6", m: [91, 7.8, 78] },
-          { name: "st-run", dur: 1700, from: 25, to: 50, label: "COMPRIMINDO (2/2) · parte 2/6", m: [96, 8.2, 92] },
-          { name: "st-run", dur: 1700, from: 51, to: 74, label: "COMPRIMINDO (2/2) · parte 4/6", m: [98, 8.4, 95] },
-          { name: "st-run", dur: 1700, from: 75, to: 99, label: "COMPRIMINDO (2/2) · parte 6/6", m: [94, 8.1, 90] },
+          { name: "st-split", dur: 2100, btn: "COMPRIMIR → 6 PARTES · H.265" },
+          { name: "st-run", dur: 1900, from: 2, to: 24, label: "H.265 · NVENC p4 · parte 1/6", m: [91, 7.8, 78, 100, "2s"] },
+          { name: "st-run", dur: 1700, from: 25, to: 50, label: "H.265 · NVENC · parte 2/6", m: [96, 8.2, 92, 100, "9s"] },
+          { name: "st-run", dur: 1700, from: 51, to: 74, label: "H.265 · NVENC · parte 4/6", m: [98, 8.4, 95, 100, "22s"] },
+          { name: "st-run", dur: 1700, from: 75, to: 99, label: "H.265 · NVENC · parte 6/6", m: [94, 8.1, 90, 100, "36s"] },
           { name: "st-done", dur: 3400 },
           { name: "st-pick", dur: 3400, lite: true },
         ];
@@ -332,7 +363,7 @@
           pill.textContent = s.lite ? "☾" : "☀";
           if (s.btn !== undefined && arun) arun.textContent = s.btn;
           if (s.label !== undefined) stgl.textContent = s.label;
-          if (s.m !== undefined) setMetrics(s.m[0], s.m[1], s.m[2]);
+          if (s.m !== undefined) setMetrics(s.m[0], s.m[1], s.m[2], s.m[3], s.m[4]);
           if (s.from !== undefined) {
             fill.style.width = s.from + "%";
             pct.textContent = s.from + "%";
@@ -343,8 +374,8 @@
           enter(schedule.length - 1);
           fill.style.width = "100%";
           pct.textContent = "100%";
-          stgl.textContent = "CONCLUÍDO";
-          setMetrics(0, 6.2, 0);
+          stgl.textContent = "CONCLUÍDO · H.265 · NVENC p4";
+          setMetrics(0, 6.2, 0, 0, "1min 12s");
           return;
         }
 
