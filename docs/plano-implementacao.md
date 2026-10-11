@@ -780,7 +780,7 @@ cresceu com os recursos das fases 4 e 5 (Avançado, Cortar em partes, Ajustes).
 
 ### Comportamento
 
-- Cada grupo da sidebar (`Tamanho alvo`/`Qualidade`, `Avançado`, `Presets`,
+- Cada grupo da sidebar (`Tamanho`/`Qualidade`, `Avançado`, `Presets`,
   `Cortar em partes`, `Ajustes por arquivo`) ganha um **cabeçalho colapsável**
   (título + chevron `▾/▸`, clique ou Enter/Espaço alterna).
 - Padrão: o cartão ativo da configuração e `Presets` abertos; `Avançado`,

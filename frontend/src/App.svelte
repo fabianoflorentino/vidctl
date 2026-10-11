@@ -1217,9 +1217,9 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
       onmouseleave={() => (sbHover = false)}
     >
       {#if selectedPreset?.mode === 'size'}
-        <Section title="Tamanho alvo" open={sectionState.config} onchange={() => toggleSection("config")} infoTip="Presets de tamanho fazem o ffmpeg calcular o bitrate pela duração para caber no alvo (encode 2-pass).">
+        <Section title="Tamanho" open={sectionState.config} onchange={() => toggleSection("config")} infoTip="Presets de tamanho fazem o ffmpeg calcular o bitrate pela duração para caber no alvo (encode 2-pass).">
           <div class="tune-row">
-            <span class="meta-k">tamanho (MB)</span>
+            <span class="meta-k">megabytes</span>
             <Stepper value={sizeMB} min={2} max={100} digits={1} ariaLabel="tamanho alvo" onchange={(v) => (sizeMB = v)} />
           </div>
             {#if sizeEstimate?.available}

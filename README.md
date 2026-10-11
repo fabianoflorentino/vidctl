@@ -200,7 +200,7 @@ e o botão "verificar de novo" confere o resultado.
 
 ## Estimativa de tamanho
 
-Antes de comprimir, o vidctl mostra no painel "Tamanho alvo" o tamanho que a
+Antes de comprimir, o vidctl mostra no painel "Tamanho" o tamanho que a
 saída deve ter (badge "esperado ≈ X MB") e a economia em relação ao arquivo
 original, quando o alvo é menor. No modo `size` a previsão é exata: ela usa o
 mesmo orçamento de bits do encode 2-pass (alvo × 0,95 de overhead − áudio,
@@ -340,7 +340,7 @@ item ou **limpar fila** (remove concluídos, erros e cancelados).
 
 ## Usabilidade
 
-- **Sidebar colapsável**: os cartões de configuração (`Tamanho alvo`/`Qualidade`,
+- **Sidebar colapsável**: os cartões de configuração (`Tamanho`/`Qualidade`,
   `Avançado`, `Presets`, `Cortar`, `Extrair áudio`, `Ajustes de vídeo`) colapsam e
   expandem pelo cabeçalho; `Avançado`, `Cortar`, `Extrair áudio` e `Ajustes de
   vídeo` vêm

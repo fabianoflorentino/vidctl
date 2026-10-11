@@ -39,6 +39,8 @@ operacional dos pacotes.
   mostrando a extensão do formato selecionado (`.mp3`, `.flac`, `.wav`…) e um
   **"salvar como…"** para escolher outro destino.
 - **Janela maior por padrão**: a janela abre em **1360×768** (antes 1000×700).
+- **"Tamanho alvo" → "Tamanho"**: a seção da sidebar ficou só **Tamanho** e o
+  rótulo do controle virou **megabytes** (sem a ambiguidade de MB = mega-bit).
 - **Tema "sistema" fiel**: a opção de aparência "Sistema" agora lê o tema real
   do desktop (gsettings/GTK no Linux, `AppleInterfaceStyle` no macOS, registro
   no Windows) em vez de confiar no `prefers-color-scheme` do WebKit, que no
