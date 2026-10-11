@@ -12,7 +12,8 @@ for os in linux windows macos; do
   sed -i -E "s#(releases/tag/)v[0-9]+\.[0-9]+\.[0-9]+-${os}#\1${VERSION}-${os}#g" "$FILE"
 done
 
-sed -i -E "s/baixar v[0-9]+\.[0-9]+\.[0-9]+/baixar ${VERSION}/g" "$FILE"
+# pill de versão "última release" (vX.Y.Z)
+sed -i -E "s/>v[0-9]+\.[0-9]+\.[0-9]+</>${VERSION}</g" "$FILE"
 
 grep -q "releases/tag/${VERSION}-linux" "$FILE"
 echo "site sincronizado para ${VERSION}"
