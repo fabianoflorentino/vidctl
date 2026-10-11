@@ -175,7 +175,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
         await SaveConfig(currentConfig())
         lastSavedConfig = snapshot
       } catch (err) {
-        error = 'falha ao salvar as preferências: ' + err
+        error = t('prefs.saveFail', { err: String(err) })
       }
     }, 500)
   }
@@ -1008,7 +1008,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
     try {
       saved = await GetConfig()
     } catch (err) {
-      error = 'falha ao carregar as preferências: ' + err
+      error = t('prefs.loadFail', { err: String(err) })
       configReady = true
       return
     }
