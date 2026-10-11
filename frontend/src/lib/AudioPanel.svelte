@@ -12,9 +12,18 @@
     hasAudio: boolean
     spec?: audio.Spec
     invalid?: string
+    outputPath?: string
+    manual?: boolean
   }
 
-  let { inputPath, hasAudio, spec = $bindable(), invalid = $bindable('') }: Props = $props()
+  let {
+    inputPath,
+    hasAudio,
+    spec = $bindable(),
+    invalid = $bindable(''),
+    outputPath = $bindable(''),
+    manual = $bindable(false),
+  }: Props = $props()
 
   const FORMATS = [
     { id: 'mp3', title: 'MP3', description: 'padrão da UI · 192 kbps' },
@@ -71,18 +80,17 @@
     return ''
   })
 
-  let suggestedOutput = $state('')
-
-  // O destino segue a pasta da configuração e o sufixo das Preferências; o
-  // painel não repete o "salvar como…" já presente no cartão principal.
+  // O destino segue a pasta da configuração e o sufixo das Preferências. Com
+  // "salvar como…" o usuário escolhe um caminho próprio (manual) que não é
+  // sobrescrito ao trocar o formato.
   $effect(() => {
     const path = inputPath
     const fmt = codec
-    if (!path) return
+    if (!path || manual) return
     let cancelled = false
     SuggestAudioOutput(path, fmt)
       .then((p) => {
-        if (!cancelled && codec === fmt) suggestedOutput = p
+        if (!cancelled && codec === fmt) outputPath = p
       })
       .catch(() => {})
     return () => {
@@ -99,7 +107,7 @@
     trimStartSec: trimStartSec > 0 ? trimStartSec : 0,
     trimEndSec: trimEndSec > 0 ? trimEndSec : 0,
     normalize: normalize && !lossless,
-    outputPath: suggestedOutput ?? '',
+    outputPath: outputPath ?? '',
   }))
 
   $effect(() => {

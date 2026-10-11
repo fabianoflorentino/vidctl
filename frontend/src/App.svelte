@@ -23,6 +23,7 @@
     GetEncoders,
     RefreshEncoders,
     ExtractAudio,
+    OpenAudioDialog,
   } from '../wailsjs/go/main/App.js'
   import { EventsOn, EventsOff, OnFileDrop, OnFileDropOff, Environment } from '../wailsjs/runtime/runtime.js'
   import type { main, presets, media, config, encode, audio } from '../wailsjs/go/models.js'
@@ -326,6 +327,8 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   let prefsOpen = $state(false)
   let audioSpec = $state<audio.Spec | undefined>(undefined)
   let audioInvalid = $state('')
+  let audioOutputPath = $state('')
+  let audioManual = $state(false)
   let dragging = $state(false)
   let nativeFileDrop = true
 
@@ -387,6 +390,8 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
     codec = 'h264'
     hardware = ''
     nvencPreset = 'p4'
+    audioOutputPath = ''
+    audioManual = false
   }
 
   function handleDrop(paths: string[]) {
@@ -1110,6 +1115,16 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
     void extractAudio(audioSpec)
   }
 
+  async function pickAudioOutput() {
+    const codec = audioSpec?.codec ?? 'mp3'
+    const suggested = (audioSpec?.outputPath || audioOutputLabel()).split(/[\\/]/).pop() || `audio.${AUDIO_EXTS[codec] ?? 'mp3'}`
+    const path = await OpenAudioDialog(suggested, codec)
+    if (path) {
+      audioOutputPath = path
+      audioManual = true
+    }
+  }
+
   async function clearFinished() {
     try {
       const remaining = await ClearFinished()
@@ -1305,7 +1320,14 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
             <div class="hint">escolha o vídeo para extrair o áudio</div>
           {:else}
             {#key inputPath}
-              <AudioPanel {inputPath} hasAudio={info.hasAudio} bind:spec={audioSpec} bind:invalid={audioInvalid} />
+              <AudioPanel
+                {inputPath}
+                hasAudio={info.hasAudio}
+                bind:spec={audioSpec}
+                bind:invalid={audioInvalid}
+                bind:outputPath={audioOutputPath}
+                bind:manual={audioManual}
+              />
             {/key}
           {/if}
           </Section>
@@ -1420,6 +1442,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
               <span class="out-path mono" class:empty={!audioSpec?.outputPath} title={audioOutputLabel()}>
                 {audioOutputLabel()}
               </span>
+              <button class="btn subtle small" onclick={pickAudioOutput} disabled={!info?.hasAudio}>salvar como…</button>
             </div>
           </div>
         </div>

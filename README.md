@@ -307,7 +307,8 @@ Sem reencodar o vídeo:
 - O destino é automático, na pasta preferida ou ao lado do vídeo, com o
   **sufixo** das Preferências (padrão `-audio`): `convite-audio.mp3`. A caixa
   de áudio embaixo do destino do vídeo mostra esse caminho (com a extensão do
-  formato selecionado) e o botão "extrair áudio".
+  formato selecionado, exemplo `convite-audio.flac`), além do botão
+  **"extrair áudio"** e do **"salvar como…"** para escolher outro destino.
 - A extração entra na **mesma fila de tarefas** (`Task.Kind = audio`):
   usa os mesmos eventos, mostra progresso (`EXTRAINDO ÁUDIO`) e permite
   cancelar; ao concluir, o item ganha "abrir pasta".

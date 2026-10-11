@@ -36,7 +36,8 @@ operacional dos pacotes.
 - **Botão "extrair áudio" no cartão do vídeo**: as opções de áudio continuam na
   sidebar, mas o botão de extrair agora vive num cartão próprio abaixo do
   destino do vídeo (mesma aparência do "salvar como…"), com o caminho do áudio
-  mostrando a extensão do formato selecionado (`.mp3`, `.flac`, `.wav`…).
+  mostrando a extensão do formato selecionado (`.mp3`, `.flac`, `.wav`…) e um
+  **"salvar como…"** para escolher outro destino.
 
 ## [2.2.1] — 2026-10-11
 
