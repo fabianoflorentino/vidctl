@@ -15,6 +15,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 jobs:
   sync:
@@ -56,3 +57,12 @@ jobs:
           git commit -m "docs(site): links de download na release ${VERSION}"
           git pull --rebase origin main
           git push origin main
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      # O push acima usa o token default (não dispara workflows), então o
+      # Pages é acionado explicitamente para mostrar a versão nova na hora.
+      - name: Deploy site
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run "Site Build & Deploy" --ref main
