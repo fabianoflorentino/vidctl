@@ -39,7 +39,7 @@ Branch            | Fase | PR
 `feat/notificacao`| 7 — Notificação + abrir pasta | pendente
 `feat/updates`    | 8 — Verificação de atualização | pendente
 `feat/presets`    | 9 — Presets personalizados | pendente
-`feat/i18n`       | 10 — i18n pt/en | pendente
+`feat/i18n`       | 10 — i18n pt-BR/en/es/zh + base em inglês | pendente
 `feat/split-tempo`| 11 — Corte por tempo | pendente
 `feat/transcricao`| 12 — Transcrição de vídeo | pendente
 `feat/sidebar`    | 13 — Barra lateral colapsável | pendente
@@ -61,7 +61,7 @@ Branch            | Fase | PR
 | 7 | Notificação ao concluir + abrir pasta | §7 | P |
 | 8 | Verificação de atualização no app | §8 | M |
 | 9 | Presets personalizados pelo usuário | §9 | M |
-| 10 | i18n (pt/en) — opcional | §10 | M |
+| 10 | i18n (pt-BR/en/es/zh) + base em inglês | §10 | G |
 | 11 | Corte em segmentos por tempo (split) | §11 | G |
 | 12 | Transcrição de vídeo (legendas srt/vtt + texto) | §12 | G |
 | 13 | Barra lateral colapsável (UX) | §13 | P |
@@ -604,18 +604,31 @@ modo offline atual).
 
 ---
 
-## Fase 10 — i18n pt/en (opcional)
+## Fase 10 — i18n (pt-BR/en/es/zh) + base em inglês
 
-**Objetivo:** interface em pt (default) e en.
+**Objetivo:** interface em 4 idiomas — **pt-BR** (default), **en**, **es** e
+**zh (mandarim, chinês simplificado)** — e o código/documentação na **base em
+inglês** (comentários, mensagens de log e textos técnicos).
 
-- `frontend/src/i18n.ts`: dicionário + `t(key)`; strings do `App.svelte`
-  movidas para as chaves.
-- `config.Language` controla o idioma (selector no painel de configuração),
-  default `"pt"`.
-- Backend sem mudança de eventos; `SystemStatus.Message`/erros continuam em pt
-  e podem entrar num dicionário do backend depois (fora de escopo agora).
-- Testes: `i18n.ts` (chaves completas por idioma) via `svelte-check`/teste de
-  TS simples.
+> **Ajuste global (mesma leva):** todo o código e os comentários do projeto
+> passam a ser **em inglês** (incluindo nomes de teste); a documentação pública
+> (README, site, plano, BACKLOG) também. As strings de **UX** ficam no
+> dicionário de i18n e são apresentadas no idioma do usuário.
+
+- `frontend/src/lib/i18n.ts`: dicionário `{ pt, en, es, zh }` + `t(key)` (o
+  idioma atual é configurado no boot e em cada troca; a UI remonta com
+  `{#key lang}` para re-avaliar as chaves). Chaves por superfície: topbar,
+  sidebar (Tamanho, Avançado, Presets, Cortar, Extrair áudio, Ajustes de
+  vídeo), ações (Comprimir…, Trocar vídeo…, extrair áudio, salvar como…),
+  fila de tarefas, resultados, StatusPage, Preferências e o painel de áudio.
+- `config.Language` aceita `"pt"`, `"en"`, `"es"`, `"zh"` (default `"pt"`);
+  seletor no painel de Preferências.
+- Erros do backend continuam em inglês na fonte e viram chave do dicionário no
+  frontend quando exibidos (libera o roteamento por idioma sem refazer cada
+  mensagem).
+- Testes: `i18n.ts` com todas as chaves presentes nos 4 idiomas (via
+  `svelte-check`/teste de TS simples); `config` aceitando `en/es/zh` e
+  rejeitando fora da lista.
 
 ---
 
@@ -918,7 +931,7 @@ v2.3.0  → Fase 6 (extrair áudio)                      [entregue]
 v2.4.0  → Fase 7 (notificações)                       [depende de config]
 v2.5.0  → Fase 8 (check update)                       [usa a API de releases por tag + fluxo de publish novo]
 v2.6.0  → Fase 9 (presets custom)                     [depende de config]
-v2.7.0  → Fase 10 (i18n, opcional)
+v2.7.0  → Fase 10 (i18n pt-BR/en/es/zh + base em inglês)
 v2.8.0  → Fase 12 (transcrição srt/vtt/txt)
 ```
 
