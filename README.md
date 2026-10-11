@@ -33,6 +33,10 @@ arquivo** (escala, corte, remover áudio, FPS, rotação, thumbnail). 100% offli
 - **Ajustes por arquivo**: escala (padrão/original/personalizada), corte por
   janela em `mm:ss`, remover áudio, FPS, rotação e geração de thumbnail —
   aplicados por trabalho, além do preset
+- **Extrair áudio**: pelo menu do vídeo (⋮ → "extrair áudio…") você tira a faixa
+  de áudio sem reencodar o vídeo, escolhendo formato (mp3/opus/aac/flac/wav ou
+  copiar), qualidade, canais e normalização — a extração entra na mesma fila
+  de conversões
 - **Sidebar colapsável + tempo de conversão**: os grupos de configuração
   colapsam e expandem (acordeão, um por vez) e cada conversão mostra o tempo
   decorrido e o total ao concluir, facilitando comparar presets e encoders
@@ -282,6 +286,28 @@ preset, também por trabalho:
 A ordem dos filtros de vídeo é sempre `transpose → scale → fps`. Corte manual
 e **"Cortar em partes"** não podem ser combinados. Formatos de tempo aceitos:
 `90` (segundos), `1:30` (minutos:segundos) e `1:02:30` (horas).
+
+## Extrair áudio
+
+No menu do vídeo (⋮ → **"extrair áudio…"**) o vidctl tira a faixa de áudio
+sem reencodar o vídeo. O modal escolhe:
+
+| Opção | Detalhe |
+|---|---|
+| **Formato** | `mp3`, `opus`, `aac`, `flac`, `wav` ou **copiar** (sinalização, só remux para `.mka` sem recodificar) |
+| **Qualidade** | `kbps` para formatos com perda (32–320); `flac`/`wav`/`copiar` não aceitam bitrate — saem sem perda |
+| **Canais** | manter, mono (`-ac 1`) ou estéreo (`-ac 2`) |
+| **Normalizar** | `-af loudnorm=I=-16:LRA=11:TP=-1.5` (EBU R128, single-pass); não aplicável a `copiar` |
+| **Janela** | extrai só o trecho `início`–`fim` em `mm:ss` (ex.: `1:30`–`3:00`), com seek antes do decode |
+
+- O destino é o mesmo da compressão: a pasta preferida ou ao lado do vídeo,
+  com o **sufixo** das Preferências (padrão `-audio`): `convite-audio.mp3`.
+  Dá para trocar o arquivo com "salvar como…".
+- A extração entra na **mesma fila de conversões** (`Task.Kind = audio`):
+  usa os mesmos eventos, mostra progresso (`EXTRAINDO ÁUDIO`) e permite
+  cancelar; ao concluir, o item ganha "abrir pasta".
+- Vídeos **sem faixa de áudio** não mostram a ação e, se tentados, falham com
+  "o vídeo não tem faixa de áudio".
 
 ## Fila de conversões
 

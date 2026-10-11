@@ -34,8 +34,8 @@ Branch            | Fase | PR
 `feat/fila`       | 2 — Fila de conversões | aberto
 `feat/estimativa` | 3 — Estimativa de tamanho | mergeado
 `feat/hevc`       | 4 — HEVC/x265 + GPU (hardware) | mergeado
-`feat/ajustes`    | 5 — Ajustes por arquivo | aberto
-`feat/audio`      | 6 — Extração de áudio | pendente
+`feat/ajustes`    | 5 — Ajustes por arquivo | mergeado
+`feat/audio`      | 6 — Extração de áudio | aberto
 `feat/notificacao`| 7 — Notificação + abrir pasta | pendente
 `feat/updates`    | 8 — Verificação de atualização | pendente
 `feat/presets`    | 9 — Presets personalizados | pendente
@@ -57,7 +57,7 @@ Branch            | Fase | PR
 | 3 | Estimativa de tamanho antes do encode | §3 | M |
 | 4 | Codec HEVC/x265 + aceleração de GPU (NVENC/AMF/QSV/VideoToolbox) | §4 | G |
 | 5 | Ajustes por arquivo (escala, corte, áudio, FPS, thumbnail) | §5 | G |
-| 6 | Extração de áudio com opções (mp3/opus/aac/flac/wav/copiar) | §6 | M |
+| 6 | Extração de áudio com opções (mp3/opus/aac/flac/wav/copiar) | §6 | M | ✅ |
 | 7 | Notificação ao concluir + abrir pasta | §7 | P |
 | 8 | Verificação de atualização no app | §8 | M |
 | 9 | Presets personalizados pelo usuário | §9 | M |
@@ -395,6 +395,16 @@ VideoToolbox) com detecção de disponibilidade e fallback para software.
 **Objetivo:** tirar a trilha de áudio do vídeo sem reencodar o vídeo, com
 escolhas explícitas de formato, qualidade, canais e normalização. Hoje o app
 só comprime vídeo; extração é um botão novo no card do arquivo.
+
+> **Status: ✅ implementada** — ver `feat/audio`. O `Spec` ganhou um campo
+> `InputPath` (o modal é aberto a partir do vídeo atual, então a entrada vem
+> junto do pedido, não separada). A fila ganhou despacho por `Kind`: o
+> `compress.Manager` roda `audio.Extract` para `Task.Kind = "audio"` e continua
+> usando `compress.Run` para compressão; os eventos `done`/`progress`/`error`
+> já carregam `Kind="audio"` (fase 2), então a UI roteia por `jobId` sem
+> mudança de evento. Novo binding `ExtractAudio(spec)`, `SuggestAudioOutput` e
+> `OpenAudioDialog` com filtro pela extensão do formato. A configuração ganhou
+> `AudioSuffix` (default `-audio`).
 
 > Depende da fase 2 (`Task.Kind="audio"` na fila) e da fase 1 (preferências:
 > caminho de saída, sufixo). O trim reaproveita `-ss/-to` da fase 5.
