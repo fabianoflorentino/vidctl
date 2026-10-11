@@ -388,27 +388,46 @@ button {
   background: var(--window);
 }
 
-/* scrollbar da sidebar: mais fina e inset para não "vazar" (raios 18px) */
+/* scrollbar própria da sidebar (a nativa do GTK/WebKit vaza e cresce no hover) */
 .sidebar {
-  scrollbar-width: thin;
-  scrollbar-color: var(--border-strong) transparent;
+  position: relative;
+  scrollbar-width: none;
+  scrollbar-color: transparent transparent;
 }
 
 .sidebar::-webkit-scrollbar {
-  width: 6px;
+  display: none;
 }
 
-.sidebar::-webkit-scrollbar-track {
-  background: transparent;
-  margin: 18px 6px;
+.sidebar-scrollbar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 5px;
+  width: 8px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  z-index: 5;
+  cursor: pointer;
+}
+
+.sidebar-scrollbar.show {
+  opacity: 1;
+}
+
+.sidebar-scrollbar-thumb {
+  position: absolute;
+  top: var(--sb-top);
+  height: var(--sb-h);
+  left: 0;
+  right: 0;
   border-radius: 999px;
-}
-
-.sidebar::-webkit-scrollbar-thumb {
   background: var(--border-strong);
-  border-radius: 999px;
-  border: 1px solid transparent;
-  background-clip: content-box;
+  transition: background 0.15s ease;
+}
+
+.sidebar-scrollbar:hover .sidebar-scrollbar-thumb {
+  background: var(--fg-dim);
 }
 
 /* control group */
