@@ -48,8 +48,11 @@ arquivo** (escala, corte, remover áudio, FPS, rotação, thumbnail). 100% offli
 - Progresso em tempo real com cancelamento a qualquer momento
 - Painel de progresso abaixo do vídeo com leitura de carga do sistema
   (CPU, memória, processo do ffmpeg e GPU NVIDIA quando disponível)
-- Desktop nativo para **Linux, Windows e macOS** (Wails v2 + WebKit/WebView2)
-- Tema claro/escuro: segue o sistema por padrão e pode ser fixado no botão de
+- Desktop nativo para **Linux, Windows e macOS** (Wails v2 + WebKit/WebView2),
+  abre numa janela de **1360×768** por padrão
+- Tema claro/escuro: **"Sistema"** segue o tema real do desktop (lê o GTK no
+  Linux, `AppleInterfaceStyle` no macOS e o registro no Windows — o WebKit
+  nem sempre reporta o tema certo), e dá para fixar claro/escuro no botão de
   sol/lua no topo (a escolha persiste entre execuções)
 - Visual no padrão **Constrict**: tema escuro fosco com accent slate, tema
   claro derivado e ícone próprio nos instaladores de todas as plataformas
