@@ -11,6 +11,10 @@ operacional dos pacotes.
 
 ## [Unreleased]
 
+Nada ainda — em desenvolvimento.
+
+## [2.3.0] — 2026-10-11
+
 - **Extrair áudio de um vídeo** (fase 6): a nova seção **"Extrair áudio"** da
   barra lateral extrai a faixa sem reencodar o vídeo, escolhendo formato (mp3,
   opus, aac, flac, wav ou copiar — sinalização de stream, só remux), qualidade

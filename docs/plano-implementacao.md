@@ -35,7 +35,7 @@ Branch            | Fase | PR
 `feat/estimativa` | 3 — Estimativa de tamanho | mergeado
 `feat/hevc`       | 4 — HEVC/x265 + GPU (hardware) | mergeado
 `feat/ajustes`    | 5 — Ajustes por arquivo | mergeado
-`feat/audio`      | 6 — Extração de áudio | aberto
+`feat/audio`      | 6 — Extração de áudio | mergeado
 `feat/notificacao`| 7 — Notificação + abrir pasta | pendente
 `feat/updates`    | 8 — Verificação de atualização | pendente
 `feat/presets`    | 9 — Presets personalizados | pendente
@@ -396,7 +396,8 @@ VideoToolbox) com detecção de disponibilidade e fallback para software.
 escolhas explícitas de formato, qualidade, canais e normalização. Hoje o app
 só comprime vídeo; extração é um botão novo no card do arquivo.
 
-> **Status: ✅ implementada** — ver `feat/audio`. O `Spec` ganhou um campo
+> **Status: ✅ implementada e entregue na v2.3.0** — ver `feat/audio` (mergeado).
+> O `Spec` ganhou um campo
 > `InputPath` (o modal é aberto a partir do vídeo atual, então a entrada vem
 > junto do pedido, não separada). A fila ganhou despacho por `Kind`: o
 > `compress.Manager` roda `audio.Extract` para `Task.Kind = "audio"` e continua
@@ -910,21 +911,15 @@ Uma fase por versão, na ordem de dependência. A coluna da branch segue o
 [fluxo de execução](#fluxo-de-execução).
 
 ```
-v2.1.0  → Fase 11 (cortado em partes) [entregue fora de ordem, junto do redesign de UI]
-v2.2.0  → Fase 1 (config)            [base p/ tudo]
-v2.3.0  → Fase 2 (fila)              [maior; define Task+Job de vez; usa OpenMultipleDialog já pronto]
-v2.4.0  → Fase 3 (estimativa)
-v2.5.0  → Fase 4 (codec/hw: HEVC + GPU)  [default segue software; GPU opt-in]
-v2.6.0  → Fase 5 (ajustes)           [inclui trim -ss/-to reaproveitado da fase 11]
-v2.7.0  → Fase 6 (extrair áudio + opções)
-v2.8.0  → Fase 7 (notificações)      [depende de config]
-v2.9.0  → Fase 8 (check update)      [usa a API de releases por tag + fluxo de publish novo]
-v2.10.0 → Fase 9 (presets custom)    [depende de config]
-v2.11.0 → Fase 10 (i18n, opcional)
-v2.12.0 → Fase 12 (transcrição srt/vtt/txt)
-v2.13.0 → Fase 13 (barra lateral colapsável)   [UX]
-v2.14.0 → Fase 14 (tempo total de conversão)   [UX]
-v2.15.0 → Fase 15 (arrastar e soltar na janela) [UX]
+v2.1.0  → Fase 11 (split) + redesign de UI            [entregue]
+v2.2.0  → Fases 1–5 + 13–15 (config, fila, estimativa, codec/hw, ajustes, UX) [entregue]
+v2.2.1  → ícone unificado nos instaladores            [entregue]
+v2.3.0  → Fase 6 (extrair áudio)                      [entregue]
+v2.4.0  → Fase 7 (notificações)                       [depende de config]
+v2.5.0  → Fase 8 (check update)                       [usa a API de releases por tag + fluxo de publish novo]
+v2.6.0  → Fase 9 (presets custom)                     [depende de config]
+v2.7.0  → Fase 10 (i18n, opcional)
+v2.8.0  → Fase 12 (transcrição srt/vtt/txt)
 ```
 
 Cada versão deve passar por `make check` (vet + test + gofmt + svelte-check) e
