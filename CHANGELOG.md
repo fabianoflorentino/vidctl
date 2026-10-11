@@ -38,7 +38,7 @@ operacional dos pacotes.
   destino do vídeo (mesma aparência do "salvar como…"), com o caminho do áudio
   mostrando a extensão do formato selecionado (`.mp3`, `.flac`, `.wav`…) e um
   **"salvar como…"** para escolher outro destino.
-- **Janela maior por padrão**: a janela abre em **1280×720** (antes 1000×700).
+- **Janela maior por padrão**: a janela abre em **1360×768** (antes 1000×700).
 - **Tema "sistema" fiel**: a opção de aparência "Sistema" agora lê o tema real
   do desktop (gsettings/GTK no Linux, `AppleInterfaceStyle` no macOS, registro
   no Windows) em vez de confiar no `prefers-color-scheme` do WebKit, que no
