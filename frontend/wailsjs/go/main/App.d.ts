@@ -61,3 +61,5 @@ export function RefreshEncoders():Promise<encode.Availability>;
 export function SaveConfig(arg1:config.Config):Promise<void>;
 
 export function SuggestAudioOutput(arg1:string,arg2:string):Promise<string>;
+
+export function SystemTheme():Promise<string>;

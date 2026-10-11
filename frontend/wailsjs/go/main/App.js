@@ -105,3 +105,7 @@ export function SaveConfig(arg1) {
 export function SuggestAudioOutput(arg1, arg2) {
   return window['go']['main']['App']['SuggestAudioOutput'](arg1, arg2);
 }
+
+export function SystemTheme() {
+  return window['go']['main']['App']['SystemTheme']();
+}

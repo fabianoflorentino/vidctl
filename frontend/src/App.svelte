@@ -24,6 +24,7 @@
     RefreshEncoders,
     ExtractAudio,
     OpenAudioDialog,
+    SystemTheme,
   } from '../wailsjs/go/main/App.js'
   import { EventsOn, EventsOff, OnFileDrop, OnFileDropOff, Environment } from '../wailsjs/runtime/runtime.js'
   import type { main, presets, media, config, encode, audio } from '../wailsjs/go/models.js'
@@ -70,21 +71,34 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   let ffmpegMsg = $state('')
 
   let theme = $state<ThemeChoice>('system')
+  let systemDark = $state(false)
+  let systemResolved = $state(false)
 
   try {
     const saved = localStorage.getItem('vidctl-theme')
     if (saved === 'light' || saved === 'dark') {
       theme = saved
-      document.documentElement.dataset.theme = saved
     }
   } catch {
-    /* localStorage indisponível: segue o tema do sistema */
+    /* localStorage indisponível: segue o sistema */
   }
+
+  // O WebKitGTK (Linux) costuma reportar prefers-color-scheme: light mesmo com
+  // o desktop escuro; o tema real vem do backend (gsettings/registry/defaults)
+  // e o matchMedia só acompanha mudanças ao vivo.
+  $effect(() => {
+    if (theme !== 'system') return
+    if (!systemResolved) return
+    document.documentElement.dataset.theme = systemDark ? 'dark' : 'light'
+  })
 
   function setTheme(next: ThemeChoice) {
     theme = next
-    if (next === 'system') delete document.documentElement.dataset.theme
-    else document.documentElement.dataset.theme = next
+    if (next === 'system') {
+      document.documentElement.dataset.theme = systemDark ? 'dark' : 'light'
+    } else {
+      document.documentElement.dataset.theme = next
+    }
     try {
       localStorage.setItem('vidctl-theme', next)
     } catch {
@@ -830,6 +844,21 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   )
 
   onMount(() => {
+    const mq = window.matchMedia('(prefers-color-scheme: dark)')
+    const onMode = () => {
+      if (systemResolved) systemDark = mq.matches
+    }
+    if (mq.addEventListener) mq.addEventListener('change', onMode)
+    SystemTheme()
+      .then((t) => {
+        systemDark = t === 'dark'
+        systemResolved = true
+      })
+      .catch(() => {
+        systemDark = !!mq.matches
+        systemResolved = true
+      })
+
     load()
     Environment()
       .then((env) => (nativeFileDrop = env.platform !== 'linux'))
