@@ -13,6 +13,12 @@ operacional dos pacotes.
 
 Nada ainda — em desenvolvimento.
 
+## [2.2.1] — 2026-10-11
+
+- Ícone unificado nos instaladores: o mesmo desenho do favicon (vídeo/play com
+  gradiente) nos pacotes de todas as plataformas (a v2.2.0 ainda carregava o
+  ícone anterior por ter sido compilada antes do merge do #34).
+
 ## [2.2.0] — 2026-10-11
 
 Persistência das preferências, fila de conversões em lote, estimativa de
