@@ -6,7 +6,7 @@
     <title>vidctl — vídeo leve, história completa</title>
     <meta
       name="description"
-      content="vidctl comprime vídeos para o tamanho exato de cada plataforma (WhatsApp, Instagram, Shorts, YouTube), com codec H.265 e aceleração de GPU (NVENC/QSV/AMF/VT), ajustes por arquivo e corte em partes por tempo — tema claro/escuro, métricas ao vivo, desktop, offline, open-source."
+      content="vidctl comprime vídeos para o tamanho exato de cada plataforma (WhatsApp, Instagram, Shorts, YouTube), com codec H.265 e aceleração de GPU (NVENC/QSV/AMF/VT), ajustes por arquivo, corte em partes por tempo e extração da trilha de áudio (mp3/opus/aac/flac/wav) — tema claro/escuro, métricas ao vivo, desktop, offline, open-source."
     />
     <link rel="icon" type="image/svg+xml" href="img/favicon.svg" />
     <link rel="stylesheet" href="css/main.css" />
@@ -28,7 +28,7 @@
 
     <main>
       <section class="hero">
-        <p class="kicker">ffmpeg 2-pass &middot; H.265 + GPU &middot; corte em partes &middot; desktop &middot; open-source</p>
+        <p class="kicker">ffmpeg 2-pass &middot; H.265 + GPU &middot; corte em partes &middot; extrair áudio &middot; desktop &middot; open-source</p>
         <h1>
           Vídeo leve,<br />
           <em>história completa.</em>
@@ -38,7 +38,8 @@
           no tamanho alvo <strong>sem cortar a duração nem o formato</strong>. Ganhe velocidade com
           <strong>H.265 e aceleração de GPU</strong> (NVENC/QSV/AMF/VideoToolbox), aplique <strong>ajustes por arquivo</strong>
           (escala, corte em <code>mm:ss</code>, remover áudio, FPS, rotação, thumbnail) e, se quiser,
-          <strong>divida em partes</strong> — 30 min viram 6 × 5 min, prontos pra publicar. Tudo local, nada de nuvem.
+          <strong>divida em partes</strong> — 30 min viram 6 × 5 min, prontos pra publicar. Precisa só do áudio?
+          <strong>Extraia a trilha</strong> em mp3, opus, aac, flac ou wav (ou copie sem recodificar) — tudo local, nada de nuvem.
         </p>
 
         <div class="cta-row">
@@ -53,7 +54,7 @@
           class="demo st-pick"
           id="demo"
           role="img"
-          aria-label="Demonstração animada do vidctl: barra lateral em acordeão (Avançado aberto com H.265, NVENC e preset p4; Presets, Cortar em partes, Ajustes por arquivo e Tamanho alvo colapsados), cartão de saída ao lado do vídeo, compressão no preset WhatsApp Status com corte em 6 partes de 5 minutos, métricas de CPU/RAM/ffmpeg/GPU e tempo em tempo real e, no fim, a tela inicial em tema claro."
+          aria-label="Demonstração animada do vidctl: barra lateral em acordeão (Avançado aberto com H.265, NVENC e preset p4; Presets, Cortar, Extrair áudio, Ajustes de vídeo e Tamanho alvo colapsados), cartão de saída ao lado do vídeo, compressão no preset WhatsApp Status com corte em 6 partes de 5 minutos, métricas de CPU/RAM/ffmpeg/GPU e tempo em tempo real, extração de áudio em MP3 rodando na fila de tarefas e, no fim, a tela inicial em tema claro."
         >
           <div class="wbar">
             <i></i><i></i><i></i>
@@ -70,7 +71,7 @@
             </header>
             <div class="abody">
               <aside class="aside">
-                <div class="grp sect open">
+                <div class="grp sect" data-grp="avancado">
                   <div class="sect-head"><span>Avançado</span><b class="chev"></b></div>
                   <div class="sect-body">
                     <div class="meta">codec de vídeo</div>
@@ -88,29 +89,46 @@
                     <div class="hint">2 backend(s) de hardware · GPU no painel</div>
                   </div>
                 </div>
-                <div class="grp sect">
+                <div class="grp sect" data-grp="presets">
                   <div class="sect-head"><span>Presets</span><span class="sect-val">WhatsApp Status</span><b class="chev"></b></div>
                   <div class="sect-body">
                     <div class="prow picked"><span class="pn">WhatsApp Status<small>status e conversas</small></span><span class="pv">10 MB</span></div>
                     <div class="prow"><span class="pn">Instagram<small>reels &amp; stories</small></span><span class="pv">16 MB</span></div>
                   </div>
                 </div>
-                <div class="grp sect">
-                  <div class="sect-head"><span>Cortar em partes</span><span class="sect-val">6 × ~5:00</span><b class="chev"></b></div>
+                <div class="grp sect" data-grp="split">
+                  <div class="sect-head"><span>Cortar</span><span class="sect-val">6 × ~5:00</span><b class="chev"></b></div>
                   <div class="sect-body">
                     <div class="trow on"><span>partes</span><span class="sl"><span class="th" style="left:22%"></span></span><span class="num">6</span></div>
                     <div class="trow"><span>min/parte</span><span class="sl"><span class="th" style="left:10%"></span></span><span class="num">5</span></div>
                   </div>
                 </div>
-                <div class="grp sect">
-                  <div class="sect-head"><span>Ajustes por arquivo</span><span class="sect-val">corte 1:00–3:30</span><b class="chev"></b></div>
+                <div class="grp sect" data-grp="audio">
+                  <div class="sect-head"><span>Extrair áudio</span><span class="sect-val">MP3 · 192k</span><b class="chev"></b></div>
+                  <div class="sect-body">
+                    <div class="meta">formato</div>
+                    <div class="chips">
+                      <span class="chip picked">MP3</span><span class="chip">Opus</span><span class="chip">AAC</span><span class="chip dim">FLAC</span><span class="chip dim">WAV</span><span class="chip dim">copiar</span>
+                    </div>
+                    <div class="trow on"><span>qualidade</span><span class="sl"><span class="th" style="left:60%"></span></span><span class="num">192</span><span class="unit">kbps</span></div>
+                    <div class="meta">canais</div>
+                    <div class="chips">
+                      <span class="chip picked">Estéreo</span><span class="chip">Mono</span><span class="chip">Manter</span>
+                    </div>
+                    <div class="trow"><span>normalizar (EBU R128)</span><span class="sect-val">off</span></div>
+                    <div class="aqout"><span class="opath">…/palestra-open-source-audio.mp3</span><span class="obtn">salvar como…</span></div>
+                    <div class="aarun">EXTRAIR ÁUDIO</div>
+                  </div>
+                </div>
+                <div class="grp sect" data-grp="ajustes">
+                  <div class="sect-head"><span>Ajustes de vídeo</span><span class="sect-val">corte 1:00–3:30</span><b class="chev"></b></div>
                   <div class="sect-body">
                     <div class="trow"><span>escala</span><span class="sect-val">Original</span></div>
                     <div class="trow"><span>remover áudio</span><span class="sect-val">off</span></div>
                     <div class="trow"><span>thumbnail</span><span class="sect-val">on</span></div>
                   </div>
                 </div>
-                <div class="grp sect">
+                <div class="grp sect" data-grp="tamanho">
                   <div class="sect-head"><span>Tamanho alvo</span><span class="sect-val">10 MB</span><b class="chev"></b></div>
                   <div class="sect-body">
                     <div class="trow"><span>tamanho</span><span class="sl"><span class="th" style="left:34%"></span></span><span class="num">10</span><span class="unit">MB</span></div>
@@ -140,6 +158,22 @@
                   <div class="trow"><span>corte</span><span class="sect-val">6 × ~5:00</span></div>
                   <div class="trow"><span>encode</span><span class="sect-val">H.265 · NVENC · p4</span></div>
                 </div>
+                <div class="aq">
+                  <div class="aqhead"><span>Fila de tarefas</span><span class="aqcount">1 tarefa</span></div>
+                  <div class="aq-run">
+                    <div class="aqrow">
+                      <span class="aqdot"></span>
+                      <span class="aqname">palestra-open-source.mp3</span>
+                      <span class="aqtag">MP3 · 192k</span>
+                    </div>
+                    <div class="aqstate">EXTRAINDO ÁUDIO · <b id="aq-pct">0%</b></div>
+                    <div class="atrack"><div class="afill" id="aq-fill"></div></div>
+                  </div>
+                  <div class="aq-done">
+                    <span class="aqres">palestra-open-source.mp3 · <b>33.8 MB</b> · ⏱ 12s</span>
+                    <span class="abtn solid">abrir pasta</span>
+                  </div>
+                </div>
                 <div class="aprog">
                   <div class="aphead"><span id="stage-label">H.265 · NVENC p4 · parte 1/6</span><span id="demo-pct">0%</span></div>
                   <div class="atrack"><div class="afill" id="demo-fill"></div></div>
@@ -162,7 +196,7 @@
           </div>
         </div>
 
-        <p class="note">30:00 · 1080p · 420 MB → 6 partes de ~5 min somando 59,4 MB (−86%) no preset WhatsApp Status (10 MB por parte), com H.265 + NVENC (preset p4) — no fim, a tela inicial aparece em tema claro (botão sol/lua do app)</p>
+        <p class="note">30:00 · 1080p · 420 MB → 6 partes de ~5 min somando 59,4 MB (−86%) no preset WhatsApp Status (10 MB por parte), com H.265 + NVENC (preset p4). Depois, a mesma trilha vira <b>MP3 · 192k · 33,8 MB</b> na seção Extrair áudio da barra lateral e roda como tarefa na fila — e, no fim, a tela inicial aparece em tema claro (botão sol/lua do app)</p>
       </section>
 
       <section id="recursos" class="section">
@@ -178,8 +212,13 @@
           </article>
           <article class="card">
             <span class="tag">novo</span>
-            <h3>Ajustes por arquivo</h3>
+            <h3>Ajustes de vídeo</h3>
             <p>Escala (padrão/original/custom), corte por janela em <code>mm:ss</code>, remover áudio, FPS, rotação e geração de thumbnail — aplicados por trabalho, além do preset.</p>
+          </article>
+          <article class="card">
+            <span class="tag">novo</span>
+            <h3>Extrair áudio</h3>
+            <p>Pegue só a trilha de áudio sem reencodar o vídeo: mp3, opus, aac, flac, wav ou copiar (remux). Com qualidade em kbps, canais, normalização EBU R128 e janela <code>mm:ss</code> — na mesma fila de tarefas, com progresso e abrir pasta.</p>
           </article>
           <article class="card">
             <span class="tag">novo</span>
@@ -188,7 +227,7 @@
           </article>
           <article class="card">
             <span class="tag">novo</span>
-            <h3>Corte em partes</h3>
+            <h3>Cortar</h3>
             <p>Divida o vídeo por tempo: N partes iguais ou X minutos por parte (30 min → 6 × 5 min). Mínimo de 1 min por parte, cada uma comprimida de verdade e salva como <code>nome-part1.mp4</code>.</p>
           </article>
           <article class="card">
@@ -294,6 +333,7 @@
           <li><span class="step-num">03</span><h3>Cortar (opcional)</h3><p>Ative o corte em partes e veja o plano na hora: 30:00 → 6 × ~5:00.</p></li>
           <li><span class="step-num">04</span><h3>Executar</h3><p>2-pass com orçamento por parte, barra agregada e métricas de CPU/RAM/GPU ao vivo.</p></li>
           <li><span class="step-num">05</span><h3>Enviar</h3><p>Pronto. Toca em “abrir pasta” e manda pra plataforma.</p></li>
+          <li><span class="step-num">06</span><h3>Extrair áudio (opcional)</h3><p>Precisa da trilha? Escolha formato (mp3/opus/aac/flac/wav/copiar), qualidade, canais e janela — sai sem reencodar o vídeo, na mesma fila de tarefas.</p></li>
         </ol>
       </section>
 
@@ -324,10 +364,19 @@
         var metrics = document.getElementById("demo-metrics");
         var pill = document.getElementById("theme-pill");
         var arun = document.getElementById("arun-btn");
+        var aqFill = document.getElementById("aq-fill");
+        var aqPct = document.getElementById("aq-pct");
 
         function setMetrics(cpu, ram, ff, gpu, t) {
           metrics.innerHTML =
             "CPU <b>" + cpu + "%</b> · RAM <b>" + ram + "/15.6 GB</b> · ffmpeg <b>" + ff + "%</b> · GPU <b>" + gpu + "%</b> · ⏱ <b>" + t + "</b>";
+        }
+
+        function setAsideOpen(name) {
+          var groups = demo.querySelectorAll(".grp.sect");
+          for (var i = 0; i < groups.length; i++) {
+            groups[i].classList.toggle("open", groups[i].getAttribute("data-grp") === name);
+          }
         }
 
         var schedule = [
@@ -339,6 +388,8 @@
           { name: "st-run", dur: 1700, from: 51, to: 74, label: "H.265 · NVENC · parte 4/6", m: [98, 8.4, 95, 100, "22s"] },
           { name: "st-run", dur: 1700, from: 75, to: 99, label: "H.265 · NVENC · parte 6/6", m: [94, 8.1, 90, 100, "36s"] },
           { name: "st-done", dur: 3400 },
+          { name: "st-audio-run", dur: 3200, asideOpen: "audio", from: 0, to: 88 },
+          { name: "st-audio-done", dur: 3600, asideOpen: "audio" },
           { name: "st-pick", dur: 3400, lite: true },
         ];
 
@@ -353,12 +404,22 @@
           demo.className = "demo " + s.name;
           wapp.className = "wapp" + (s.lite ? " lite" : "");
           pill.textContent = s.lite ? "☾" : "☀";
+          setAsideOpen(s.asideOpen || "avancado");
           if (s.btn !== undefined && arun) arun.textContent = s.btn;
           if (s.label !== undefined) stgl.textContent = s.label;
           if (s.m !== undefined) setMetrics(s.m[0], s.m[1], s.m[2], s.m[3], s.m[4]);
+          fill.style.width = "0%";
+          pct.textContent = "0%";
+          if (aqFill) aqFill.style.width = "0%";
+          if (aqPct) aqPct.textContent = "0%";
           if (s.from !== undefined) {
-            fill.style.width = s.from + "%";
-            pct.textContent = s.from + "%";
+            if (s.name === "st-audio-run" && aqFill) {
+              aqFill.style.width = s.from + "%";
+              aqPct.textContent = s.from + "%";
+            } else {
+              fill.style.width = s.from + "%";
+              pct.textContent = s.from + "%";
+            }
           }
         }
 
@@ -378,8 +439,13 @@
           var s = schedule[idx];
           if (s.from !== undefined) {
             var v = Math.round(s.from + (s.to - s.from) * Math.min(1, elapsed / s.dur));
-            fill.style.width = v + "%";
-            pct.textContent = v + "%";
+            if (s.name === "st-audio-run" && aqFill) {
+              aqFill.style.width = v + "%";
+              aqPct.textContent = v + "%";
+            } else {
+              fill.style.width = v + "%";
+              pct.textContent = v + "%";
+            }
           }
           if (elapsed >= s.dur) enter((idx + 1) % schedule.length);
           requestAnimationFrame(frame);
