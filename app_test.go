@@ -521,17 +521,17 @@ printf '%s\n' '{"streams":[{"codec_type":"video","codec_name":"h264","width":320
 		t.Errorf("ack[1] = %+v; queria erro de preset", acks[1])
 	}
 	// Position do enqueue depende do timing do worker; o essencial é enfileirar
-	// os dois jobs válidos e vê-los na fila com posições ordenadas.
+	// os dois jobs válidos com a ordem correta e vê-los na fila. Posições ao
+	// vivo são invalidadas por worker rápido/erro sob -race, então só os ACKs
+	// (computados no enqueue) devem ser exatos.
 	if acks[2].JobID == "" || acks[3].JobID == "" {
 		t.Errorf("acks[2..3] sem jobId: %+v %+v", acks[2], acks[3])
 	}
+	if acks[2].Position != 1 || acks[3].Position != 2 || acks[2].Position >= acks[3].Position {
+		t.Errorf("posições do enqueue inesperadas: %d %d; queria 1 e 2", acks[2].Position, acks[3].Position)
+	}
 	if tasks := a.GetTasks(); len(tasks) != 2 {
 		t.Errorf("GetTasks = %d tarefas; queria 2", len(tasks))
-	} else {
-		pos := []int{tasks[0].Position, tasks[1].Position}
-		if pos[0] != 1 || pos[1] != 2 || pos[0] >= pos[1] {
-			t.Errorf("posições da fila inesperadas: %v", pos)
-		}
 	}
 
 	for _, id := range []string{acks[2].JobID, acks[3].JobID} {
@@ -813,6 +813,9 @@ func TestResolveEncoder(t *testing.T) {
 	}
 
 	cmdutil.SetOverride("ffmpeg", filepath.Join(t.TempDir(), "inexistente"))
+	// O override é global e, se vazar para o próximo teste sob shuffle, quebra
+	// quem depende do ffmpeg real do PATH — limpa antes de sair.
+	t.Cleanup(cmdutil.ClearOverrides)
 	b := newApp(nil)
 	fallback, err := b.resolveEncoder(compress.Job{Hardware: "auto"})
 	if err != nil {
