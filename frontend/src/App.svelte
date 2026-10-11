@@ -557,6 +557,64 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
     for (const k of Object.keys(sectionState) as (keyof typeof sectionState)[]) sectionState[k] = false
     sectionState[key] = next
   }
+
+  // Scrollbar própria da sidebar: a scrollbar nativa (GTK/WebKit) vaza do
+  // painel e cresce demais no hover; aqui controlamos tamanho e posição.
+  let sidebarEl = $state<HTMLElement | undefined>(undefined)
+  let sbScrollTop = $state(0)
+  let sbClientH = $state(0)
+  let sbScrollH = $state(0)
+  let sbHover = $state(false)
+  let sbDragging = $state(false)
+  let sbAwake = $state(false)
+  let sbSleepTimer: ReturnType<typeof setTimeout> | undefined
+
+  $effect(() => {
+    const el = sidebarEl
+    if (!el) return
+    const measure = () => {
+      sbClientH = el.clientHeight
+      sbScrollH = el.scrollHeight
+    }
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(el)
+    return () => ro.disconnect()
+  })
+
+  const sbVisible = $derived(sbScrollH > sbClientH)
+  const sbThumbH = $derived(sbVisible ? Math.max(28, (sbClientH * sbClientH) / sbScrollH) : 0)
+  const sbThumbTop = $derived(
+    sbVisible && sbScrollH > sbClientH ? (sbScrollTop / (sbScrollH - sbClientH)) * (sbClientH - sbThumbH) : 0,
+  )
+  const sbShow = $derived(sbVisible && (sbHover || sbDragging || sbAwake))
+
+  function onSidebarScroll() {
+    if (sidebarEl) sbScrollTop = sidebarEl.scrollTop
+    sbAwake = true
+    clearTimeout(sbSleepTimer)
+    sbSleepTimer = setTimeout(() => (sbAwake = false), 800)
+  }
+
+  function onSBDragStart(e: MouseEvent) {
+    if (!sidebarEl) return
+    sbDragging = true
+    const bar = e.currentTarget as HTMLElement
+    const rect = bar.getBoundingClientRect()
+    const move = (ev: MouseEvent) => {
+      const maxTop = sbScrollH - sbClientH
+      const ratio = Math.min(1, Math.max(0, (ev.clientY - rect.top) / rect.height))
+      sidebarEl!.scrollTop = ratio * maxTop
+    }
+    const up = () => {
+      sbDragging = false
+      window.removeEventListener('mousemove', move)
+      window.removeEventListener('mouseup', up)
+    }
+    window.addEventListener('mousemove', move)
+    window.addEventListener('mouseup', up)
+    move(e)
+  }
   let scaleMode = $state<ScaleMode>('default')
   let scaleCustom = $state('1280x720')
   let trimStart = $state('')
@@ -1081,7 +1139,13 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   />
 {:else}
   <div class="split">
-    <aside class="sidebar">
+    <aside
+      class="sidebar"
+      bind:this={sidebarEl}
+      onscroll={onSidebarScroll}
+      onmouseenter={() => (sbHover = true)}
+      onmouseleave={() => (sbHover = false)}
+    >
       {#if selectedPreset?.mode === 'size'}
         <Section title="Tamanho alvo" open={sectionState.config} onchange={() => toggleSection("config")} infoTip="Presets de tamanho fazem o ffmpeg calcular o bitrate pela duração para caber no alvo (encode 2-pass).">
           <div class="tune-row">
@@ -1270,6 +1334,18 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
               <div class="split-error mono">{adjustError}</div>
             {/if}
           </Section>
+
+      {#if sbVisible}
+        <div
+          class="sidebar-scrollbar"
+          class:show={sbShow}
+          style="--sb-h:{sbThumbH}px; --sb-top:{sbThumbTop}px"
+          onmousedown={onSBDragStart}
+          aria-hidden="true"
+        >
+          <div class="sidebar-scrollbar-thumb"></div>
+        </div>
+      {/if}
     </aside>
 
     <main class="content dropzone" class:hot={dragging}>
