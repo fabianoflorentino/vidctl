@@ -237,9 +237,11 @@ jobs:
 
       - name: Regenerate .SRCINFO (archlinux + makepkg)
         run: |
-          docker run --rm -v "$PWD":/src -w /src archlinux:base-devel bash -euo pipefail -c '
-            useradd -m builder
-            chown -R builder:builder /src
+          docker run --rm -v "$PWD":/src -w /src \
+            -e BUILDER_UID="$(id -u)" \
+            archlinux:base-devel bash -euo pipefail -c '
+            useradd -m -u "$BUILDER_UID" builder
+            chown -R builder:builder /src/pkg/aur
             runuser -u builder -- bash -c "cd /src/pkg/aur && makepkg --printsrcinfo > .SRCINFO"
           '
 
