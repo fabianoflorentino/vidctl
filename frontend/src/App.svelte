@@ -33,7 +33,6 @@
 import RadioCardGroup from './lib/RadioCardGroup.svelte'
   import Toggle from './lib/Toggle.svelte'
   import Section from './lib/Section.svelte'
-  import DropTarget from './lib/DropTarget.svelte'
   import PreferencesModal from './lib/PreferencesModal.svelte'
   import AudioPanel from './lib/AudioPanel.svelte'
   import { stageLabel } from './lib/stages'
@@ -1364,7 +1363,6 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
     </aside>
 
     <main class="content dropzone" class:hot={dragging}>
-      <DropTarget hot={dragging} onOpen={pickInput} />
       <div class="sources-head">
         <span class="group-card-title">Fontes de vídeo</span>
         {#if info}

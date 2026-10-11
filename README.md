@@ -23,10 +23,10 @@ arquivo** (escala, corte, remover áudio, FPS, rotação, thumbnail). 100% offli
   processa **um trabalho por vez** (sequencial); cada item mostra status,
   progresso e cancelamento, com "limpar fila" para os concluídos. O vídeo
   atual é único — **"Trocar vídeo…"** substitui a seleção sem enfileirar lote
-- **Drag and drop**: arraste um vídeo para a janela (ou use "Abrir…"); a área
-  de seleção vazia vira um alvo destacado quando você passa por cima, e a
-  janela inteira aceita soltar um vídeo a qualquer momento (o novo vídeo
-  substitui o atual)
+- **Drag and drop**: na tela vazia, arraste um vídeo para a janela ou use
+  "Abrir…" — a área de seleção vira um alvo em destaque quando você passa por
+  cima. Com vídeo carregado, solte um novo arquivo em qualquer lugar da janela
+  (ou use **"Trocar vídeo…"**) para substituir a seleção
 - **Codec H.265 e aceleração de GPU**: no cartão "Avançado" você troca
   H.264 ↔ H.265 e escolhe o codificador por trabalho — NVENC, QSV, AMF ou
   VideoToolbox — com detecção automática (probe de 1 frame) e, no NVENC, preset
@@ -341,9 +341,11 @@ item ou **limpar fila** (remove concluídos, erros e cancelados).
   expandem pelo cabeçalho; `Avançado`, `Cortar`, `Extrair áudio` e `Ajustes de
   vídeo` vêm
   fechados por padrão.
-- **Arrastar e soltar**: a janela principal aceita soltar um vídeo em qualquer
-  momento (área "arraste um vídeo aqui" + botão "abrir vídeo…"); um arquivo
-  troca a entrada e reseta os ajustes por arquivo.
+- **Arrastar e soltar**: a janela inteira aceita soltar um vídeo em qualquer
+  momento — na tela vazia há a área de seleção com "abrir vídeo…", e com o
+  vídeo carregado o alvo superior foi removido (o botão da barra de ações
+  **"Trocar vídeo…"** já faz a troca, e um arquivo solto na janela substitui a
+  entrada e reseta os ajustes por arquivo).
 
 ## Stack
 

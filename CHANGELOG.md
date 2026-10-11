@@ -26,6 +26,10 @@ operacional dos pacotes.
   não enfileira mais lote (o app processa um trabalho por vez, sequencial).
 - **Fila de conversões → Fila de tarefas**: a fila passou a listar qualquer
   trabalho (comprimir ou extrair áudio), com contador de tarefas.
+- **Menos redundância**: com o vídeo carregado, a área de destino (drop-target)
+  no topo do conteúdo foi removida — a troca fica no botão **"Trocar vídeo…"**
+  ou soltando um novo arquivo em qualquer lugar da janela; a área só permanece
+  na tela vazia.
 
 ## [2.2.1] — 2026-10-11
 

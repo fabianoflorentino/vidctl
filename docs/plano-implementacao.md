@@ -819,6 +819,11 @@ e configurações (software vs. GPU, preset NVENC p1–p7 etc.).
 "arrasta e solta" **junto** da opção de abrir pelo seletor — no estilo de
 import de mídia de um compositor (ex.: DaVinci Resolve).
 
+> Ajuste pós-entrega (junto da fase 6): com o vídeo **já carregado**, a área
+> de destino no topo foi removida — o botão **"Trocar vídeo…"** da barra de
+> ações e o drop em qualquer ponto da janela já fazem a troca. A área de
+> destino só permanece na **tela vazia** (estado inicial).
+
 ### Comportamento
 
 - O conteúdo principal exibe uma **área de destino** compacta no topo
