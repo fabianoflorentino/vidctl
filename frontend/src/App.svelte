@@ -560,7 +560,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
 
   // Scrollbar própria da sidebar: a scrollbar nativa (GTK/WebKit) vaza do
   // painel e cresce demais no hover; aqui controlamos tamanho e posição.
-  let sidebarEl: HTMLElement | undefined
+  let sidebarEl = $state<HTMLElement | undefined>(undefined)
   let sbScrollTop = $state(0)
   let sbClientH = $state(0)
   let sbScrollH = $state(0)
