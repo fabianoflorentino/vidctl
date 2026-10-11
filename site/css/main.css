@@ -227,13 +227,6 @@ a {
   font-size: 14px;
 }
 
-.btn-ver {
-  border-color: var(--accent);
-  color: var(--accent);
-  font-family: var(--mono);
-  letter-spacing: 0.04em;
-}
-
 .note {
   font-family: var(--mono);
   font-size: 12px;
