@@ -96,6 +96,10 @@ vídeo aceita escala, corte, remoção de áudio, FPS, rotação e thumbnail.
   lugar da coluna "quadrada" com linha cheia de divisão — a separação agora é
   por espaço e cantos arredondados, com sombra definida por tema (claro/escuro)
   e sem depender do sistema.
+- A **scrollbar da barra lateral** é própria da UI: a nativa (GTK/WebKit) foi
+  escondida — não vaza do painel nem cresce sobre o conteúdo ao passar o mouse.
+  A barra custom (fina, `8px`, recuada) aparece ao rolar/dar hover/arrastar e
+  some em ~0,8s parado, com o mesmo comportamento nas três plataformas.
 - O card de progresso acompanha o item selecionado na fila e o cancelamento
   passa a ser por item — a ação não para mais o trabalho inteiro.
 - `maxParallel` passa a valer: define quantos vídeos são comprimidos ao mesmo
