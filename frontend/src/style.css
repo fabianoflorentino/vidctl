@@ -388,6 +388,28 @@ button {
   background: var(--window);
 }
 
+/* scrollbar da sidebar: mais fina e inset para não "vazar" (raios 18px) */
+.sidebar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+.sidebar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 12px 4px;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
 /* control group */
 .group {
   background: transparent;
