@@ -8,12 +8,8 @@ VERSION="${1:?uso: site/sync-release.sh vX.Y.Z}"
 [ "$VERSION" != "${VERSION#v}" ] || VERSION="v${VERSION}"
 FILE="site/index.html"
 
-for os in linux windows macos; do
-  sed -i -E "s#(releases/tag/)v[0-9]+\.[0-9]+\.[0-9]+-${os}#\1${VERSION}-${os}#g" "$FILE"
-done
-
-# "baixar vX.Y.Z" no CTA único
+# "baixar vX.Y.Z" no CTA único (aponta para a página de releases)
 sed -i -E "s/baixar v[0-9]+\.[0-9]+\.[0-9]+/baixar ${VERSION}/g" "$FILE"
 
-grep -q "releases/tag/${VERSION}-linux" "$FILE"
+grep -q "baixar ${VERSION}" "$FILE"
 echo "site sincronizado para ${VERSION}"
