@@ -6,7 +6,7 @@
     <title>vidctl — vídeo leve, história completa</title>
     <meta
       name="description"
-      content="vidctl comprime vídeos para o tamanho exato de cada plataforma (WhatsApp, Instagram, Shorts, YouTube) e corta em partes por tempo — tema claro/escuro, métricas ao vivo, desktop, offline, open-source."
+      content="vidctl comprime vídeos para o tamanho exato de cada plataforma (WhatsApp, Instagram, Shorts, YouTube), com codec H.265 e aceleração de GPU (NVENC/QSV/AMF/VT), ajustes por arquivo e corte em partes por tempo — tema claro/escuro, métricas ao vivo, desktop, offline, open-source."
     />
     <link rel="icon" type="image/svg+xml" href="img/favicon.svg" />
     <link rel="stylesheet" href="css/main.css" />
@@ -28,21 +28,31 @@
 
     <main>
       <section class="hero">
-        <p class="kicker">ffmpeg 2-pass &middot; corte em partes &middot; desktop &middot; open-source</p>
+        <p class="kicker">ffmpeg 2-pass &middot; H.265 + GPU &middot; corte em partes &middot; desktop &middot; open-source</p>
         <h1>
           Vídeo leve,<br />
           <em>história completa.</em>
         </h1>
         <p class="lede">
           Escolha o destino — WhatsApp, Instagram, Shorts, YouTube. O vidctl calcula o bitrate pra caber
-          no tamanho alvo <strong>sem cortar a duração nem o formato</strong>. E agora também
-          <strong>divide em partes</strong> — 30 min viram 6 × 5 min, prontos pra publicar. Tudo local, nada de nuvem.
+          no tamanho alvo <strong>sem cortar a duração nem o formato</strong>. Ganhe velocidade com
+          <strong>H.265 e aceleração de GPU</strong> (NVENC/QSV/AMF/VideoToolbox), aplique <strong>ajustes por arquivo</strong>
+          (escala, corte em <code>mm:ss</code>, remover áudio, FPS, rotação, thumbnail) e, se quiser,
+          <strong>divida em partes</strong> — 30 min viram 6 × 5 min, prontos pra publicar. Tudo local, nada de nuvem.
         </p>
 
         <div class="cta-row">
-          <a class="btn btn-acid" href="https://github.com/fabianoflorentino/vidctl/releases/tag/v2.0.0-linux" target="_blank" rel="noopener">
-            baixar v2.0.0
-            <span class="btn-sub">windows · linux (.deb/.rpm) · macos</span>
+          <a class="btn btn-acid" href="https://github.com/fabianoflorentino/vidctl/releases/tag/v2.1.0-linux" target="_blank" rel="noopener">
+            baixar v2.1.0
+            <span class="btn-sub">linux · zip/.deb/.rpm</span>
+          </a>
+          <a class="btn btn-acid" href="https://github.com/fabianoflorentino/vidctl/releases/tag/v2.1.0-windows" target="_blank" rel="noopener">
+            baixar v2.1.0
+            <span class="btn-sub">windows 64-bit</span>
+          </a>
+          <a class="btn btn-acid" href="https://github.com/fabianoflorentino/vidctl/releases/tag/v2.1.0-macos" target="_blank" rel="noopener">
+            baixar v2.1.0
+            <span class="btn-sub">macos arm64</span>
           </a>
           <a class="btn btn-ghost" href="https://github.com/fabianoflorentino/vidctl" target="_blank" rel="noopener">código no github ↗</a>
         </div>
@@ -125,7 +135,7 @@
                 </div>
               </main>
             </div>
-            <footer class="aff">offline · h264 + aac · 2-pass quando há limite de tamanho</footer>
+            <footer class="aff">h264/h265 + aac · 2-pass quando há limite de tamanho · GPU opcional</footer>
           </div>
         </div>
 
@@ -138,6 +148,21 @@
           <h2>Recursos</h2>
         </div>
         <div class="grid">
+          <article class="card">
+            <span class="tag">novo</span>
+            <h3>Codec H.265 + GPU</h3>
+            <p>HEVC encolhe mais pelo mesmo visual. Com NVENC, QSV, AMF ou VideoToolbox o encode vira dezenas de vezes mais rápido — e você escolhe o preset NVENC (p1–p7) para calibrar velocidade × qualidade.</p>
+          </article>
+          <article class="card">
+            <span class="tag">novo</span>
+            <h3>Ajustes por arquivo</h3>
+            <p>Escala (padrão/original/custom), corte por janela em <code>mm:ss</code>, remover áudio, FPS, rotação e geração de thumbnail — aplicados por trabalho, além do preset.</p>
+          </article>
+          <article class="card">
+            <span class="tag">novo</span>
+            <h3>Sidebar colapsável + tempo</h3>
+            <p>Os grupos de configuração colapsam e expandem (um por vez), a janela inteira aceita arrastar e soltar vídeo, e cada conversão mostra o tempo que levou — fácil comparar encoders e presets.</p>
+          </article>
           <article class="card">
             <span class="tag">novo</span>
             <h3>Corte em partes</h3>
@@ -154,7 +179,7 @@
           <article class="card">
             <span class="tag">novo</span>
             <h3>Métricas ao vivo</h3>
-            <p>Durante a conversão o painel mostra CPU, memória, carga do ffmpeg e GPU — pra você saber que a máquina está trabalhando sem travar a interface.</p>
+            <p>Durante a conversão o painel mostra CPU, memória, carga do ffmpeg e GPU (engine de vídeo) — pra você saber que a máquina está trabalhando sem travar a interface.</p>
           </article>
           <article class="card">
             <span class="tag">novo</span>

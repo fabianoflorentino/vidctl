@@ -4,7 +4,9 @@ Compressor de vídeo desktop com backend Go (Wails + ffmpeg). Escolha o destino
 (WhatsApp, Instagram, Shorts, YouTube) e o app calcula automaticamente o
 bitrate para caber no tamanho alvo — preservando a duração e o formato, sem
 cortar cena. Alimentado por encode **2-pass** quando há limite de tamanho ou
-**CRF** quando é qualidade em primeiro lugar. 100% offline.
+**CRF** quando é qualidade em primeiro lugar, com **H.265/HEVC** e
+**aceleração de GPU** opcionais (NVENC/QSV/AMF/VideoToolbox) e **ajustes por
+arquivo** (escala, corte, remover áudio, FPS, rotação, thumbnail). 100% offline.
 
 > Histórico de versões: [CHANGELOG.md](CHANGELOG.md)
 
@@ -22,7 +24,18 @@ cortar cena. Alimentado por encode **2-pass** quando há limite de tamanho ou
   fila mostra status, progresso e cancelamento por item, com "limpar fila"
   para os concluídos
 - **Drag and drop**: arraste um vídeo para a janela (ou use "Abrir…"); a área
-  de seleção vazia vira um alvo destacado quando você passa por cima
+  de seleção vazia vira um alvo destacado quando você passa por cima, e a
+  janela inteira aceita soltar vídeo a qualquer momento
+- **Codec H.265 e aceleração de GPU**: no cartão "Avançado" você troca
+  H.264 ↔ H.265 e escolhe o codificador por trabalho — NVENC, QSV, AMF ou
+  VideoToolbox — com detecção automática (probe de 1 frame) e, no NVENC, preset
+  de velocidade/qualdade `p1`–`p7`
+- **Ajustes por arquivo**: escala (padrão/original/personalizada), corte por
+  janela em `mm:ss`, remover áudio, FPS, rotação e geração de thumbnail —
+  aplicados por trabalho, além do preset
+- **Sidebar colapsável + tempo de conversão**: os grupos de configuração
+  colapsam e expandem (acordeão, um por vez) e cada conversão mostra o tempo
+  decorrido e o total ao concluir, facilitando comparar presets e encoders
 - Encode ffmpeg **2-pass** para atingir o tamanho máximo sem estourar o limite
 - **Aviso de qualidade antes de comprimir**: o app estima o bitrate que o
   ajuste atual vai render (por parte, quando há corte); se ficar abaixo do
