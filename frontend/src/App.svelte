@@ -24,9 +24,10 @@
     SaveConfig,
     GetEncoders,
     RefreshEncoders,
+    ExtractAudio,
   } from '../wailsjs/go/main/App.js'
   import { EventsOn, EventsOff, OnFileDrop, OnFileDropOff, Environment } from '../wailsjs/runtime/runtime.js'
-  import type { main, presets, media, config, encode } from '../wailsjs/go/models.js'
+  import type { main, presets, media, config, encode, audio } from '../wailsjs/go/models.js'
   import { compress as bindings, config as configBindings } from '../wailsjs/go/models.js'
   import StatusPage from './lib/StatusPage.svelte'
   import VideoRow from './lib/VideoRow.svelte'
@@ -36,6 +37,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   import Section from './lib/Section.svelte'
   import DropTarget from './lib/DropTarget.svelte'
   import PreferencesModal from './lib/PreferencesModal.svelte'
+  import AudioModal from './lib/AudioModal.svelte'
   import { stageLabel } from './lib/stages'
 
   type ProgressEv = { jobId: string; stage: string; percent: number }
@@ -46,6 +48,8 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   type QueueState = 'queued' | 'running' | 'done' | 'error' | 'canceled'
   type QueueItem = {
     jobId: string
+    kind: 'compress' | 'audio'
+    meta: string
     label: string
     inputPath: string
     outputPath: string
@@ -106,6 +110,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   let outputDir = $state('')
   let ffmpegPath = $state('')
   let ffprobePath = $state('')
+  let audioSuffix = $state('-audio')
   let configReady = $state(false)
   let saveTimer: ReturnType<typeof setTimeout> | undefined
 
@@ -120,6 +125,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
     maxParallel: 1,
     notifyOnDone: false,
     openFolderOnDone: false,
+    audioSuffix: '-audio',
   })
 
   function currentConfig(): config.Config {
@@ -131,6 +137,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
       outputDir,
       ffmpegPath,
       ffprobePath,
+      audioSuffix,
     })
   }
 
@@ -228,6 +235,8 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
 
   function createItem(fields: Partial<QueueItem> & { jobId: string; inputPath: string; presetId: string }) {
     const item: QueueItem = {
+      kind: 'compress',
+      meta: '',
       label: '',
       outputPath: '',
       state: 'queued',
@@ -254,6 +263,8 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   function fromTask(t: bindings.TaskStatus): QueueItem {
     return {
       jobId: t.jobId,
+      kind: t.kind === 'audio' ? 'audio' : 'compress',
+      meta: '',
       label: t.label,
       inputPath: t.inputPath,
       outputPath: t.outputPath,
@@ -301,7 +312,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
     }
   }
 
-  const previewItem = $derived(queue.filter((i) => i.inputPath === inputPath).at(-1) ?? null)
+  const previewItem = $derived(queue.filter((i) => i.kind === 'compress' && i.inputPath === inputPath).at(-1) ?? null)
   const previewState = $derived(previewItem?.state ?? 'idle')
   const previewBusy = $derived(previewState === 'queued' || previewState === 'running')
   const previewDone = $derived(previewState === 'done')
@@ -316,6 +327,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   })
 
   let prefsOpen = $state(false)
+  let audioModalOpen = $state(false)
   let dragging = $state(false)
   let nativeFileDrop = true
 
@@ -943,6 +955,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
       outputDir = saved.outputDir ?? ''
       ffmpegPath = saved.ffmpegPath ?? ''
       ffprobePath = saved.ffprobePath ?? ''
+      audioSuffix = saved.audioSuffix ?? '-audio'
 
       const p = presetList.find((x) => x.id === selectedPresetId)
       if (p?.mode === 'size' && !hasSavedSize) sizeMB = p.sizeMB
@@ -1082,6 +1095,26 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
       i.state = 'canceled'
       i.stage = ''
     })
+  }
+
+  async function extractAudio(spec: audio.Spec) {
+    audioModalOpen = false
+    try {
+      const jobId = await ExtractAudio(spec)
+      dbg(`ExtractAudio ok job=${jobId} codec=${spec.codec}`)
+      createItem({
+        jobId,
+        kind: 'audio',
+        meta: spec.codec,
+        label: fileName(spec.inputPath),
+        inputPath: spec.inputPath,
+        presetId: '',
+        outputPath: spec.outputPath,
+      })
+    } catch (err) {
+      dbg(`ExtractAudio erro=${String(err)}`)
+      error = String(err)
+    }
   }
 
   async function clearFinished() {
@@ -1367,6 +1400,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
           {thumb}
           onSwitch={pickInput}
           onClear={reset}
+          onAudio={() => (audioModalOpen = true)}
         />
         <div class="out-card group-card">
           <div class="group-card-body">
@@ -1440,7 +1474,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
                 <div class="qi-body">
                   <div class="qi-line">
                     <span class="qi-label" title={item.inputPath}>{item.label}</span>
-                    <span class="qi-preset mono">{presetName(item.presetId)}</span>
+                    <span class="qi-preset mono">{item.kind === 'audio' ? (item.meta || 'áudio').toUpperCase() : presetName(item.presetId)}</span>
                     <span class="qi-state mono">{stateLabel(item)}</span>
                   </div>
                   {#if item.state === 'running' && item.jobId !== previewItem?.jobId}
@@ -1450,7 +1484,9 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
                     <div class="qi-error mono">{item.error}</div>
                   {/if}
                 </div>
-                {#if item.state === 'queued' || item.state === 'running'}
+                {#if item.state === 'done' && item.kind === 'audio' && item.outputPath}
+                  <button class="btn subtle small" onclick={() => OpenFolder(item.outputPath)}>abrir pasta</button>
+                {:else if item.state === 'queued' || item.state === 'running'}
                   <button class="btn subtle small" onclick={() => cancelItem(item.jobId)}>cancelar</button>
                 {/if}
               </li>
@@ -1524,10 +1560,19 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   {outputDir}
   {ffmpegPath}
   {ffprobePath}
+  {audioSuffix}
   onclose={() => (prefsOpen = false)}
   ontheme={setTheme}
   onRecheck={checkFFmpeg}
   onoutputdir={(v) => (outputDir = v)}
   onffmpegpath={(v) => (ffmpegPath = v)}
   onffprobepath={(v) => (ffprobePath = v)}
+  onaudiosuffix={(v) => (audioSuffix = v)}
+/>
+
+<AudioModal
+  open={audioModalOpen}
+  {inputPath}
+  onclose={() => (audioModalOpen = false)}
+  onExtract={extractAudio}
 />

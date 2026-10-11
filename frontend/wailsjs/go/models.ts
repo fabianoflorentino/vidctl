@@ -1,3 +1,36 @@
+export namespace audio {
+	
+	export class Spec {
+	    inputPath: string;
+	    codec: string;
+	    bitrateKbps: number;
+	    sampleRate: number;
+	    channels: number;
+	    trimStartSec: number;
+	    trimEndSec: number;
+	    normalize: boolean;
+	    outputPath: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new Spec(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.inputPath = source["inputPath"];
+	        this.codec = source["codec"];
+	        this.bitrateKbps = source["bitrateKbps"];
+	        this.sampleRate = source["sampleRate"];
+	        this.channels = source["channels"];
+	        this.trimStartSec = source["trimStartSec"];
+	        this.trimEndSec = source["trimEndSec"];
+	        this.normalize = source["normalize"];
+	        this.outputPath = source["outputPath"];
+	    }
+	}
+
+}
+
 export namespace compress {
 	
 	export class Suggestion {
@@ -169,6 +202,7 @@ export namespace config {
 	    maxParallel: number;
 	    notifyOnDone: boolean;
 	    openFolderOnDone: boolean;
+	    audioSuffix: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new Config(source);
@@ -186,6 +220,7 @@ export namespace config {
 	        this.maxParallel = source["maxParallel"];
 	        this.notifyOnDone = source["notifyOnDone"];
 	        this.openFolderOnDone = source["openFolderOnDone"];
+	        this.audioSuffix = source["audioSuffix"];
 	    }
 	}
 

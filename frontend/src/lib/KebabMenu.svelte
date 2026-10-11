@@ -2,6 +2,7 @@
   export interface KebabItem {
     id: string
     label: string
+    disabled?: boolean
   }
 
   interface Props {
@@ -53,7 +54,7 @@
       }}
     >
       {#each items as item (item.id)}
-        <button role="menuitem" onclick={() => pick(item.id)}>{item.label}</button>
+        <button role="menuitem" disabled={item.disabled} onclick={() => pick(item.id)}>{item.label}</button>
       {/each}
     </div>
   {/if}

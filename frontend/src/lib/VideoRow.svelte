@@ -16,6 +16,7 @@
     thumb?: string
     onSwitch?: () => void
     onClear?: () => void
+    onAudio?: () => void
   }
 
   let {
@@ -27,16 +28,19 @@
     thumb = '',
     onSwitch = () => {},
     onClear = () => {},
+    onAudio = () => {},
   }: Props = $props()
 
   const orientation = $derived(info.width > info.height ? '16:9' : '9:16')
 
-  const kebabItems: KebabItem[] = [
+  const kebabItems = $derived<KebabItem[]>([
+    { id: 'audio', label: 'extrair áudio…', disabled: !info.hasAudio },
     { id: 'switch', label: 'trocar arquivo' },
     { id: 'clear', label: 'limpar' },
-  ]
+  ])
 
   function onKebab(id: string) {
+    if (id === 'audio') onAudio()
     if (id === 'switch') onSwitch()
     if (id === 'clear') onClear()
   }

@@ -3,6 +3,7 @@
 import {main} from '../models';
 import {compress} from '../models';
 import {estimate} from '../models';
+import {audio} from '../models';
 import {config} from '../models';
 import {encode} from '../models';
 import {media} from '../models';
@@ -25,6 +26,8 @@ export function DebugLog(arg1:string):Promise<void>;
 
 export function EstimateSize(arg1:compress.Job):Promise<estimate.Result>;
 
+export function ExtractAudio(arg1:audio.Spec):Promise<string>;
+
 export function GetAdvice(arg1:compress.Job):Promise<compress.Advice>;
 
 export function GetConfig():Promise<config.Config>;
@@ -41,6 +44,8 @@ export function GetThumbnail(arg1:string,arg2:number):Promise<string>;
 
 export function GetUsage():Promise<sysinfo.Snapshot>;
 
+export function OpenAudioDialog(arg1:string,arg2:string):Promise<string>;
+
 export function OpenFolder(arg1:string):Promise<void>;
 
 export function OpenInputDialog():Promise<string>;
@@ -54,3 +59,5 @@ export function OpenThumbnailDialog(arg1:string):Promise<string>;
 export function RefreshEncoders():Promise<encode.Availability>;
 
 export function SaveConfig(arg1:config.Config):Promise<void>;
+
+export function SuggestAudioOutput(arg1:string,arg2:string):Promise<string>;
