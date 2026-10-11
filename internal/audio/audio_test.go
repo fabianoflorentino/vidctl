@@ -59,6 +59,11 @@ func TestBuildArgs(t *testing.T) {
 			contains: []string{"-vn", "-map", "0:a:0"},
 		},
 		{
+			name:     "progresso do ffmpeg habilitado antes do destino",
+			spec:     base,
+			contains: []string{"-progress", "pipe:1", "-nostats", "/out/x.mp3"},
+		},
+		{
 			name:     "canais e taxa condicionais",
 			spec:     Spec{InputPath: "a.mp4", OutputPath: "o.mp3", Codec: "mp3", Channels: 1, SampleRate: 16000},
 			contains: []string{"-ac", "1", "-ar", "16000"},

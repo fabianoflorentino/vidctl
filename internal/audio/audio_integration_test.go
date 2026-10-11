@@ -105,13 +105,20 @@ func TestExtractSuccess(t *testing.T) {
 
 	argv := readArgv(t, log)
 	got := ""
+	progress := false
 	for i, a := range argv {
 		if a == "-i" && i+1 < len(argv) {
 			got = argv[i+1]
 		}
+		if a == "-progress" && i+1 < len(argv) && argv[i+1] == "pipe:1" {
+			progress = true
+		}
 	}
 	if got != input {
 		t.Errorf("entrada no argv = %q, want %q", got, input)
+	}
+	if !progress {
+		t.Errorf("argv %v não habilita o progresso via -progress pipe:1", argv)
 	}
 }
 

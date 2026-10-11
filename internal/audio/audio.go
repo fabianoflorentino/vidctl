@@ -174,6 +174,7 @@ func buildArgs(spec Spec) []string {
 	if spec.Normalize {
 		args = append(args, "-af", "loudnorm=I=-16:LRA=11:TP=-1.5")
 	}
+	args = append(args, "-progress", "pipe:1", "-nostats")
 	args = append(args, spec.OutputPath)
 	return args
 }
