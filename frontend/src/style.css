@@ -795,7 +795,7 @@ button {
 
 .advice-msg {
   margin: 0;
-  font-size: 12.5px;
+  font-size: 13px;
   line-height: 1.45;
   color: var(--fg);
 }
@@ -871,7 +871,7 @@ input[type="number"].num {
   margin: 0 12px 6px;
   padding: 3px 10px;
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--accent);
   background: var(--accent-bg);
   border: 1px solid var(--border);
@@ -889,7 +889,7 @@ input[type="number"].num {
 
 .out-path {
   flex: 1;
-  font-size: 12px;
+  font-size: 13px;
   word-break: break-all;
   color: var(--fg);
 }
@@ -1277,7 +1277,7 @@ input[type="number"].num {
 
 .sum-row .sum-v {
   font-family: var(--mono);
-  font-size: 12.5px;
+  font-size: 13.5px;
   color: var(--fg);
   text-align: right;
   overflow: hidden;
