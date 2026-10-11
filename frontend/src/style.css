@@ -395,18 +395,19 @@ button {
 }
 
 .sidebar::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 .sidebar::-webkit-scrollbar-track {
   background: transparent;
-  margin: 12px 4px;
+  margin: 18px 6px;
+  border-radius: 999px;
 }
 
 .sidebar::-webkit-scrollbar-thumb {
   background: var(--border-strong);
   border-radius: 999px;
-  border: 2px solid transparent;
+  border: 1px solid transparent;
   background-clip: content-box;
 }
 
