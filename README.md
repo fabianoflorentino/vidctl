@@ -290,9 +290,11 @@ e **"Cortar"** não podem ser combinados. Formatos de tempo aceitos:
 
 ## Extrair áudio
 
-A seção **"Extrair áudio"** da barra lateral (aberta com a sidebar de
-configuração) tira a faixa de áudio do vídeo carregado, sem reencodar o vídeo.
-O painel escolhe:
+As **opções** de extração ficam na seção **"Extrair áudio"** da barra lateral
+(formato, qualidade, canais, normalização e janela); o **botão para extrair**
+vive no cartão do vídeo, num caixa igual à do destino (abaixo do "salvar
+como…"), mostrando o caminho do áudio com a extensão do formato escolhido.
+Sem reencodar o vídeo:
 
 | Opção | Detalhe |
 |---|---|
@@ -303,9 +305,9 @@ O painel escolhe:
 | **Janela** | extrai só o trecho `início`–`fim` em `mm:ss` (ex.: `1:30`–`3:00`), com seek antes do decode |
 
 - O destino é automático, na pasta preferida ou ao lado do vídeo, com o
-  **sufixo** das Preferências (padrão `-audio`): `convite-audio.mp3`. O painel
-  de extração não repete o "salvar como…" — o cartão principal da janela já
-  cuida do destino do trabalho.
+  **sufixo** das Preferências (padrão `-audio`): `convite-audio.mp3`. A caixa
+  de áudio embaixo do destino do vídeo mostra esse caminho (com a extensão do
+  formato selecionado) e o botão "extrair áudio".
 - A extração entra na **mesma fila de tarefas** (`Task.Kind = audio`):
   usa os mesmos eventos, mostra progresso (`EXTRAINDO ÁUDIO`) e permite
   cancelar; ao concluir, o item ganha "abrir pasta".

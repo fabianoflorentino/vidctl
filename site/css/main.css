@@ -668,6 +668,29 @@ a {
   padding: 14px 16px;
 }
 
+.aaudio {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+}
+
+.obtn.solid {
+  background: var(--acc);
+  border-color: var(--acc);
+  color: var(--acc-ink);
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.demo.st-audio-run .aaudio,
+.demo.st-audio-done .aaudio {
+  display: flex;
+}
+
 .aqhead {
   display: flex;
   align-items: center;
@@ -770,20 +793,6 @@ a {
 
 .aqres b {
   color: var(--ok);
-}
-
-/* grupo Extrair áudio da sidebar do mock */
-.aarun {
-  text-align: center;
-  background: var(--acc);
-  border: 1px solid var(--acc);
-  border-radius: 999px;
-  color: var(--acc-ink);
-  font-family: var(--mono);
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  padding: 8px 14px;
 }
 
 /* demo: acordeão e cartões novos */

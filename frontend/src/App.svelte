@@ -324,6 +324,8 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   })
 
   let prefsOpen = $state(false)
+  let audioSpec = $state<audio.Spec | undefined>(undefined)
+  let audioInvalid = $state('')
   let dragging = $state(false)
   let nativeFileDrop = true
 
@@ -1088,6 +1090,26 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
     }
   }
 
+  const AUDIO_EXTS: Record<string, string> = { mp3: 'mp3', opus: 'opus', aac: 'aac', flac: 'flac', wav: 'wav', copy: 'mka' }
+
+  function canExtractAudio(): boolean {
+    return !!ffmpegOk && !!info?.hasAudio && !!audioSpec && !audioInvalid && !!audioSpec.outputPath
+  }
+
+  // Rótulo da caixa de áudio: usa o caminho sugerido pelo backend e, enquanto
+  // ele não chega, um placeholder com a mesma convenção (pasta + sufixo + ext).
+  function audioOutputLabel(): string {
+    if (audioSpec?.outputPath) return audioSpec.outputPath
+    const codec = audioSpec?.codec ?? 'mp3'
+    const base = (inputPath.split(/[\\/]/).pop() || 'video').replace(/\.[^.]+$/, '')
+    return targetDir() + base + (audioSuffix || '-audio') + '.' + (AUDIO_EXTS[codec] ?? 'mp3')
+  }
+
+  function extractAudioNow() {
+    if (!canExtractAudio() || !audioSpec) return
+    void extractAudio(audioSpec)
+  }
+
   async function clearFinished() {
     try {
       const remaining = await ClearFinished()
@@ -1278,12 +1300,12 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
           {/if}
           </Section>
 
-      <Section title="Extrair áudio" open={sectionState.audio} onchange={() => toggleSection("audio")} infoTip="Tira a faixa de áudio do vídeo sem reencodar o vídeo: formato (mp3/opus/aac/flac/wav/copiar), qualidade, canais, normalização e janela de tempo. A extração entra na mesma fila de conversões.">
+      <Section title="Extrair áudio" open={sectionState.audio} onchange={() => toggleSection("audio")} infoTip="Opções da extração de áudio (formato, qualidade, canais, normalização e janela). A extração é disparada pelo botão na caixa do vídeo, abaixo do destino.">
           {#if !info}
             <div class="hint">escolha o vídeo para extrair o áudio</div>
           {:else}
             {#key inputPath}
-              <AudioPanel {inputPath} hasAudio={info.hasAudio} onExtract={extractAudio} />
+              <AudioPanel {inputPath} hasAudio={info.hasAudio} bind:spec={audioSpec} bind:invalid={audioInvalid} />
             {/key}
           {/if}
           </Section>
@@ -1388,6 +1410,16 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
                 {outputPath || 'escolha o vídeo para gerar o caminho de saída'}
               </span>
               <button class="btn subtle small" onclick={pickOutput} disabled={!inputPath}>salvar como…</button>
+            </div>
+          </div>
+        </div>
+        <div class="out-card group-card">
+          <div class="group-card-body">
+            <div class="out-row">
+              <button class="btn solid small" onclick={extractAudioNow} disabled={!canExtractAudio()}>extrair áudio</button>
+              <span class="out-path mono" class:empty={!audioSpec?.outputPath} title={audioOutputLabel()}>
+                {audioOutputLabel()}
+              </span>
             </div>
           </div>
         </div>

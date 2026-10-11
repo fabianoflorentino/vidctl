@@ -10,10 +10,11 @@
   interface Props {
     inputPath: string
     hasAudio: boolean
-    onExtract?: (spec: audio.Spec) => void
+    spec?: audio.Spec
+    invalid?: string
   }
 
-  let { inputPath, hasAudio, onExtract }: Props = $props()
+  let { inputPath, hasAudio, spec = $bindable(), invalid = $bindable('') }: Props = $props()
 
   const FORMATS = [
     { id: 'mp3', title: 'MP3', description: 'padrão da UI · 192 kbps' },
@@ -34,7 +35,6 @@
   let normalize = $state(false)
   let trimStart = $state('')
   let trimEnd = $state('')
-  let panelError = $state('')
 
   const codecOptions: RadioOption[] = FORMATS.map((f) => ({ id: f.id, title: f.title, description: f.description }))
 
@@ -90,7 +90,7 @@
     }
   })
 
-  const spec = $derived.by<audio.Spec>(() => ({
+  const specPlain = $derived.by<audio.Spec>(() => ({
     inputPath,
     codec,
     bitrateKbps: lossless ? 0 : bitrateKbps,
@@ -103,6 +103,14 @@
   }))
 
   $effect(() => {
+    spec = specPlain
+  })
+
+  $effect(() => {
+    invalid = validation
+  })
+
+  $effect(() => {
     if (lossless) bitrateKbps = DEFAULT_BITRATE[codec] ?? 0
     if (codec === 'copy') normalize = false
   })
@@ -110,15 +118,6 @@
   function selectCodec(id: string) {
     codec = id
     if (!LOSSLESS[id]) bitrateKbps = DEFAULT_BITRATE[id] ?? bitrateKbps
-  }
-
-  function run() {
-    if (validation) {
-      panelError = validation
-      return
-    }
-    panelError = ''
-    onExtract?.(spec)
   }
 </script>
 
@@ -160,21 +159,9 @@
 {#if !hasAudio}
   <div class="hint">este vídeo não tem faixa de áudio</div>
 {/if}
-{#if panelError}
-  <div class="split-error mono">{panelError}</div>
-{/if}
-
-<div class="audio-run">
-  <button class="btn solid" onclick={run} disabled={!inputPath || !!validation}>EXTRAIR ÁUDIO</button>
-</div>
 
 <style>
   .spacer {
     margin-top: 14px;
-  }
-  .audio-run {
-    margin-top: 14px;
-    display: flex;
-    justify-content: flex-end;
   }
 </style>
