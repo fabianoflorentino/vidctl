@@ -1110,6 +1110,9 @@ func TestNotifyOnError(t *testing.T) {
 
 func TestOpenFolderOnDone(t *testing.T) {
 	skipOnWindows(t)
+	if runtime.GOOS != "linux" {
+		t.Skip("the fake xdg-open only covers the Linux opener")
+	}
 	marker := filepath.Join(t.TempDir(), "opened-dir")
 	dir := t.TempDir()
 	scripts := map[string]string{
