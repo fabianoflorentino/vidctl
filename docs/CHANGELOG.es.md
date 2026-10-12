@@ -1,6 +1,6 @@
 # Changelog
 
-**Español · [Português (Brasil)](CHANGELOG.md) · [English](CHANGELOG.en.md) ·
+**Español · [Português (Brasil)](../CHANGELOG.md) · [English](CHANGELOG.en.md) ·
 [中文（简体）](CHANGELOG.zh-CN.md)**
 
 Todos los cambios relevantes de vidctl, en el formato
@@ -14,7 +14,13 @@ solo el sistema operativo de los paquetes.
 
 ## [Unreleased]
 
-Nada aún — en desarrollo.
+- **Notificaciones del sistema** (fase 7): aviso del escritorio cuando una
+  tarea termina o falla (`notifyOnDone`) y la opción de revelar la carpeta del
+  archivo de salida al finalizar (`openFolderOnDone`), configurables en la
+  nueva sección "Notificaciones" de Preferencias. El backend entrega vía
+  `beeep` (toast en Windows, Centro de notificaciones en macOS, `notify-send`
+  en Linux) y abre la carpeta con el gestor de archivos del sistema; las
+  notificaciones nunca afectan el resultado de la conversión.
 
 ## [2.4.0] — 2026-10-12
 

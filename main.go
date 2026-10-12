@@ -3,6 +3,7 @@ package main
 import (
 	"embed"
 
+	"github.com/fabianoflorentino/vidctl/internal/app"
 	"github.com/fabianoflorentino/vidctl/internal/dlog"
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
@@ -22,8 +23,7 @@ func fileDropOption() *options.DragAndDrop {
 }
 
 func main() {
-	// Create an instance of the app structure
-	app := NewApp()
+	a := newApp()
 
 	dlog.Printf("[main] vidctl iniciado com VIDCTL_DEBUG ativo")
 
@@ -39,9 +39,9 @@ func main() {
 		},
 		BackgroundColour: &options.RGBA{R: 13, G: 12, B: 10, A: 1},
 		DragAndDrop:      fileDropOption(),
-		OnStartup:        app.startup,
+		OnStartup:        app.OnStartupFor(a.App),
 		Bind: []interface{}{
-			app,
+			a,
 		},
 	})
 

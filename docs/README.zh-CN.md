@@ -1,6 +1,6 @@
 # vidctl
 
-**中文（简体）· [Português (Brasil)](README.md) · [English](README.en.md) ·
+**中文（简体）· [Português (Brasil)](../README.md) · [English](README.en.md) ·
 [Español](README.es.md)**
 
 使用 Go 后端的桌面视频压缩工具（Wails + ffmpeg）。选择一个目标
@@ -9,7 +9,7 @@
 **CRF**，并支持可选的 **H.265/HEVC**、**GPU 加速**（NVENC/QSV/AMF/VideoToolbox）、
 **按文件调整**（缩放、裁剪、移除音频、FPS、旋转、缩略图）。100% 离线。
 
-> 版本历史：[CHANGELOG.md](CHANGELOG.md)
+> 版本历史：[CHANGELOG.md](../CHANGELOG.md)
 
 ## 功能
 
@@ -31,6 +31,7 @@
 - 无需联网：字体和界面打包在二进制中
 - 启动时检查 `ffmpeg`/`ffprobe` 并在缺失时提示；“重新检查”按钮会重新读取系统 PATH，因此可以在应用打开时安装 ffmpeg，无需重启
 - **持久化配置**：预设、大小、CRF 和输出文件夹在下一次启动时恢复原样；也可以在“设置”中将 ffmpeg/ffprobe 指向 PATH 之外的位置
+- **系统通知**：任务完成或失败时发出桌面通知，并可在成功时自动打开输出文件所在文件夹 —— 两个开关都位于“设置”中
 - 在 Windows 上，转换和文件探测不会打开控制台窗口
 
 ## 安装
@@ -43,7 +44,7 @@
 | `v1.x.y-macos` | `vidctl-macos-arm64.zip` + 校验和 |
 | `v1.x.y-linux` | zip + `.deb` + `.rpm` + 校验和 |
 
-包含完整性校验和各系统 ffmpeg 的分步指南：**[docs/instalacao.md](docs/instalacao.md)**
+包含完整性校验和各系统 ffmpeg 的分步指南：**[instalacao.md](instalacao.md)**
 
 ## 工作原理
 
@@ -135,8 +136,8 @@ flowchart LR
 | `notifyOnDone` | `false` | 完成时通知 |
 | `openFolderOnDone` | `false` | 完成时打开输出文件夹 |
 
-`maxParallel` 已经作用于转换队列（启动和保存“设置”时应用）；`notifyOnDone`、
-`openFolderOnDone` 和 `language` 会保留在文件中，但只在[计划](docs/plano-implementacao.md)中的通知和 i18n 阶段才生效。
+`maxParallel` 已经作用于转换队列（启动和保存“设置”时应用）；`notifyOnDone` 和
+`openFolderOnDone` 控制[通知](#通知)。`language` 保留界面中选择的语言。
 
 你也可以手动编辑文件：越界值（CRF 超过 51、`maxParallel` 低于 1）会在读取时修正，其余内容（包括未来版本的字段）都会保留。
 
@@ -233,6 +234,15 @@ vidctl 一次处理**一个视频**：“切换视频…”（或将新文件拖
 - “切换视频…”会使用所选视频作为新目标（与 ⋮ → “切换文件”行为相同）；切换时队列不会新增额外任务。
 - 进度按任务显示（`compress:queued`、`compress:start`、`compress:progress`、`compress:done`、`compress:error`），因此某个项目出错不会拖垮其他项目。每个任务都会显示**转换用时**：处理期间已用时间和完成时的总时间 — 便于对比预设和编码器。
 
+## 通知
+
+在**设置**中，**通知**区域控制队列任务完成时的行为：
+
+- **完成时通知**（`notifyOnDone`）：当压缩或音频提取结束时显示系统通知 —— “已完成”或“失败”。
+- **完成后打开文件夹**（`openFolderOnDone`）：任务成功完成时，在文件管理器中显示输出视频所在的文件夹。
+
+通知使用各平台的原生通知器（Windows 的 toast、macOS 的通知中心、Linux 的 `notify-send`），绝不会影响转换结果：没有通知器的桌面环境只会忽略该提醒。
+
 ## 易用性
 
 - **可折叠侧栏**：配置卡片（`大小`/`质量`、`高级`、`预设`、`切割`、`提取音频`、`视频调整`）可通过其标题折叠与展开；`高级`、`切割`、`提取音频` 和 `视频调整` 默认关闭。
@@ -308,23 +318,25 @@ VIDCTL_SMOKE="/path/to/video.mp4" go test -run TestSmokeReal -v ./internal/compr
 ```text
 .
 ├── main.go                    # Wails 入口 + 窗口选项
-├── app.go                     # 暴露给前端的 bindings（对话框、compress、cancel）
 ├── internal/
+│   ├── app/                     # Wails 绑定门面（对话框、compress、队列、配置）
 │   ├── cmdutil/                 # 子进程创建与二进制查找（带 PATH override）
 │   ├── compress/                # ffmpeg 流程：码率预算、2-pass 和 CRF、任务管理
 │   ├── config/                  # 持久化偏好（config.json，原子读/写）
 │   ├── events/                  # 后端 → 前端事件（progress/done/error）
 │   ├── media/                   # 通过 ffprobe 读取元数据、通过 ffmpeg 生成缩略图
+│   ├── notify/                  # 桌面通知（beeep — toast/通知中心/notify-send）
 │   ├── presets/                 # 按平台配置（WhatsApp、Instagram、Shorts、YouTube）
 │   ├── split/                   # 分段切割计划（N 段或每段分钟）
-│   └── sysinfo/                 # 供进度面板使用的 CPU/内存/GPU 用量
+│   ├── sysinfo/                 # 供进度面板使用的 CPU/内存/GPU 用量
+│   └── systemtheme/             # 按操作系统检测浅色/深色主题
 ├── frontend/                    # Svelte 5 + Vite UI（bindings 在 frontend/wailsjs）
 ├── pkg/
 │   ├── aur/                     # PKGBUILD + 脚本（类 AUR 安装）
 │   ├── arch/                    # pkg/arch/install.sh（makepkg -si）
 │   ├── deb/ · rpm/              # .deb 和 .rpm 包描述
 │   └── icon/ · vidctl.desktop
-├── docs/                        # 安装指南、backlog 和实施计划
+├── docs/                        # 4 种语言的 README/CHANGELOG、安装指南、backlog 和实施计划
 ├── site/                        # 静态落地页（Pages）
 ├── build/                       # Wails 构建资源（图标、darwin/windows）
 ├── .github/workflows/           # CI · Release（zips + deb + rpm）· Pages

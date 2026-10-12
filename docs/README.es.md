@@ -1,6 +1,6 @@
 # vidctl
 
-**Español · [Português (Brasil)](README.md) · [English](README.en.md) ·
+**Español · [Português (Brasil)](../README.md) · [English](README.en.md) ·
 [中文（简体）](README.zh-CN.md)**
 
 Compresor de vídeo de escritorio con backend Go (Wails + ffmpeg). Elige un
@@ -11,7 +11,7 @@ cortar la escena. Alimentado por encode **2-pass** cuando hay límite de tamaño
 GPU** opcionales (NVENC/QSV/AMF/VideoToolbox) y **ajustes por archivo** (escala,
 corte, quitar audio, FPS, rotación, thumbnail). 100 % offline.
 
-> Historial de versiones: [CHANGELOG.md](CHANGELOG.md)
+> Historial de versiones: [CHANGELOG.md](../CHANGELOG.md)
 
 ## Funciones
 
@@ -68,6 +68,9 @@ corte, quitar audio, FPS, rotación, thumbnail). 100 % offline.
 - **Configuración persistente**: preset, tamaño, CRF y carpeta de destino
   vuelven como estaban al siguiente inicio; puedes apuntar ffmpeg/ffprobe fuera
   del PATH en Preferencias
+- **Notificaciones del sistema**: aviso del escritorio cuando una tarea termina
+  o falla, y opción de abrir automáticamente la carpeta del archivo de salida
+  al finalizar — los dos interruptores están en Preferencias
 - En Windows, las conversiones y las sondas de archivo no abren ventanas de
   consola
 
@@ -84,7 +87,7 @@ plataforma**:
 | `v1.x.y-linux` | zip + `.deb` + `.rpm` + checksums |
 
 Guía paso a paso, con verificación de integridad y el ffmpeg por sistema:
-**[docs/instalacao.md](docs/instalacao.md)**
+**[instalacao.md](instalacao.md)**
 
 ## Cómo funciona
 
@@ -179,10 +182,10 @@ inválido, la app abre con los valores predeterminados en lugar de fallar.
 | `notifyOnDone` | `false` | notificar al terminar |
 | `openFolderOnDone` | `false` | abrir la carpeta de salida al terminar |
 
-`maxParallel` ya aplica a la cola de conversiones (aplicado al inicio y al
-guardar Preferencias); `notifyOnDone`, `openFolderOnDone` y `language` se
-conservan en el archivo pero solo tienen efecto con las fases de notificación e
-i18n del [plan](docs/plano-implementacao.md).
+`maxParallel` aplica a la cola de conversiones (aplicado al inicio y al guardar
+Preferencias); `notifyOnDone` y `openFolderOnDone` controlan las
+[notificaciones](#notificaciones). `language` conserva el idioma elegido en la
+interfaz.
 
 También puedes editar el archivo a mano: los valores fuera de rango (CRF sobre
 51, `maxParallel` bajo 1) se corrigen al leer, y el resto se conserva, incluidos
@@ -349,6 +352,22 @@ a elemento o **vaciar cola** (quita terminados, errores y cancelados).
   transcurrido durante el proceso y total al terminar — útil para comparar
   presets y codificadores.
 
+## Notificaciones
+
+En **Preferencias**, la sección **Notificaciones** controla lo que ocurre
+cuando una tarea de la cola termina:
+
+- **Avisar al finalizar** (`notifyOnDone`): muestra una notificación del
+  sistema — "finalizado" o "falló" — cuando una compresión o extracción de
+  audio llega a su fin.
+- **Abrir carpeta al finalizar** (`openFolderOnDone`): revela en el gestor de
+  archivos la carpeta del vídeo de salida cuando la tarea termina con éxito.
+
+Las notificaciones usan el sistema nativo de cada plataforma (toast en Windows,
+Notification Center en macOS, `notify-send` en Linux) y nunca interfieren con el
+resultado de la conversión: un escritorio sin notificador simplemente ignora el
+aviso.
+
 ## Usabilidad
 
 - **Sidebar colapsable**: las tarjetas de configuración (`Tamaño`/`Calidad`,
@@ -442,23 +461,25 @@ VIDCTL_SMOKE="/ruta/al/video.mp4" go test -run TestSmokeReal -v ./internal/compr
 ```text
 .
 ├── main.go                    # entrypoint Wails + opciones de la ventana
-├── app.go                     # bindings expuestos al frontend (diálogos, compress, cancel)
 ├── internal/
+│   ├── app/                     # fachada de bindings del Wails (diálogos, compress, cola, config)
 │   ├── cmdutil/                 # creación de subprocesos y búsqueda de binarios (con override del PATH)
 │   ├── compress/                # pipeline ffmpeg: presupuesto de bitrate, 2-pass y CRF, gestión de jobs
 │   ├── config/                  # preferencias persistidas en config.json (lectura/escritura atómica)
 │   ├── events/                  # eventos backend → frontend (progress/done/error)
 │   ├── media/                   # lectura de metadatos vía ffprobe y miniaturas vía ffmpeg
+│   ├── notify/                  # notificaciones del escritorio (beeep — toast/Centro de notificaciones/notify-send)
 │   ├── presets/                 # perfiles por plataforma (WhatsApp, Instagram, Shorts, YouTube)
 │   ├── split/                   # plan de corte en partes (N partes o min/parte)
-│   └── sysinfo/                 # uso de CPU/memoria/GPU para el panel de progreso
+│   ├── sysinfo/                 # uso de CPU/memoria/GPU para el panel de progreso
+│   └── systemtheme/             # detección del tema claro/oscuro del sistema por SO
 ├── frontend/                    # UI Svelte 5 + Vite (bindings en frontend/wailsjs)
 ├── pkg/
 │   ├── aur/                     # PKGBUILD + scripts (instalación estilo AUR)
 │   ├── arch/                    # pkg/arch/install.sh (makepkg -si)
 │   ├── deb/ · rpm/              # descriptores de los paquetes .deb y .rpm
 │   └── icon/ · vidctl.desktop
-├── docs/                        # instalación, backlog y planes de implementación
+├── docs/                        # README/CHANGELOG en 4 idiomas, instalación, backlog y planes
 ├── site/                        # landing page estática (Pages)
 ├── build/                       # recursos de build del Wails (ícono, darwin/windows)
 ├── .github/workflows/           # CI · Release (zips + deb + rpm) · Pages

@@ -1,7 +1,7 @@
 # Changelog
 
-**Português (Brasil) · [English](CHANGELOG.en.md) · [Español](CHANGELOG.es.md) ·
-[中文（简体）](CHANGELOG.zh-CN.md)**
+**Português (Brasil) · [English](docs/CHANGELOG.en.md) · [Español](docs/CHANGELOG.es.md) ·
+[中文（简体）](docs/CHANGELOG.zh-CN.md)**
 
 Todas as mudanças relevantes do vidctl, no formato
 [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/), com
@@ -14,7 +14,13 @@ operacional dos pacotes.
 
 ## [Unreleased]
 
-Nada ainda — em desenvolvimento.
+- **Notificações do sistema** (fase 7): aviso do desktop quando uma tarefa
+  termina ou falha (`notifyOnDone`) e a opção de revelar a pasta do arquivo de
+  saída ao concluir (`openFolderOnDone`), configuráveis na nova seção
+  "Notificações" das Preferências. O backend entrega via `beeep` (toast no
+  Windows, central de notificações no macOS, `notify-send` no Linux) e abre a
+  pasta com o gerenciador de arquivos do sistema; notificações nunca afetam o
+  resultado da conversão.
 
 ## [2.4.0] — 2026-10-12
 

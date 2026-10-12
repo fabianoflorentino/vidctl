@@ -1,4 +1,8 @@
-package main
+// Package systemtheme detects whether the operating system is in dark mode.
+// WebKitGTK on Linux often reports prefers-color-scheme: light no matter the
+// desktop theme, so the app reads the real preference (gsettings/GTK, macOS
+// defaults, Windows registry) instead of trusting the webview.
+package systemtheme
 
 import (
 	"os"
@@ -8,11 +12,8 @@ import (
 	"strings"
 )
 
-// systemTheme reports whether the operating system is in dark mode. WebKitGTK
-// on Linux often reports prefers-color-scheme: light no matter the desktop
-// theme, so the app reads the real preference (gsettings/GTK, macOS defaults,
-// Windows registry) instead of trusting the webview.
-func systemTheme() string {
+// Detect reports "dark" or "light" for the current operating system.
+func Detect() string {
 	switch runtime.GOOS {
 	case "windows":
 		return themeFromRegistry(regAppsUseThemeOutput())
@@ -21,11 +22,6 @@ func systemTheme() string {
 	default:
 		return themeFromLinux()
 	}
-}
-
-// SystemTheme is exposed to the frontend: "dark" | "light".
-func (a *App) SystemTheme() string {
-	return systemTheme()
 }
 
 // --- Windows ---

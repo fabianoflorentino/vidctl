@@ -1,6 +1,6 @@
 # vidctl
 
-**English · [Português (Brasil)](README.md) · [Español](README.es.md) ·
+**English · [Português (Brasil)](../README.md) · [Español](README.es.md) ·
 [中文（简体）](README.zh-CN.md)**
 
 Desktop video compressor with a Go backend (Wails + ffmpeg). Pick a destination
@@ -11,7 +11,7 @@ cutting the scene. Powered by **2-pass** encoding when there is a size limit or
 acceleration** (NVENC/QSV/AMF/VideoToolbox) and **per-file adjustments** (scale,
 cut, remove audio, FPS, rotation, thumbnail). 100% offline.
 
-> Version history: [CHANGELOG.md](CHANGELOG.md)
+> Version history: [CHANGELOG.md](../CHANGELOG.md)
 
 ## Features
 
@@ -67,6 +67,9 @@ cut, remove audio, FPS, rotation, thumbnail). 100% offline.
 - **Persistent configuration**: preset, size, CRF and destination folder come
   back as they were on the next boot; you can point ffmpeg/ffprobe outside the
   PATH in Preferences
+- **System notifications**: a desktop alert when a task finishes or fails, and
+  an option to open the output file folder automatically on success — both
+  toggles live in Preferences
 - On Windows, conversions and file probing do not open console windows
 
 ## Installation
@@ -82,7 +85,7 @@ platform**:
 | `v1.x.y-linux` | zip + `.deb` + `.rpm` + checksums |
 
 Step-by-step guide, with integrity verification and per-system ffmpeg:
-**[docs/instalacao.md](docs/instalacao.md)**
+**[instalacao.md](instalacao.md)**
 
 ## How it works
 
@@ -176,10 +179,10 @@ the default values instead of failing.
 | `notifyOnDone` | `false` | notify when finished |
 | `openFolderOnDone` | `false` | open the output folder when finished |
 
-`maxParallel` already applies to the conversion queue (applied at startup and
-when saving Preferences); `notifyOnDone`, `openFolderOnDone` and `language` are
-preserved in the file but only take effect with the notification and i18n phases
-of the [plan](docs/plano-implementacao.md).
+`maxParallel` applies to the conversion queue (applied at startup and when
+saving Preferences); `notifyOnDone` and `openFolderOnDone` control the
+[notifications](#notifications). `language` keeps the interface language
+chosen in Preferences.
 
 You can also edit the file by hand: out-of-range values (CRF above 51,
 `maxParallel` below 1) are fixed on read, and everything else is preserved,
@@ -341,6 +344,21 @@ or **clear the queue** (removes finished, failed and canceled items).
   elapsed during processing and total when done — useful for comparing presets
   and encoders.
 
+## Notifications
+
+In **Preferences**, the **Notifications** section controls what happens when a
+queue task finishes:
+
+- **Notify when finished** (`notifyOnDone`): shows a system notification —
+  "finished" or "failed" — when a compression or audio extraction comes to an
+  end.
+- **Open folder on done** (`openFolderOnDone`): reveals the output video
+  folder in the file manager when the task finishes successfully.
+
+Notifications use the native notifier of each platform (toast on Windows,
+Notification Center on macOS, `notify-send` on Linux) and never affect the
+conversion result: a desktop without a notifier simply ignores the alert.
+
 ## Usability
 
 - **Collapsible sidebar**: the configuration cards (`Size`/`Quality`, `Advanced`,
@@ -432,23 +450,25 @@ VIDCTL_SMOKE="/path/to/video.mp4" go test -run TestSmokeReal -v ./internal/compr
 ```text
 .
 ├── main.go                    # Wails entrypoint + window options
-├── app.go                     # bindings exposed to the frontend (dialogs, compress, cancel)
 ├── internal/
+│   ├── app/                     # Wails binding facade (dialogs, compress, queue, config)
 │   ├── cmdutil/                 # subprocess creation and binary lookup (with PATH override)
 │   ├── compress/                # ffmpeg pipeline: bitrate budget, 2-pass and CRF, job management
 │   ├── config/                  # preferences persisted in config.json (atomic read/write)
 │   ├── events/                  # backend → frontend events (progress/done/error)
 │   ├── media/                   # metadata via ffprobe and thumbnails via ffmpeg
+│   ├── notify/                  # desktop notifications (beeep — toast/Notification Center/notify-send)
 │   ├── presets/                 # per-platform profiles (WhatsApp, Instagram, Shorts, YouTube)
 │   ├── split/                   # part-cut plan (N parts or min/part)
-│   └── sysinfo/                 # CPU/memory/GPU usage for the progress panel
+│   ├── sysinfo/                 # CPU/memory/GPU usage for the progress panel
+│   └── systemtheme/             # per-OS light/dark system theme detection
 ├── frontend/                    # Svelte 5 + Vite UI (bindings in frontend/wailsjs)
 ├── pkg/
 │   ├── aur/                     # PKGBUILD + scripts (AUR-style install)
 │   ├── arch/                    # pkg/arch/install.sh (makepkg -si)
 │   ├── deb/ · rpm/              # .deb and .rpm package descriptors
 │   └── icon/ · vidctl.desktop
-├── docs/                        # install guide, backlog and implementation plans
+├── docs/                        # README/CHANGELOG in 4 languages, install guide, backlog, plans
 ├── site/                        # static landing page (Pages)
 ├── build/                       # Wails build assets (icon, darwin/windows)
 ├── .github/workflows/           # CI · Release (zips + deb + rpm) · Pages

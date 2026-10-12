@@ -1,4 +1,4 @@
-package main
+package app
 
 import (
 	"context"
@@ -15,6 +15,7 @@ import (
 	"github.com/fabianoflorentino/vidctl/internal/compress"
 	"github.com/fabianoflorentino/vidctl/internal/config"
 	"github.com/fabianoflorentino/vidctl/internal/events"
+	"github.com/fabianoflorentino/vidctl/internal/notify"
 	"github.com/fabianoflorentino/vidctl/internal/presets"
 )
 
@@ -986,5 +987,184 @@ func TestSuggestAudioOutput(t *testing.T) {
 	}
 	if want := filepath.Join("/tmp", "x-triha.opus"); got != want {
 		t.Errorf("SuggestAudioOutput = %q, want %q", got, want)
+	}
+}
+
+type notifyRecorder struct {
+	ch chan string
+}
+
+func (n *notifyRecorder) Notify(title, message string) error {
+	n.ch <- title + ": " + message
+	return nil
+}
+
+func fakeFFprobeScript() string {
+	return `#!/bin/sh
+printf '%s\n' '{"streams":[{"codec_type":"video","codec_name":"h264","width":320,"height":240,"duration":2.0}],"format":{"duration":2.0}}'
+`
+}
+
+func newNotificationApp(t *testing.T) *App {
+	t.Helper()
+	a := newTestApp(t)
+	// Observe-only emitter: the real startup() routes through the Wails runtime
+	// context, which aborts the test binary on invalid lifecycle contexts.
+	events.SetEmitter(func(name string, data any) {
+		a.jobs.Observe(name, data)
+	})
+	t.Cleanup(func() { events.SetEmitter(nil) })
+	return a
+}
+
+func TestNotifyOnDone(t *testing.T) {
+	skipOnWindows(t)
+	dir := t.TempDir()
+	scripts := map[string]string{
+		"ffmpeg":  "#!/bin/sh\nexit 0\n",
+		"ffprobe": fakeFFprobeScript(),
+	}
+	for name, script := range scripts {
+		if err := os.WriteFile(filepath.Join(dir, name), []byte(script), 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	t.Setenv("PATH", dir)
+
+	rec := &notifyRecorder{ch: make(chan string, 4)}
+	notify.SetSender(rec)
+	t.Cleanup(func() { notify.SetSender(nil) })
+
+	a := newNotificationApp(t)
+	cfg := config.Defaults()
+	cfg.NotifyOnDone = true
+	if err := a.store.Save(cfg); err != nil {
+		t.Fatal(err)
+	}
+
+	jobID, err := a.Compress(compress.Job{
+		InputPath:  "in.mp4",
+		OutputPath: filepath.Join(t.TempDir(), "out.mp4"),
+		PresetID:   "whatsapp-status",
+	})
+	if err != nil {
+		t.Fatalf("Compress: %v", err)
+	}
+	if s := waitTaskTerminal(t, a, jobID); s.State != compress.StateDone {
+		t.Fatalf("final state = %q; want done", s.State)
+	}
+	select {
+	case got := <-rec.ch:
+		if !strings.Contains(got, "vidctl") || !strings.Contains(got, "in.mp4") || !strings.Contains(got, "finished") {
+			t.Errorf("notification = %q; want vidctl/in.mp4 finished", got)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("no notification emitted on done")
+	}
+}
+
+func TestNotifyOnError(t *testing.T) {
+	skipOnWindows(t)
+	dir := t.TempDir()
+	scripts := map[string]string{
+		"ffmpeg":  "#!/bin/sh\nexit 1\n",
+		"ffprobe": fakeFFprobeScript(),
+	}
+	for name, script := range scripts {
+		if err := os.WriteFile(filepath.Join(dir, name), []byte(script), 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	t.Setenv("PATH", dir)
+
+	rec := &notifyRecorder{ch: make(chan string, 4)}
+	notify.SetSender(rec)
+	t.Cleanup(func() { notify.SetSender(nil) })
+
+	a := newNotificationApp(t)
+	cfg := config.Defaults()
+	cfg.NotifyOnDone = true
+	if err := a.store.Save(cfg); err != nil {
+		t.Fatal(err)
+	}
+
+	jobID, err := a.Compress(compress.Job{
+		InputPath: "in.mp4",
+		PresetID:  "whatsapp-status",
+	})
+	if err != nil {
+		t.Fatalf("Compress: %v", err)
+	}
+	if s := waitTaskTerminal(t, a, jobID); s.State != compress.StateError {
+		t.Fatalf("final state = %q; want error", s.State)
+	}
+	select {
+	case got := <-rec.ch:
+		if !strings.Contains(got, "in.mp4") || !strings.Contains(got, "failed") {
+			t.Errorf("notification = %q; want in.mp4 failed", got)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("no notification emitted on error")
+	}
+}
+
+func TestOpenFolderOnDone(t *testing.T) {
+	skipOnWindows(t)
+	if runtime.GOOS != "linux" {
+		t.Skip("the fake xdg-open only covers the Linux opener")
+	}
+	marker := filepath.Join(t.TempDir(), "opened-dir")
+	dir := t.TempDir()
+	scripts := map[string]string{
+		"ffmpeg":   "#!/bin/sh\nexit 0\n",
+		"ffprobe":  fakeFFprobeScript(),
+		"xdg-open": "#!/bin/sh\nprintf '%s' \"$1\" > '" + marker + "'\n",
+	}
+	for name, script := range scripts {
+		if err := os.WriteFile(filepath.Join(dir, name), []byte(script), 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	t.Setenv("PATH", dir)
+
+	a := newNotificationApp(t)
+	cfg := config.Defaults()
+	cfg.OpenFolderOnDone = true
+	if err := a.store.Save(cfg); err != nil {
+		t.Fatal(err)
+	}
+
+	outDir := t.TempDir()
+	jobID, err := a.Compress(compress.Job{
+		InputPath:  "in.mp4",
+		OutputPath: filepath.Join(outDir, "out.mp4"),
+		PresetID:   "whatsapp-status",
+	})
+	if err != nil {
+		t.Fatalf("Compress: %v", err)
+	}
+	if s := waitTaskTerminal(t, a, jobID); s.State != compress.StateDone {
+		t.Fatalf("final state = %q; want done", s.State)
+	}
+
+	deadline := time.Now().Add(5 * time.Second)
+	var got []byte
+	for time.Now().Before(deadline) {
+		data, err := os.ReadFile(marker)
+		if err == nil {
+			got = data
+			break
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+	if string(got) != outDir {
+		t.Errorf("xdg-open received %q; want %q", got, outDir)
+	}
+}
+
+func TestSystemThemeBinding(t *testing.T) {
+	a := NewApp()
+	if got := a.SystemTheme(); got != "dark" && got != "light" {
+		t.Errorf("SystemTheme() = %q, want dark|light", got)
 	}
 }

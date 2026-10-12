@@ -36,7 +36,7 @@ Branch            | Fase | PR
 `feat/hevc`       | 4 — HEVC/x265 + GPU (hardware) | mergeado
 `feat/ajustes`    | 5 — Ajustes por arquivo | mergeado
 `feat/audio`      | 6 — Extração de áudio | mergeado
-`feat/notificacao`| 7 — Notificação + abrir pasta | pendente
+`feat/notificacoes`| 7 — Notificação + abrir pasta | mergeado
 `feat/updates`    | 8 — Verificação de atualização | pendente
 `feat/presets`    | 9 — Presets personalizados | pendente
 `feat/i18n`       | 10 — i18n pt-BR/en/es/zh + base em inglês | mergeado
@@ -58,7 +58,7 @@ Branch            | Fase | PR
 | 4 | Codec HEVC/x265 + aceleração de GPU (NVENC/AMF/QSV/VideoToolbox) | §4 | G |
 | 5 | Ajustes por arquivo (escala, corte, áudio, FPS, thumbnail) | §5 | G |
 | 6 | Extração de áudio com opções (mp3/opus/aac/flac/wav/copiar) | §6 | M | ✅ |
-| 7 | Notificação ao concluir + abrir pasta | §7 | P |
+| 7 | Notificação ao concluir + abrir pasta | §7 | P | ✅ |
 | 8 | Verificação de atualização no app | §8 | M |
 | 9 | Presets personalizados pelo usuário | §9 | M |
 | 10 | i18n (pt-BR/en/es/zh) + base em inglês | §10 | G | ✅ |
@@ -519,6 +519,16 @@ só comprime vídeo; extração é um botão novo no card do arquivo.
 
 **Objetivo:** aviso de sistema quando um job termina/erro e auto-abrir pasta.
 
+> **Status: ✅ implementada e entregue na v2.5.0** — ver `feat/notificacoes`
+> (mergeado). Adotado **beeep** (decisão 1). O `compress.Manager` ganhou
+> `SetOnFinish` (executado fora da trava, após o estado terminal) e o `App`
+> injeta `notifyFinish`: lê a config e aplica `notifyOnDone` (notifica
+> "terminou"/"falhou" via `internal/notify`, com `Sender` injetável) e
+> `openFolderOnDone` (abre a pasta de saída só em sucesso). Sem evento novo no
+> contrato do front — a notificação é efeito colateral da fila. As
+> **Preferências** ganharam a seção "Notificações" com os dois toggles
+> (persistidos em `config.json`).
+
 ### Backend
 - `internal/notify` com interface `Sender` (padrão `beeep`/`go-toast`
   Windows/`notify-send` Linux/`osascript` macOS). A dependência `go-toast`
@@ -890,6 +900,8 @@ import de mídia de um compositor (ex.: DaVinci Resolve).
    wrappers por SO usando `go-toast` (já no `go.mod`, Windows-only) +
    `notify-send`/`osascript` (zero dependência nova). Recomendado: **beeep**,
    com interface `Sender` para trocar depois sem tocar a UI.
+   > ✅ **Resolvido na v2.5.0 (feat/notificacoes):** beeep adotado; `Sender`
+   > injetável (`notify.SetSender`) usado nos testes.
 2. **Precisão em hardware (fase 4)**: NVENC/AMF 1-pass VBR não atingem o
    tamanho exato do 2-pass. Default permanece software; hardware no modo
    `size` assume tolerância (+/− ~5–10%). Validar com usuário se aceita.
@@ -934,7 +946,7 @@ v2.2.0  → Fases 1–5 + 13–15 (config, fila, estimativa, codec/hw, ajustes, 
 v2.2.1  → ícone unificado nos instaladores            [entregue]
 v2.3.0  → Fase 6 (extrair áudio)                      [entregue]
 v2.4.0  → Fase 10 (i18n + base em inglês)                 [entregue]
-v2.5.0  → Fase 7 (notificações)                       [depende de config]
+v2.5.0  → Fase 7 (notificações)                       [depende de config; branch feat/notificacoes]
 v2.6.0  → Fase 8 (check update)                       [usa a API de releases por tag + fluxo de publish novo]
 v2.7.0  → Fase 9 (presets custom)                     [depende de config]
 v2.8.0  → Fase 12 (transcrição srt/vtt/txt)

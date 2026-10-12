@@ -1,4 +1,4 @@
-package main
+package systemtheme
 
 import (
 	"strings"
@@ -30,13 +30,13 @@ func TestThemeFromRegistry(t *testing.T) {
 	}
 	// unreadable registry (no "reg" binary) assumes dark, the common default.
 	if got := themeFromRegistry(""); got != "dark" {
-		t.Errorf("themeFromRegistry(vazio) = %q, want dark", got)
+		t.Errorf("themeFromRegistry(empty) = %q, want dark", got)
 	}
 }
 
 func TestAppleStyleIsDark(t *testing.T) {
 	if !appleStyleIsDark("Dark") {
-		t.Error("AppleInterfaceStyle=Dark deveria ser dark")
+		t.Error("AppleInterfaceStyle=Dark should be dark")
 	}
 	if appleStyleIsDark("Light") {
 		t.Error("AppleInterfaceStyle=Light should not be dark")
@@ -53,9 +53,9 @@ func TestGTKIniIsDark(t *testing.T) {
 		want    bool
 	}{
 		{"prefer dark global", "[Settings]\ngtk-application-prefer-dark-theme=1\n", true},
-		{"prefer dark desligado", "[Settings]\ngtk-application-prefer-dark-theme=0\n", false},
-		{"tema com nome Dark", "[Settings]\ngtk-theme-name=Adwaita-dark\n", true},
-		{"tema normal", "[Settings]\ngtk-theme-name=Adwaita\n", false},
+		{"prefer dark off", "[Settings]\ngtk-application-prefer-dark-theme=0\n", false},
+		{"theme named Dark", "[Settings]\ngtk-theme-name=Adwaita-dark\n", true},
+		{"plain theme", "[Settings]\ngtk-theme-name=Adwaita\n", false},
 		{"no configuration", "", false},
 	}
 	for _, tt := range tests {
@@ -68,24 +68,17 @@ func TestGTKIniIsDark(t *testing.T) {
 }
 
 func TestSystemThemeReturnsUsableValue(t *testing.T) {
-	if got := systemTheme(); got != "dark" && got != "light" {
-		t.Errorf("systemTheme() = %q, want dark|light", got)
-	}
-}
-
-func TestSystemThemeBinding(t *testing.T) {
-	a := NewApp()
-	if got := a.SystemTheme(); got != "dark" && got != "light" {
-		t.Errorf("SystemTheme() = %q, want dark|light", got)
+	if got := Detect(); got != "dark" && got != "light" {
+		t.Errorf("Detect() = %q, want dark|light", got)
 	}
 }
 
 func TestThemeFromLinuxGsettingsLikes(t *testing.T) {
 	// The gsettings flow does not run here; we only keep the invariants
-	// dos prefixos que o temaFromLinux consome.
+	// of the prefixes that fromLinux consumes.
 	for _, s := range []string{strings.ToLower("prefer-dark"), strings.ToLower("Adwaita-dark")} {
 		if !strings.Contains(s, "dark") {
-			t.Errorf("%q deveria conter dark", s)
+			t.Errorf("%q should contain dark", s)
 		}
 	}
 }
