@@ -44,16 +44,16 @@ func (s Segment) Duration() float64 {
 // into the last slice (no part is ever shorter than 1 minute).
 func Plan(durationSec float64, spec Spec) ([]Segment, error) {
 	if spec.Parts > 0 && spec.MinutesEach > 0 {
-		return nil, errors.New("informe apenas uma opção de corte: número de partes ou minutos por parte")
+		return nil, errors.New("provide only one cut option: number of parts or minutes per part")
 	}
 	if spec.Parts <= 0 && spec.MinutesEach <= 0 {
-		return nil, errors.New("corte requer número de partes ou minutos por parte")
+		return nil, errors.New("cut requires a number of parts or minutes per part")
 	}
 	if durationSec <= 0 {
-		return nil, errors.New("duração do vídeo inválida")
+		return nil, errors.New("invalid video duration")
 	}
 	if durationSec < MinPartSec {
-		return nil, fmt.Errorf("vídeo com %.0fs é mais curto que o mínimo de 1 min por parte", durationSec)
+		return nil, fmt.Errorf("video of %.0fs is shorter than the 1 min per part minimum", durationSec)
 	}
 
 	if spec.Parts > 0 {
@@ -67,12 +67,12 @@ func planByParts(durationSec float64, parts int) ([]Segment, error) {
 		return nil, errors.New("corte em partes precisa de pelo menos 2 partes")
 	}
 	if parts > MaxParts {
-		return nil, fmt.Errorf("máximo de %d partes por vídeo", MaxParts)
+		return nil, fmt.Errorf("maximum of %d parts per video", MaxParts)
 	}
 	slice := durationSec / float64(parts)
 	if slice < MinPartSec {
 		return nil, fmt.Errorf(
-			"cada parte teria %s; o mínimo é 1 min. Use menos partes",
+			"each part would be %s; the minimum is 1 min. Use fewer parts",
 			humanDuration(slice))
 	}
 	return segments(durationSec, func(i int) float64 {
@@ -85,7 +85,7 @@ func planByMinutes(durationSec float64, minutes float64) ([]Segment, error) {
 		return nil, errors.New("cada parte precisa ter pelo menos 1 minuto")
 	}
 	if minutes > MaxMinutesEach {
-		return nil, fmt.Errorf("máximo de %d minutos por parte", MaxMinutesEach)
+		return nil, fmt.Errorf("maximum of %d minutes per part", MaxMinutesEach)
 	}
 	slice := minutes * 60
 	full := int(math.Floor(durationSec / slice))
@@ -100,10 +100,10 @@ func planByMinutes(durationSec float64, minutes float64) ([]Segment, error) {
 	}
 	if total < 2 {
 		return nil, fmt.Errorf(
-			"com %g min por parte o vídeo inteiro cabe em 1 parte; não há corte", minutes)
+			"with %g min per part the whole video fits in 1 part; no cut", minutes)
 	}
 	if total > MaxParts {
-		return nil, fmt.Errorf("corte geraria %d partes; o máximo é %d", total, MaxParts)
+		return nil, fmt.Errorf("cut would create %d parts; the maximum is %d", total, MaxParts)
 	}
 
 	return segments(durationSec, func(i int) float64 {

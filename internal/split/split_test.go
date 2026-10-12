@@ -61,12 +61,12 @@ func TestPlanByParts(t *testing.T) {
 			name:        "partes menores que o minimo sao rejeitadas",
 			durationSec: 300,
 			spec:        Spec{Parts: 6},
-			wantErr:     "o mínimo é 1 min",
+			wantErr:     "the minimum is 1 min",
 		},
 		{name: "uma parte nao e corte", durationSec: 1800, spec: Spec{Parts: 1}, wantErr: "pelo menos 2 partes"},
-		{name: "partes demais", durationSec: 1800, spec: Spec{Parts: MaxParts + 1}, wantErr: "máximo"},
-		{name: "video curto demais", durationSec: 30, spec: Spec{Parts: 2}, wantErr: "mais curto que o mínimo"},
-		{name: "duracao invalida", durationSec: 0, spec: Spec{Parts: 2}, wantErr: "duração do vídeo inválida"},
+		{name: "partes demais", durationSec: 1800, spec: Spec{Parts: MaxParts + 1}, wantErr: "maximum"},
+		{name: "video curto demais", durationSec: 30, spec: Spec{Parts: 2}, wantErr: "shorter than the 1 min per part minimum"},
+		{name: "duracao invalida", durationSec: 0, spec: Spec{Parts: 2}, wantErr: "invalid video duration"},
 	}
 
 	for _, tt := range tests {
@@ -138,7 +138,7 @@ func TestPlanByMinutes(t *testing.T) {
 			name:        "video cabe em uma parte nao gera corte",
 			durationSec: 240,
 			spec:        Spec{MinutesEach: 5},
-			wantErr:     "cabe em 1 parte",
+			wantErr:     "fits in 1 part",
 		},
 		{
 			name:        "minutos fracionarios cortam em partes de 1m30s",
@@ -159,13 +159,13 @@ func TestPlanByMinutes(t *testing.T) {
 			name:        "escolhas conflitantes",
 			durationSec: 1800,
 			spec:        Spec{Parts: 6, MinutesEach: 5},
-			wantErr:     "apenas uma opção",
+			wantErr:     "only one",
 		},
 		{
 			name:        "nenhuma escolha",
 			durationSec: 1800,
 			spec:        Spec{},
-			wantErr:     "requer número de partes",
+			wantErr:     "requires a number of parts",
 		},
 	}
 
@@ -188,7 +188,7 @@ func TestPlanByMinutes(t *testing.T) {
 
 func TestPlanByMinutesMaxParts(t *testing.T) {
 	_, err := Plan(61*60, Spec{MinutesEach: 1})
-	if err == nil || !strings.Contains(err.Error(), "máximo") {
+	if err == nil || !strings.Contains(err.Error(), "maximum") {
 		t.Fatalf("err = %v, want erro de máximo de partes", err)
 	}
 }

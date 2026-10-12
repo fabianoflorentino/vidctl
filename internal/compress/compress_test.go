@@ -347,7 +347,7 @@ func TestRunFFprobeMissing(t *testing.T) {
 
 	got := captureCompressEvents(t)
 	Run(context.Background(), "j3", Job{InputPath: "in.mp4", OutputPath: "out.mp4", PresetID: "whatsapp-status"})
-	if err := findErr(got); !strings.Contains(err, "ffprobe não encontrado") {
+	if err := findErr(got); !strings.Contains(err, "ffprobe not found") {
 		t.Errorf("erro inesperado: %q", err)
 	}
 }
@@ -598,7 +598,7 @@ func TestRunSplitInvalid(t *testing.T) {
 		PresetID:   "whatsapp-status",
 		Split:      &split.Spec{Parts: 300},
 	})
-	if e := findErr(got); !strings.Contains(e, "máximo") {
+	if e := findErr(got); !strings.Contains(e, "maximum") {
 		t.Errorf("esperava erro de máximo de partes, got %q", e)
 	}
 }

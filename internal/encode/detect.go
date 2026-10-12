@@ -47,7 +47,7 @@ type Detector struct {
 func ffmpegBinary() (string, error) {
 	p, err := cmdutil.Resolve("ffmpeg")
 	if err != nil {
-		return "", errors.New("ffmpeg não encontrado. Instale o ffmpeg para usar o vidctl.")
+		return "", errors.New("ffmpeg not found. Install ffmpeg to use vidctl.")
 	}
 	return p, nil
 }
@@ -178,7 +178,7 @@ func probeEncoder(bin, encoder string) error {
 		if msg == "" {
 			msg = err.Error()
 		}
-		dlog.Printf("[encode] encoder %q indisponível: %s", encoder, msg)
+		dlog.Printf("[encode] encoder %q unavailable: %s", encoder, msg)
 		return errors.New(msg)
 	}
 	dlog.Printf("[encode] encoder %q OK", encoder)

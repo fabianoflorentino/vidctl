@@ -222,7 +222,7 @@ func TestProbeNoVideoStream(t *testing.T) {
 	t.Setenv("PATH", dir)
 
 	_, err := Probe(in)
-	if err == nil || !strings.Contains(err.Error(), "não contém um stream de vídeo") {
+	if err == nil || !strings.Contains(err.Error(), "has no video stream") {
 		t.Fatalf("esperava erro de stream de vídeo, got %v", err)
 	}
 }
@@ -235,7 +235,7 @@ func TestProbeZeroDuration(t *testing.T) {
 	t.Setenv("PATH", dir)
 
 	_, err := Probe(in)
-	if err == nil || !strings.Contains(err.Error(), "duração") {
+	if err == nil || !strings.Contains(err.Error(), "duration") {
 		t.Fatalf("esperava erro de duração, got %v", err)
 	}
 }

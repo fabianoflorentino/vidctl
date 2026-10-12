@@ -10,7 +10,7 @@ import (
 
 var logger = log.New(os.Stderr, "", log.LstdFlags|log.Lmicroseconds)
 
-// Enabled informa se o modo de depuração foi ligado via VIDCTL_DEBUG.
+// Enabled reports whether debug mode is on via VIDCTL_DEBUG.
 // Qualquer valor diferente de vazio e de "0" ativa o rastro.
 func Enabled() bool {
 	v := os.Getenv("VIDCTL_DEBUG")

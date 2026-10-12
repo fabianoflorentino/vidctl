@@ -49,7 +49,7 @@ func ClearOverrides() {
 // ErrNotConfigured reports that the configured override cannot be used. Callers
 // use it to tell a bad user-provided path apart from a binary missing from PATH,
 // which deserves a different hint.
-var ErrNotConfigured = errors.New("caminho configurado inválido")
+var ErrNotConfigured = errors.New("invalid configured path")
 
 // Resolve locates a binary, preferring the configured override over the system
 // PATH. An override pointing at a missing file is an error, not a silent
@@ -64,7 +64,7 @@ func Resolve(name string) (string, error) {
 		return "", fmt.Errorf("%w para %s (%s): %w", ErrNotConfigured, name, path, err)
 	}
 	if info.IsDir() {
-		return "", fmt.Errorf("%w para %s (%s): é um diretório", ErrNotConfigured, name, path)
+		return "", fmt.Errorf("%w for %s (%s): it is a directory", ErrNotConfigured, name, path)
 	}
 	return path, nil
 }

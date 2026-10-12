@@ -45,13 +45,13 @@ func BudgetFor(preset presets.Preset, info *media.Info, durationSec float64) (Bu
 	targetBits := preset.SizeMB * 8 * 1024 * 1024
 	audioBitsPerSec := audioBitsPerSec(preset, info)
 	if durationSec <= 0 {
-		return Budget{}, errors.New("duração do vídeo inválida")
+		return Budget{}, errors.New("invalid video duration")
 	}
 
 	videoBits := math.Floor(targetBits*0.95 - audioBitsPerSec*durationSec)
 	if videoBits <= 0 {
 		return Budget{}, fmt.Errorf(
-			"tamanho alvo (%.0f MB) pequeno demais para %.0fs de vídeo. Aumente o alvo.",
+			"target size (%.0f MB) is too small for a %.0fs video. Increase the target.",
 			preset.SizeMB, durationSec)
 	}
 
@@ -85,7 +85,7 @@ type Result struct {
 // Available stays false and only the current size is reported.
 func Size(info *media.Info, preset presets.Preset, spec *split.Spec) (Result, error) {
 	if info == nil {
-		return Result{}, errors.New("vídeo não analisado")
+		return Result{}, errors.New("video not analyzed")
 	}
 	audioBits := audioBitsPerSec(preset, info)
 	res := Result{

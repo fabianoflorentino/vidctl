@@ -116,7 +116,7 @@ func TestResolveWithDirectoryOverrideIsAnError(t *testing.T) {
 	if !errors.Is(err, ErrNotConfigured) {
 		t.Errorf("erro %v não é ErrNotConfigured", err)
 	}
-	if !strings.Contains(err.Error(), "diretório") {
+	if !strings.Contains(err.Error(), "directory") {
 		t.Errorf("mensagem %q deveria dizer que é um diretório", err)
 	}
 }
