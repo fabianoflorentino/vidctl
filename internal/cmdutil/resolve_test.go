@@ -26,7 +26,7 @@ func TestResolveMissingWithoutOverride(t *testing.T) {
 	ClearOverrides()
 	t.Setenv("PATH", t.TempDir())
 	if _, err := Resolve("ffmpeg"); err == nil {
-		t.Error("Resolve deveria falhar sem override e sem PATH")
+		t.Error("Resolve should falhar sem override e sem PATH")
 	}
 }
 
@@ -64,7 +64,7 @@ func TestSetOverrideEmptyRemovesPrevious(t *testing.T) {
 	SetOverride("ffmpeg", "")
 
 	if _, ok := Override("ffmpeg"); ok {
-		t.Error("Override deveria ter sido removido")
+		t.Error("Override should ter sido removido")
 	}
 
 	dir := t.TempDir()
@@ -128,7 +128,7 @@ func TestResolvePathFailureIsNotNotConfigured(t *testing.T) {
 	t.Setenv("PATH", t.TempDir())
 	_, err := Resolve("ffprobe")
 	if err == nil {
-		t.Fatal("Resolve deveria falhar")
+		t.Fatal("Resolve should falhar")
 	}
 	if errors.Is(err, ErrNotConfigured) {
 		t.Errorf("missing from PATH must not become ErrNotConfigured: %v", err)
@@ -156,10 +156,10 @@ func TestClearOverrides(t *testing.T) {
 	ClearOverrides()
 
 	if _, ok := Override("ffmpeg"); ok {
-		t.Error("ffmpeg ainda tem override")
+		t.Error("ffmpeg still tem override")
 	}
 	if _, ok := Override("ffprobe"); ok {
-		t.Error("ffprobe ainda tem override")
+		t.Error("ffprobe still tem override")
 	}
 }
 

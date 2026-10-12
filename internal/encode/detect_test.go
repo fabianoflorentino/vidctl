@@ -69,16 +69,16 @@ func TestDetectorAvailability(t *testing.T) {
 
 	nvenc := findInfo(avail, HWNVENC)
 	if nvenc == nil || !sameStrings(nvenc.Codecs, []string{CodecH264, CodecH265}) {
-		t.Errorf("nvenc esperava codecs [h264 h265], got %+v", nvenc)
+		t.Errorf("nvenc expected codecs [h264 h265], got %+v", nvenc)
 	}
 	qsv := findInfo(avail, HWQSV)
 	if qsv == nil || !sameStrings(qsv.Codecs, []string{CodecH264, CodecH265}) {
-		t.Errorf("qsv esperava codecs [h264 h265], got %+v", qsv)
+		t.Errorf("qsv expected codecs [h264 h265], got %+v", qsv)
 	}
 	vt := findInfo(avail, HWVideotoolbox)
 	if runtime.GOOS == "darwin" {
 		if vt == nil || !sameStrings(vt.Codecs, []string{CodecH264}) || vt.Error == "" {
-			t.Errorf("videotoolbox esperava apenas h264 com erro de probe, got %+v", vt)
+			t.Errorf("videotoolbox expected apenas h264 com erro de probe, got %+v", vt)
 		}
 	} else if vt != nil {
 		t.Errorf("videotoolbox should not appear outside macOS, got %+v", vt)
@@ -106,7 +106,7 @@ func TestDetectorCachesAndRefreshes(t *testing.T) {
 		t.Fatalf("cache inesperado: %+v vs %+v", first.Hardware, second.Hardware)
 	}
 	if len(first.Hardware) != expectedBackends() {
-		t.Fatalf("esperava %d backends, got %d: %+v", expectedBackends(), len(first.Hardware), first.Hardware)
+		t.Fatalf("expected %d backends, got %d: %+v", expectedBackends(), len(first.Hardware), first.Hardware)
 	}
 
 	// Backends desapareceram: Refresh deve re-detectar.
@@ -128,7 +128,7 @@ func TestDetectorFFmpegMissing(t *testing.T) {
 	cmdutil.SetOverride("ffmpeg", filepath.Join(t.TempDir(), "inexistente"))
 	t.Cleanup(cmdutil.ClearOverrides)
 	if _, err := d.Availability(); err == nil {
-		t.Fatal("esperava erro com ffmpeg ausente")
+		t.Fatal("expected erro com ffmpeg ausente")
 	}
 }
 
@@ -140,7 +140,7 @@ func TestDetectorListParsesOnlyVideo(t *testing.T) {
 		t.Fatalf("listEncoders error: %v", err)
 	}
 	if !contains(names, "libx264") || !contains(names, "h264_nvenc") {
-		t.Errorf("esperava libx264/h264_nvenc na lista, got %v", names)
+		t.Errorf("expected libx264/h264_nvenc na lista, got %v", names)
 	}
 	if contains(names, "aac") {
 		t.Errorf("audio encoders must not enter the list, got %v", names)
@@ -155,7 +155,7 @@ func TestProbeEncoderFailure(t *testing.T) {
 		t.Fatal("expected an error when forcing a failed probe")
 	}
 	if !strings.Contains(err.Error(), "unavailable") {
-		t.Errorf("erro deveria carregar a mensagem do stderr, got %v", err)
+		t.Errorf("erro should carregar a mensagem do stderr, got %v", err)
 	}
 }
 
@@ -169,16 +169,16 @@ func TestDetectorBackendWithoutCodecs(t *testing.T) {
 	}
 	nvenc := findInfo(avail, HWNVENC)
 	if nvenc == nil {
-		t.Fatalf("nvenc deveria aparecer listado mesmo com probe falho, got %+v", avail.Hardware)
+		t.Fatalf("nvenc should aparecer listado mesmo com probe falho, got %+v", avail.Hardware)
 	}
 	if nvenc.Codecs == nil {
 		t.Error("codecs must not be nil: it would become null in the JSON and break the frontend")
 	}
 	if len(nvenc.Codecs) != 0 {
-		t.Errorf("codecs deveria estar vazio, got %v", nvenc.Codecs)
+		t.Errorf("codecs should estar empty, got %v", nvenc.Codecs)
 	}
 	if nvenc.Error == "" {
-		t.Error("erro do probe deveria ser preservado para a UI")
+		t.Error("erro do probe should ser preservado para a UI")
 	}
 }
 
@@ -200,7 +200,7 @@ func TestSupportedOnGOOS(t *testing.T) {
 	}
 	for _, id := range []string{HWNVENC, HWQSV, ""} {
 		if !supportedOnGOOS(id) {
-			t.Errorf("%q deveria ser oferecido em qualquer SO", id)
+			t.Errorf("%q should ser oferecido em qualquer SO", id)
 		}
 	}
 }

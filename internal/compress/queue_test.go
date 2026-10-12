@@ -34,7 +34,7 @@ func waitState(t *testing.T, m *Manager, id, want string) TaskStatus {
 		}
 		time.Sleep(5 * time.Millisecond)
 	}
-	t.Fatalf("task %s ficou em %q (%+v), esperava %q", id, last.State, last, want)
+	t.Fatalf("task %s ficou em %q (%+v), expected %q", id, last.State, last, want)
 	return last
 }
 
@@ -68,7 +68,7 @@ func TestEnqueueRunsInFIFOOrder(t *testing.T) {
 	select {
 	case got := <-started:
 		if got != id1 {
-			t.Errorf("primeiro a rodar = %q; queria %q", got, id1)
+			t.Errorf("primeiro a rodar = %q; want %q", got, id1)
 		}
 	case <-time.After(5 * time.Second):
 		t.Fatal("first job did not start")
@@ -77,7 +77,7 @@ func TestEnqueueRunsInFIFOOrder(t *testing.T) {
 	s2, _ := statusByID(m, id2)
 	s3, _ := statusByID(m, id3)
 	if s2.State != StateQueued || s3.State != StateQueued {
-		t.Errorf("estados = %q/%q; queria queued/queued", s2.State, s3.State)
+		t.Errorf("estados = %q/%q; want queued/queued", s2.State, s3.State)
 	}
 	if s2.Position != 2 || s3.Position != 3 {
 		t.Errorf("list positions = %d,%d; want 2,3 (id1 counts as unfinished)", s2.Position, s3.Position)
@@ -120,7 +120,7 @@ func TestCancelQueuedTaskNeverRuns(t *testing.T) {
 
 	m.Cancel(id2)
 	if s := waitState(t, m, id2, StateCanceled); s.Position != 0 {
-		t.Errorf("cancelada com position %d; queria 0", s.Position)
+		t.Errorf("cancelada com position %d; want 0", s.Position)
 	}
 
 	close(release)
@@ -164,10 +164,10 @@ func TestManagerDispatchesAudioTasks(t *testing.T) {
 	m.runAudio = func(_ context.Context, jobID string, task Task) error {
 		audioCalled = true
 		if task.Kind != events.KindAudio {
-			t.Errorf("kind no runner = %q; queria audio", task.Kind)
+			t.Errorf("kind no runner = %q; want audio", task.Kind)
 		}
 		if jobID == "" || task.InputPath == "" {
-			t.Errorf("runner deveria receber jobID e input: %q %+v", jobID, task)
+			t.Errorf("runner should receber jobID e input: %q %+v", jobID, task)
 		}
 		return nil
 	}
@@ -178,7 +178,7 @@ func TestManagerDispatchesAudioTasks(t *testing.T) {
 		t.Error("runAudio was not called for the audio task")
 	}
 	if s.Kind != events.KindAudio || s.InputPath != "/videos/a.mp4" {
-		t.Errorf("status = %+v; queria kind audio e o caminho de entrada", s)
+		t.Errorf("status = %+v; want kind audio e o caminho de entrada", s)
 	}
 }
 
@@ -201,14 +201,14 @@ func TestSetMaxParallel(t *testing.T) {
 		t.Fatal("first job did not start")
 	}
 	if s, _ := statusByID(m, id2); s.State != StateQueued {
-		t.Errorf("segundo job em %q; com maxParallel=1 deveria estar queued", s.State)
+		t.Errorf("segundo job em %q; com maxParallel=1 should estar queued", s.State)
 	}
 
 	m.SetMaxParallel(2)
 	select {
 	case got := <-started:
 		if got != id2 {
-			t.Errorf("segundo a rodar = %q; queria %q", got, id2)
+			t.Errorf("segundo a rodar = %q; want %q", got, id2)
 		}
 	case <-time.After(5 * time.Second):
 		t.Fatal("second job did not start after SetMaxParallel(2)")
@@ -239,7 +239,7 @@ func TestSetMaxParallelClampsToOne(t *testing.T) {
 		t.Fatal("clamp de maxParallel travou a fila")
 	}
 	if s, _ := statusByID(m, id2); s.State != StateQueued {
-		t.Errorf("segundo job em %q; SetMaxParallel(0) deveria limitar a 1 slot", s.State)
+		t.Errorf("segundo job em %q; SetMaxParallel(0) should limitar a 1 slot", s.State)
 	}
 
 	close(release)
@@ -256,10 +256,10 @@ func TestWorkerRecordsError(t *testing.T) {
 	id, _ := m.Enqueue(Task{Job: Job{InputPath: "a.mp4"}})
 	s := waitState(t, m, id, StateError)
 	if s.Error != "boom" {
-		t.Errorf("erro registrado = %q; queria %q", s.Error, "boom")
+		t.Errorf("erro registrado = %q; want %q", s.Error, "boom")
 	}
 	if s.Position != 0 {
-		t.Errorf("tarefa com erro em position %d; queria 0", s.Position)
+		t.Errorf("tarefa com erro em position %d; want 0", s.Position)
 	}
 }
 
@@ -278,16 +278,16 @@ func TestObserveEnrichesRunningTask(t *testing.T) {
 	s := waitState(t, m, id, StateDone)
 
 	if s.Percent != 100 || s.Stage != "done" {
-		t.Errorf("ao concluir = {%%:%v stage:%q}; queria 100/done", s.Percent, s.Stage)
+		t.Errorf("ao concluir = {%%:%v stage:%q}; want 100/done", s.Percent, s.Stage)
 	}
 	if s.PartsTotal != 3 || s.PartsDone != 1 {
-		t.Errorf("partes = %d/%d; queria 1/3", s.PartsDone, s.PartsTotal)
+		t.Errorf("partes = %d/%d; want 1/3", s.PartsDone, s.PartsTotal)
 	}
 	if s.SizeBytes != 1200 {
-		t.Errorf("SizeBytes = %d; queria 1200", s.SizeBytes)
+		t.Errorf("SizeBytes = %d; want 1200", s.SizeBytes)
 	}
 	if s.OutputPath != "/tmp/out.mp4" {
-		t.Errorf("OutputPath = %q; queria /tmp/out.mp4", s.OutputPath)
+		t.Errorf("OutputPath = %q; want /tmp/out.mp4", s.OutputPath)
 	}
 
 	events.EmitProgress(id, events.KindCompress, "encoding", 10)
@@ -380,7 +380,7 @@ func TestClearFinishedKeepsPending(t *testing.T) {
 	waitState(t, m, id3, StateDone)
 	m.ClearFinished()
 	if got := len(m.List()); got != 0 {
-		t.Errorf("fila deveria ficar vazia, ficou com %d", got)
+		t.Errorf("fila should ficar vazia, ficou com %d", got)
 	}
 }
 
@@ -393,7 +393,7 @@ func TestRemoveTask(t *testing.T) {
 
 	m.Remove(id)
 	if got := len(m.List()); got != 0 {
-		t.Errorf("Remove deixou %d tarefas", got)
+		t.Errorf("Remove left %d tasks", got)
 	}
 	m.Remove("inexistente")
 }
@@ -440,10 +440,10 @@ func TestQueueRunsTwoJobsToCompletion(t *testing.T) {
 	}
 	for _, n := range []string{"compress:queued", "compress:start", "compress:done"} {
 		if counts[n] != 2 {
-			t.Errorf("%s emitido %d vezes; queria 2 (todos: %v)", n, counts[n], names)
+			t.Errorf("%s emitido %d vezes; want 2 (todos: %v)", n, counts[n], names)
 		}
 	}
 	if len(dones) != 2 || dones[0].OutputPath == dones[1].OutputPath {
-		t.Errorf("dones = %+v; queria dois arquivos distintos", dones)
+		t.Errorf("dones = %+v; want dois arquivos distintos", dones)
 	}
 }

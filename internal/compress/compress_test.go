@@ -121,7 +121,7 @@ func TestFFmpegPathReportsBrokenOverride(t *testing.T) {
 		t.Errorf("error %v is not ErrNotConfigured", err)
 	}
 	if !strings.Contains(err.Error(), "nao-existe") {
-		t.Errorf("mensagem %q deveria citar o caminho configurado", err)
+		t.Errorf("mensagem %q should citar o caminho configurado", err)
 	}
 }
 
@@ -190,7 +190,7 @@ func TestRunFailsWithBrokenOverride(t *testing.T) {
 	if msg := findErr(got); msg == "" {
 		t.Fatal("job should fail with an invalid override")
 	} else if !strings.Contains(msg, "nao-existe") {
-		t.Errorf("mensagem %q deveria citar o caminho configurado", msg)
+		t.Errorf("mensagem %q should citar o caminho configurado", msg)
 	}
 }
 
@@ -300,7 +300,7 @@ func TestExecuteProgress(t *testing.T) {
 		}
 	}
 	if len(percents) != 2 {
-		t.Fatalf("esperava 2 eventos de progresso, got %d", len(percents))
+		t.Fatalf("expected 2 eventos de progresso, got %d", len(percents))
 	}
 	if percents[0] != 25 || percents[1] != 99.9 {
 		t.Errorf("progressos inesperados: %v", percents)
@@ -390,7 +390,7 @@ func TestRunSizeSuccess(t *testing.T) {
 		}
 	}
 	if idx1, idx2 := indexStage(stages, "pass1/2"), indexStage(stages, "pass2/2"); idx1 < 0 || idx2 < 0 || idx1 > idx2 {
-		t.Errorf("stages inesperados (pass1 antes de pass2): %v", stages)
+		t.Errorf("stages inesperados (pass1 before de pass2): %v", stages)
 	}
 	var done int
 	for _, r := range *got {
@@ -402,7 +402,7 @@ func TestRunSizeSuccess(t *testing.T) {
 		}
 	}
 	if done != 1 {
-		t.Errorf("esperava 1 done, got %d", done)
+		t.Errorf("expected 1 done, got %d", done)
 	}
 	if e := findErr(got); e != "" {
 		t.Errorf("erro inesperado: %q", e)
@@ -443,7 +443,7 @@ func TestRunCrfSuccess(t *testing.T) {
 		}
 	}
 	if done != 1 {
-		t.Errorf("esperava 1 done, got %d", done)
+		t.Errorf("expected 1 done, got %d", done)
 	}
 	if e := findErr(got); e != "" {
 		t.Errorf("erro inesperado: %q", e)
@@ -476,7 +476,7 @@ func TestRunCanceled(t *testing.T) {
 	got := captureCompressEvents(t)
 	Run(ctx, "j10", Job{InputPath: "in.mp4", OutputPath: filepath.Join(t.TempDir(), "out.mp4"), PresetID: "whatsapp-status"})
 	if len(*got) != 1 {
-		t.Fatalf("esperava apenas o progresso inicial, got %+v", *got)
+		t.Fatalf("expected apenas o progresso inicial, got %+v", *got)
 	}
 	progress, ok := (*got)[0].data.(events.ProgressEvent)
 	if !ok || progress.Stage != "pass1/2" || progress.Percent != 0 {
@@ -560,16 +560,16 @@ func TestRunSizeSplit(t *testing.T) {
 	}
 	lines := strings.Split(strings.TrimSpace(string(raw)), "\n")
 	if len(lines) != 6 {
-		t.Fatalf("esperava 6 comandos (2 por parte), got %d: %q", len(lines), string(raw))
+		t.Fatalf("expected 6 comandos (2 por parte), got %d: %q", len(lines), string(raw))
 	}
 	if !strings.Contains(lines[0], "-ss 0.000 -to 60.000 -i in.mp4") {
-		t.Errorf("seek antes de -i ausente no pass1 da parte 1: %q", lines[0])
+		t.Errorf("seek before de -i ausente no pass1 da parte 1: %q", lines[0])
 	}
 	if !strings.Contains(lines[2], "-ss 60.000 -to 120.000") {
 		t.Errorf("seek da parte 2 ausente: %q", lines[2])
 	}
 	if !strings.Contains(lines[0], "vidctl-j-split-p1 ") || !strings.Contains(lines[2], "vidctl-j-split-p2 ") {
-		t.Errorf("passlogfile deveria diferir por parte: %q / %q", lines[0], lines[2])
+		t.Errorf("passlogfile should diferir por parte: %q / %q", lines[0], lines[2])
 	}
 	part1 := strings.TrimSuffix(output, ".mp4") + "-part1.mp4"
 	part2 := strings.TrimSuffix(output, ".mp4") + "-part2.mp4"
@@ -630,7 +630,7 @@ func TestRunNoSplitKeepsSingleDone(t *testing.T) {
 		}
 	}
 	if done != 1 {
-		t.Fatalf("esperava 1 done, got %d", done)
+		t.Fatalf("expected 1 done, got %d", done)
 	}
 	raw, err := os.ReadFile(argsLog)
 	if err != nil {
@@ -647,7 +647,7 @@ func TestEffectivePresetOverrides(t *testing.T) {
 		t.Fatal("youtube should resolve")
 	}
 	if base.Codec != "" || base.Hardware != "" {
-		t.Errorf("default deveria ser software h264, got codec=%q hardware=%q", base.Codec, base.Hardware)
+		t.Errorf("default should ser software h264, got codec=%q hardware=%q", base.Codec, base.Hardware)
 	}
 
 	withOverrides, ok := EffectivePreset(Job{PresetID: "youtube", Codec: "h265", Hardware: "nvenc"})
@@ -688,7 +688,7 @@ func TestBuildSizePassesCodecHardware(t *testing.T) {
 		}
 		for _, args := range [][]string{p1.Args, p2.Args} {
 			if !containsStr(args, "-c:v", "libx265") {
-				t.Errorf("esperava libx265, got %v", args)
+				t.Errorf("expected libx265, got %v", args)
 			}
 			if !containsStr(args, "-x265-params", "log-level=error") {
 				t.Errorf("expected x265 noise silenced, got %v", args)
@@ -703,7 +703,7 @@ func TestBuildSizePassesCodecHardware(t *testing.T) {
 			t.Fatalf("unexpected error: %v", err)
 		}
 		if !containsStr(p2.Args, "-c:v", "hevc_nvenc") {
-			t.Errorf("esperava hevc_nvenc, got %v", p2.Args)
+			t.Errorf("expected hevc_nvenc, got %v", p2.Args)
 		}
 		if containsStr(p2.Args, "-preset", "medium") {
 			t.Errorf("nvenc must not use the x264 preset, got %v", p2.Args)
@@ -784,7 +784,7 @@ func TestRunSizeHardwareSinglePass(t *testing.T) {
 		t.Errorf("must not have pass2/2 on a 1-pass backend, got %v", stages)
 	}
 	if done != 1 {
-		t.Errorf("esperava 1 done, got %d", done)
+		t.Errorf("expected 1 done, got %d", done)
 	}
 	if e := findErr(got); e != "" {
 		t.Errorf("erro inesperado: %q", e)
@@ -795,7 +795,7 @@ func TestRunSizeHardwareSinglePass(t *testing.T) {
 		t.Fatal(err)
 	}
 	if n := len(strings.Split(strings.TrimSpace(string(raw)), "\n")); n != 1 {
-		t.Errorf("esperava 1 comando ffmpeg, got %d: %q", n, string(raw))
+		t.Errorf("expected 1 comando ffmpeg, got %d: %q", n, string(raw))
 	}
 }
 

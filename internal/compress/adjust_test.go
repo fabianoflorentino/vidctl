@@ -79,10 +79,10 @@ func TestValidate(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			err := Validate(tc.job)
 			if err == nil {
-				t.Fatalf("esperava erro para %+v", tc.job)
+				t.Fatalf("expected erro para %+v", tc.job)
 			}
 			if !strings.Contains(err.Error(), tc.want) {
-				t.Errorf("erro %q deveria conter %q", err.Error(), tc.want)
+				t.Errorf("erro %q should conter %q", err.Error(), tc.want)
 			}
 		})
 	}
@@ -102,7 +102,7 @@ func TestTrimArgsBeforeInput(t *testing.T) {
 	}
 	for name, args := range map[string][]string{"pass1": p1.Args, "pass2": p2.Args} {
 		if !beforeInput(args, "-ss", "60.000") || !beforeInput(args, "-to", "180.000") {
-			t.Errorf("%s: trim deveria ficar antes do -i, args: %v", name, args)
+			t.Errorf("%s: trim should ficar before do -i, args: %v", name, args)
 		}
 	}
 
@@ -126,7 +126,7 @@ func TestRemoveAudioArgs(t *testing.T) {
 		t.Fatalf("buildSizePasses: %v", err)
 	}
 	if !containsStr(p2.Args, "-an") {
-		t.Errorf("pass2 deveria incluir -an, args: %v", p2.Args)
+		t.Errorf("pass2 should incluir -an, args: %v", p2.Args)
 	}
 	if containsStr(p2.Args, "-c:a", "aac") {
 		t.Errorf("pass2 should not re-encode audio, args: %v", p2.Args)
@@ -216,7 +216,7 @@ func TestRunRejectsInvalidAdjustments(t *testing.T) {
 		TrimEndSec:   10,
 	})
 	if e := findErr(got); !strings.Contains(e, "end of the cut") {
-		t.Errorf("esperava erro de corte invertido, got %q", e)
+		t.Errorf("expected erro de corte invertido, got %q", e)
 	}
 }
 
@@ -228,12 +228,12 @@ func TestNvencPresetArgs(t *testing.T) {
 
 	fast := buildCrfPass(context.Background(), Job{InputPath: "in.mp4", OutputPath: "out.mp4", NvencPreset: "p1"}, presets.Preset{CRF: 23, AudioBitrate: "96k", Hardware: encode.HWNVENC}, info, seg)
 	if !containsStr(fast.Args, "-preset", "p1") {
-		t.Errorf("com preset p1 deveria incluir -preset p1, args: %v", fast.Args)
+		t.Errorf("com preset p1 should incluir -preset p1, args: %v", fast.Args)
 	}
 
 	def := buildCrfPass(context.Background(), Job{InputPath: "in.mp4", OutputPath: "out.mp4"}, presets.Preset{CRF: 23, AudioBitrate: "96k", Hardware: encode.HWNVENC}, info, seg)
 	if !containsStr(def.Args, "-preset", "p4") {
-		t.Errorf("sem preset deveria usar o default p4, args: %v", def.Args)
+		t.Errorf("sem preset should usar o default p4, args: %v", def.Args)
 	}
 }
 

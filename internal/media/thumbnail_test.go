@@ -58,6 +58,6 @@ func TestThumbDataURLCache(t *testing.T) {
 
 func TestThumbDataURLMissingFile(t *testing.T) {
 	if _, err := ThumbDataURL(filepath.Join(t.TempDir(), "nope.mp4"), 2); err == nil {
-		t.Fatal("esperava erro para arquivo inexistente")
+		t.Fatal("expected erro para arquivo inexistente")
 	}
 }

@@ -29,7 +29,7 @@ func TestParseNvidia(t *testing.T) {
 		{"multi max", "30\n55\n12\n", 55, true},
 		{"com percent", " 40 %\n", 40, true},
 		{"lixo", "error: no driver\n", 0, false},
-		{"vazio", "", 0, false},
+		{"empty", "", 0, false},
 		{"acima de 100", "110", 100, true},
 	}
 	for _, tt := range tests {
@@ -73,13 +73,13 @@ func TestSnapshotSmoke(t *testing.T) {
 	c := NewCollector()
 	s := c.Snapshot()
 	if s.MemTotalMB <= 0 {
-		t.Errorf("MemTotalMB = %v, esperava > 0", s.MemTotalMB)
+		t.Errorf("MemTotalMB = %v, expected > 0", s.MemTotalMB)
 	}
 	if s.CPU < 0 || s.CPU > 100 {
 		t.Errorf("CPU = %v, fora de 0..100", s.CPU)
 	}
 	if s.GPU < -1 || s.GPU > 100 {
-		t.Errorf("GPU = %v, esperava -1 ou 0..100", s.GPU)
+		t.Errorf("GPU = %v, expected -1 ou 0..100", s.GPU)
 	}
 	if runtime.NumCPU() < 1 {
 		t.Fatal("invalid NumCPU")
@@ -130,7 +130,7 @@ func TestParseNvidiaMaxAcrossFields(t *testing.T) {
 		t.Errorf("parseNvidia(90\\n3) = %v,%v want 90,true", got, ok)
 	}
 	if got, ok := parseNvidia([]byte("")); ok || got != 0 {
-		t.Errorf("parseNvidia(vazio) = %v,%v want 0,false", got, ok)
+		t.Errorf("parseNvidia(empty) = %v,%v want 0,false", got, ok)
 	}
 }
 
@@ -145,7 +145,7 @@ func TestSnapshotNvidiaMissingCached(t *testing.T) {
 		t.Fatalf("GPU = %v, want -1 sem nvidia-smi", s.GPU)
 	}
 	if !c.gpuProbed || c.gpuOK {
-		t.Errorf("esperava cache de indisponibilidade, got probed=%v ok=%v", c.gpuProbed, c.gpuOK)
+		t.Errorf("expected cache de indisponibilidade, got probed=%v ok=%v", c.gpuProbed, c.gpuOK)
 	}
 	// second Snapshot uses the cache and returns no GPU
 	s2 := c.Snapshot()

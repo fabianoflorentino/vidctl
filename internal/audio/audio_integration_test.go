@@ -94,7 +94,7 @@ func TestExtractSuccess(t *testing.T) {
 		t.Fatalf("Extract: %v", err)
 	}
 	if size <= 0 {
-		t.Errorf("size = %d, esperava > 0", size)
+		t.Errorf("size = %d, expected > 0", size)
 	}
 	if st, err := os.Stat(out); err != nil || st.Size() == 0 {
 		t.Errorf("output file missing: err=%v", err)
@@ -141,7 +141,7 @@ func TestExtractEmitsProgress(t *testing.T) {
 		t.Fatalf("Extract: %v", err)
 	}
 	if len(progresses) == 0 {
-		t.Fatal("esperava eventos de progresso")
+		t.Fatal("expected eventos de progresso")
 	}
 	last := progresses[len(progresses)-1]
 	if last.Kind != events.KindAudio || last.Stage != "extracting" {
@@ -168,7 +168,7 @@ func TestExtractVideoWithoutAudio(t *testing.T) {
 		t.Fatal("expected an error for a video without audio")
 	}
 	if len(errors) != 1 {
-		t.Errorf("erro emitidos = %d, queria 1", len(errors))
+		t.Errorf("erro emitidos = %d, want 1", len(errors))
 	}
 }
 
@@ -178,7 +178,7 @@ func TestExtractInvalidSpecFailsBeforeRunning(t *testing.T) {
 
 	if _, err := Extract(context.Background(), "job-inv", "/videos/in.mp4",
 		Spec{InputPath: "/videos/in.mp4", Codec: "ogg", OutputPath: "/tmp/o.mp3"}); err == nil {
-		t.Fatal("esperava erro de formato desconhecido")
+		t.Fatal("expected erro de formato desconhecido")
 	}
 }
 
@@ -191,6 +191,6 @@ func TestExtractCanceledContext(t *testing.T) {
 	out := filepath.Join(t.TempDir(), "in-audio.mp3")
 	if _, err := Extract(ctx, "job-cancel", "/videos/in.mp4",
 		Spec{InputPath: "/videos/in.mp4", Codec: "mp3", OutputPath: out}); err == nil {
-		t.Fatal("esperava erro de contexto cancelado")
+		t.Fatal("expected erro de contexto cancelado")
 	}
 }

@@ -168,18 +168,18 @@ func TestNvencPreset(t *testing.T) {
 func TestSizeArgsPNvencPreset(t *testing.T) {
 	fast := join(SizeArgsP(CodecH265, HWNVENC, 500000, 550000, 1100000, "p1"))
 	if !strings.Contains(fast, "-preset p1") {
-		t.Errorf("nvenc com p1 deveria incluir -preset p1: %q", fast)
+		t.Errorf("nvenc com p1 should incluir -preset p1: %q", fast)
 	}
 	def := join(SizeArgs(CodecH265, HWNVENC, 500000, 550000, 1100000))
 	if !strings.Contains(def, "-preset "+HWNVENCPreset) {
-		t.Errorf("nvenc default deveria incluir -preset %s: %q", HWNVENCPreset, def)
+		t.Errorf("nvenc default should incluir -preset %s: %q", HWNVENCPreset, def)
 	}
 }
 
 func TestQualityArgsPNvencPreset(t *testing.T) {
 	fast := join(QualityArgsP(CodecH265, HWNVENC, 23, "p2"))
 	if !strings.Contains(fast, "-preset p2") {
-		t.Errorf("nvenc quality com p2 deveria incluir -preset p2: %q", fast)
+		t.Errorf("nvenc quality com p2 should incluir -preset p2: %q", fast)
 	}
 	sw := join(QualityArgsP(CodecH264, "", 23, "p1"))
 	if strings.Contains(sw, "p1") {

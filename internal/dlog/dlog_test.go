@@ -24,7 +24,7 @@ func TestEnabled(t *testing.T) {
 		{name: "ligado", env: "1", want: true},
 		{name: "ligado com outro valor", env: "true", want: true},
 		{name: "desligado explicito", env: "0", want: false},
-		{name: "vazio", env: "", want: false},
+		{name: "empty", env: "", want: false},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

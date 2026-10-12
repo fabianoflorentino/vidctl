@@ -73,7 +73,7 @@ func TestBudgetFor(t *testing.T) {
 			budget, err := BudgetFor(preset, info, tt.duration)
 			if tt.wantErr {
 				if err == nil {
-					t.Fatal("esperava erro, obtive nil")
+					t.Fatal("expected erro, obtive nil")
 				}
 				return
 			}
@@ -81,13 +81,13 @@ func TestBudgetFor(t *testing.T) {
 				t.Fatalf("erro inesperado: %v", err)
 			}
 			if math.Abs(float64(budget.VideoBitrate)-float64(tt.wantNear)) > 50_000 {
-				t.Errorf("VideoBitrate = %d; queria ~%d", budget.VideoBitrate, tt.wantNear)
+				t.Errorf("VideoBitrate = %d; want ~%d", budget.VideoBitrate, tt.wantNear)
 			}
 			if budget.MaxRate < budget.VideoBitrate {
 				t.Errorf("MaxRate %d deve ser >= VideoBitrate %d", budget.MaxRate, budget.VideoBitrate)
 			}
 			if budget.BufSize != budget.VideoBitrate*2 {
-				t.Errorf("BufSize = %d; queria %d", budget.BufSize, budget.VideoBitrate*2)
+				t.Errorf("BufSize = %d; want %d", budget.BufSize, budget.VideoBitrate*2)
 			}
 		})
 	}
@@ -101,7 +101,7 @@ func TestBudgetForFloorsBitrate(t *testing.T) {
 		t.Fatalf("erro inesperado: %v", err)
 	}
 	if budget.VideoBitrate != 50_000 {
-		t.Errorf("bitrate = %d; queria o piso 50000", budget.VideoBitrate)
+		t.Errorf("bitrate = %d; want o piso 50000", budget.VideoBitrate)
 	}
 }
 
@@ -225,7 +225,7 @@ func TestSize(t *testing.T) {
 			res, err := Size(tt.info, tt.preset, tt.spec)
 			if tt.wantErr {
 				if err == nil {
-					t.Fatal("esperava erro, obtive nil")
+					t.Fatal("expected erro, obtive nil")
 				}
 				return
 			}
@@ -233,25 +233,25 @@ func TestSize(t *testing.T) {
 				t.Fatalf("erro inesperado: %v", err)
 			}
 			if res.Available != tt.wantAvail {
-				t.Errorf("Available = %v; queria %v", res.Available, tt.wantAvail)
+				t.Errorf("Available = %v; want %v", res.Available, tt.wantAvail)
 			}
 			if res.Mode != tt.preset.Mode {
-				t.Errorf("Mode = %q; queria %q", res.Mode, tt.preset.Mode)
+				t.Errorf("Mode = %q; want %q", res.Mode, tt.preset.Mode)
 			}
 			if math.Abs(res.TargetSizeMB-tt.wantTargetMB) > 0.01 {
-				t.Errorf("TargetSizeMB = %.4f; queria %.4f", res.TargetSizeMB, tt.wantTargetMB)
+				t.Errorf("TargetSizeMB = %.4f; want %.4f", res.TargetSizeMB, tt.wantTargetMB)
 			}
 			if math.Abs(res.SavedPct-tt.wantSavedPct) > 0.1 {
-				t.Errorf("SavedPct = %.3f; queria %.3f", res.SavedPct, tt.wantSavedPct)
+				t.Errorf("SavedPct = %.3f; want %.3f", res.SavedPct, tt.wantSavedPct)
 			}
 			if res.VideoKbps != tt.wantVideoKbps {
-				t.Errorf("VideoKbps = %d; queria %d", res.VideoKbps, tt.wantVideoKbps)
+				t.Errorf("VideoKbps = %d; want %d", res.VideoKbps, tt.wantVideoKbps)
 			}
 			if res.AudioKbps != tt.wantAudioKbps {
-				t.Errorf("AudioKbps = %d; queria %d", res.AudioKbps, tt.wantAudioKbps)
+				t.Errorf("AudioKbps = %d; want %d", res.AudioKbps, tt.wantAudioKbps)
 			}
 			if res.CurrentSizeMB != tt.wantCurrentMB {
-				t.Errorf("CurrentSizeMB = %f; queria %f", res.CurrentSizeMB, tt.wantCurrentMB)
+				t.Errorf("CurrentSizeMB = %f; want %f", res.CurrentSizeMB, tt.wantCurrentMB)
 			}
 		})
 	}

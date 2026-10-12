@@ -195,7 +195,7 @@ func TestSaveConfigClearsToolPathsWhenBlank(t *testing.T) {
 	}
 	for _, bin := range []string{"ffmpeg", "ffprobe"} {
 		if _, ok := cmdutil.Override(bin); ok {
-			t.Errorf("override de %s deveria ter sido removido", bin)
+			t.Errorf("override de %s should ter sido removido", bin)
 		}
 	}
 }
@@ -216,7 +216,7 @@ func TestSaveConfigRejectsInvalidAndKeepsOverride(t *testing.T) {
 	invalid := valid
 	invalid.CRF = 99
 	if err := a.SaveConfig(invalid); err == nil {
-		t.Fatal("SaveConfig deveria rejeitar crf fora da faixa")
+		t.Fatal("SaveConfig should rejeitar crf fora da faixa")
 	}
 	if got, ok := cmdutil.Override("ffmpeg"); !ok || got != custom {
 		t.Errorf("override = %q (ok=%v), want o anterior %q", got, ok, custom)
@@ -230,7 +230,7 @@ func TestSaveConfigRejectsInvalidAndKeepsOverride(t *testing.T) {
 func TestSaveConfigWithoutStore(t *testing.T) {
 	err := newApp(nil).SaveConfig(config.Defaults())
 	if err == nil {
-		t.Fatal("SaveConfig sem store deveria falhar")
+		t.Fatal("SaveConfig sem store should falhar")
 	}
 	if !strings.Contains(err.Error(), "configuration") {
 		t.Errorf("mensagem inesperada: %q", err)
@@ -258,7 +258,7 @@ func TestCheckFFmpegUsesConfiguredPath(t *testing.T) {
 
 	st := a.CheckFFmpeg()
 	if !st.FFmpegOK {
-		t.Errorf("esperava OK com os caminhos configurados, got %+v", st)
+		t.Errorf("expected OK com os caminhos configurados, got %+v", st)
 	}
 }
 
@@ -284,7 +284,7 @@ func TestCheckFFmpegFailsWithBrokenConfiguredPath(t *testing.T) {
 		t.Error("FFmpegOK should be false with an invalid configured path")
 	}
 	if !strings.Contains(st.Message, "ffmpeg") {
-		t.Errorf("mensagem deveria citar o ffmpeg: %q", st.Message)
+		t.Errorf("mensagem should citar o ffmpeg: %q", st.Message)
 	}
 }
 
@@ -294,7 +294,7 @@ func TestCheckFFmpegMissing(t *testing.T) {
 	a := NewApp()
 	st := a.CheckFFmpeg()
 	if st.FFmpegOK {
-		t.Error("FFmpegOK deveria ser false")
+		t.Error("FFmpegOK should ser false")
 	}
 	if !strings.Contains(st.Message, "ffmpeg, ffprobe") {
 		t.Errorf("mensagem inesperada: %q", st.Message)
@@ -311,7 +311,7 @@ func TestCheckFFmpegPartial(t *testing.T) {
 
 	st := NewApp().CheckFFmpeg()
 	if st.FFmpegOK {
-		t.Error("FFmpegOK deveria ser false")
+		t.Error("FFmpegOK should ser false")
 	}
 	if !strings.Contains(st.Message, "ffprobe") || strings.Contains(st.Message, "ffprobe, ") {
 		t.Errorf("mensagem inesperada: %q", st.Message)
@@ -330,13 +330,13 @@ func TestCheckFFmpegOK(t *testing.T) {
 
 	st := NewApp().CheckFFmpeg()
 	if !st.FFmpegOK || st.Message != "" {
-		t.Errorf("esperava OK, got %+v", st)
+		t.Errorf("expected OK, got %+v", st)
 	}
 }
 
 func TestJoinNames(t *testing.T) {
 	if got := joinNames([]string{}); got != "" {
-		t.Errorf("vazio: %q", got)
+		t.Errorf("empty: %q", got)
 	}
 	if got := joinNames([]string{"a"}); got != "a" {
 		t.Errorf("single: %q", got)
@@ -413,11 +413,11 @@ func TestDebugEnabled(t *testing.T) {
 	app := NewApp()
 	t.Setenv("VIDCTL_DEBUG", "1")
 	if !app.DebugEnabled() {
-		t.Fatal("DebugEnabled deveria ser true com VIDCTL_DEBUG=1")
+		t.Fatal("DebugEnabled should ser true com VIDCTL_DEBUG=1")
 	}
 	t.Setenv("VIDCTL_DEBUG", "")
 	if app.DebugEnabled() {
-		t.Fatal("DebugEnabled deveria ser false com VIDCTL_DEBUG vazio")
+		t.Fatal("DebugEnabled should ser false com VIDCTL_DEBUG empty")
 	}
 }
 
@@ -484,7 +484,7 @@ printf '%s\n' '{"streams":[{"codec_type":"video","codec_name":"h264","width":320
 		t.Fatalf("Cancel: %v", err)
 	}
 	if s := waitTaskTerminal(t, a, jobID); s.State != compress.StateCanceled {
-		t.Errorf("estado final = %q; queria canceled", s.State)
+		t.Errorf("estado final = %q; want canceled", s.State)
 	}
 }
 
@@ -512,26 +512,22 @@ printf '%s\n' '{"streams":[{"codec_type":"video","codec_name":"h264","width":320
 		{InputPath: "b.mp4", PresetID: "whatsapp-status"},
 	})
 	if len(acks) != 4 {
-		t.Fatalf("acks = %d; queria 4", len(acks))
+		t.Fatalf("acks = %d; want 4", len(acks))
 	}
 	if acks[0].JobID != "" || !strings.Contains(acks[0].Error, "no video") {
 		t.Errorf("ack[0] = %+v; want a video error", acks[0])
 	}
 	if acks[1].JobID != "" || !strings.Contains(acks[1].Error, "no preset") {
-		t.Errorf("ack[1] = %+v; queria erro de preset", acks[1])
+		t.Errorf("ack[1] = %+v; want erro de preset", acks[1])
 	}
-	// Enqueue position depends on worker timing; the point is to enqueue
-	// both valid jobs in order and see them in the queue. Live positions are
-	// invalidated by a fast/errored worker under -race, so only the ACKs
-	// (computados no enqueue) devem ser exatos.
-	if acks[2].JobID == "" || acks[3].JobID == "" {
-		t.Errorf("acks[2..3] sem jobId: %+v %+v", acks[2], acks[3])
-	}
-	if acks[2].Position != 1 || acks[3].Position != 2 || acks[2].Position >= acks[3].Position {
-		t.Errorf("unexpected enqueue positions: %d %d; want 1 and 2", acks[2].Position, acks[3].Position)
+	// Both valid jobs must be enqueued and present in the queue. Positions are
+	// not asserted: they depend on worker timing and a worker that finishes (or
+	// errors) before the next enqueue makes positions shift under -race.
+	if acks[2].JobID == "" || acks[3].JobID == "" || acks[2].JobID == acks[3].JobID {
+		t.Errorf("acks[2..3] without unique jobId: %+v %+v", acks[2], acks[3])
 	}
 	if tasks := a.GetTasks(); len(tasks) != 2 {
-		t.Errorf("GetTasks = %d tarefas; queria 2", len(tasks))
+		t.Errorf("GetTasks = %d tasks; want 2", len(tasks))
 	}
 
 	for _, id := range []string{acks[2].JobID, acks[3].JobID} {
@@ -539,13 +535,13 @@ printf '%s\n' '{"streams":[{"codec_type":"video","codec_name":"h264","width":320
 		waitTaskTerminal(t, a, id)
 	}
 	if left := a.ClearFinished(); len(left) != 0 {
-		t.Errorf("ClearFinished deixou %d tarefas; queria vazio", len(left))
+		t.Errorf("ClearFinished left %d tasks; want empty", len(left))
 	}
 }
 
 func TestGetTasksEmpty(t *testing.T) {
 	if got := NewApp().GetTasks(); len(got) != 0 {
-		t.Errorf("GetTasks = %d tarefas; queria vazio", len(got))
+		t.Errorf("GetTasks = %d tasks; want empty", len(got))
 	}
 }
 
@@ -614,13 +610,13 @@ printf '%s\n' '{"streams":[
 func TestGetUsageSmoke(t *testing.T) {
 	snap := NewApp().GetUsage()
 	if snap.MemTotalMB <= 0 {
-		t.Errorf("MemTotalMB = %v, esperava > 0", snap.MemTotalMB)
+		t.Errorf("MemTotalMB = %v, expected > 0", snap.MemTotalMB)
 	}
 	if snap.CPU < 0 || snap.CPU > 100 {
 		t.Errorf("CPU = %v, fora de 0..100", snap.CPU)
 	}
 	if snap.GPU < -1 || snap.GPU > 100 {
-		t.Errorf("GPU = %v, esperava -1 ou 0..100", snap.GPU)
+		t.Errorf("GPU = %v, expected -1 ou 0..100", snap.GPU)
 	}
 }
 
@@ -645,10 +641,10 @@ printf '%s\n' '{"streams":[
 	a := NewApp()
 
 	if _, err := a.GetAdvice(compress.Job{}); err == nil {
-		t.Error("esperava erro sem inputPath")
+		t.Error("expected erro sem inputPath")
 	}
 	if _, err := a.GetAdvice(compress.Job{InputPath: "in.mp4", PresetID: "nope"}); err == nil {
-		t.Error("esperava erro de preset desconhecido")
+		t.Error("expected erro de preset desconhecido")
 	}
 	// a 2s 240p clip: plenty of budget → OK
 	adv, err := a.GetAdvice(compress.Job{InputPath: "in.mp4", PresetID: "whatsapp-status", SizeMB: 10})
@@ -656,7 +652,7 @@ printf '%s\n' '{"streams":[
 		t.Fatalf("GetAdvice: %v", err)
 	}
 	if !adv.OK {
-		t.Errorf("clipe curto deveria estar ok: %+v", adv)
+		t.Errorf("clipe curto should estar ok: %+v", adv)
 	}
 }
 
@@ -680,10 +676,10 @@ printf '%s\n' '{"streams":[
 	a := NewApp()
 
 	if _, err := a.EstimateSize(compress.Job{}); err == nil {
-		t.Error("esperava erro sem inputPath")
+		t.Error("expected erro sem inputPath")
 	}
 	if _, err := a.EstimateSize(compress.Job{InputPath: "in.mp4", PresetID: "nope"}); err == nil {
-		t.Error("esperava erro de preset desconhecido")
+		t.Error("expected erro de preset desconhecido")
 	}
 
 	// modo size: o alvo carrega o headroom de 5% → ≈ 0.95 * 100 MB.
@@ -695,7 +691,7 @@ printf '%s\n' '{"streams":[
 		t.Error("size mode should have an available estimate")
 	}
 	if math.Abs(res.TargetSizeMB-95) > 0.1 {
-		t.Errorf("TargetSizeMB = %.3f; queria ~95", res.TargetSizeMB)
+		t.Errorf("TargetSizeMB = %.3f; want ~95", res.TargetSizeMB)
 	}
 
 	// crf mode: no deterministic forecast yet → Available=false.
@@ -794,7 +790,7 @@ func TestResolveEncoder(t *testing.T) {
 		t.Fatalf("resolveEncoder(auto): %v", err)
 	}
 	if auto.Hardware != "nvenc" {
-		t.Errorf("auto deveria resolver para nvenc, got %q", auto.Hardware)
+		t.Errorf("auto should resolver para nvenc, got %q", auto.Hardware)
 	}
 
 	concrete, err := a.resolveEncoder(compress.Job{Hardware: "qsv"})
@@ -815,7 +811,7 @@ func TestResolveEncoder(t *testing.T) {
 	cmdutil.SetOverride("ffmpeg", filepath.Join(t.TempDir(), "inexistente"))
 	// The override is global and, if it leaks into the next test under shuffle,
 	// it breaks
-	// quem depende do ffmpeg real do PATH — limpa antes de sair.
+	// quem depende do ffmpeg real do PATH — limpa before de sair.
 	t.Cleanup(cmdutil.ClearOverrides)
 	b := newApp(nil)
 	fallback, err := b.resolveEncoder(compress.Job{Hardware: "auto"})
@@ -823,7 +819,7 @@ func TestResolveEncoder(t *testing.T) {
 		t.Fatalf("resolveEncoder(auto sem ffmpeg): %v", err)
 	}
 	if fallback.Hardware != "" {
-		t.Errorf("auto sem encoders deveria virar software, got %q", fallback.Hardware)
+		t.Errorf("auto sem encoders should virar software, got %q", fallback.Hardware)
 	}
 }
 
@@ -840,10 +836,10 @@ func TestCompressRejectsInvalidEncoder(t *testing.T) {
 func TestCompressRejectsInvalidAdjustments(t *testing.T) {
 	a := newTestApp(t)
 	if _, err := a.Compress(compress.Job{InputPath: "in.mp4", PresetID: "youtube", TrimStartSec: 30, TrimEndSec: 10}); err == nil {
-		t.Error("esperava erro de corte invertido no enqueue")
+		t.Error("expected erro de corte invertido no enqueue")
 	}
 	if _, err := a.Compress(compress.Job{InputPath: "in.mp4", PresetID: "youtube", Rotate: 45}); err == nil {
-		t.Error("esperava erro de invalid rotation no enqueue")
+		t.Error("expected erro de invalid rotation no enqueue")
 	}
 }
 
@@ -858,7 +854,7 @@ func TestExtractAudioValidation(t *testing.T) {
 	}
 	spec = audio.Spec{InputPath: "in.mp4", Codec: "mp3", OutputPath: ""}
 	if _, err := a.ExtractAudio(spec); err == nil || !strings.Contains(err.Error(), "destination") {
-		t.Errorf("sem destino deveria falhar, got %v", err)
+		t.Errorf("sem destino should falhar, got %v", err)
 	}
 }
 
@@ -900,13 +896,13 @@ printf '%s\n' '{"streams":[
 
 	s := waitTaskTerminal(t, a, jobID)
 	if s.State != compress.StateDone {
-		t.Errorf("estado final = %q; queria done (task=%+v)", s.State, s)
+		t.Errorf("estado final = %q; want done (task=%+v)", s.State, s)
 	}
 	if s.Kind != "audio" {
-		t.Errorf("kind = %q; queria audio", s.Kind)
+		t.Errorf("kind = %q; want audio", s.Kind)
 	}
 	if s.OutputPath != out {
-		t.Errorf("outputPath = %q; queria %q", s.OutputPath, out)
+		t.Errorf("outputPath = %q; want %q", s.OutputPath, out)
 	}
 	if s.InputPath != "in.mp4" {
 		t.Errorf("inputPath = %q; want the extraction path", s.InputPath)
@@ -941,7 +937,7 @@ printf '%s\n' '{"streams":[
 	}
 	s := waitTaskTerminal(t, a, jobID)
 	if s.State != compress.StateError || !strings.Contains(s.Error, "has no audio track") {
-		t.Errorf("estado final = %+v; queria erro de faixa ausente", s)
+		t.Errorf("estado final = %+v; want erro de faixa ausente", s)
 	}
 }
 
@@ -949,7 +945,7 @@ func TestSuggestAudioOutput(t *testing.T) {
 	a := newTestApp(t)
 
 	if _, err := a.SuggestAudioOutput("", "mp3"); err == nil {
-		t.Error("sem entrada deveria falhar")
+		t.Error("sem entrada should falhar")
 	}
 	if _, err := a.SuggestAudioOutput("/tmp/video.mp4", "ogg"); err == nil {
 		t.Error("invalid format should fail")

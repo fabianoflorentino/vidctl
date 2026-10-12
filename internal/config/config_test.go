@@ -123,7 +123,7 @@ func TestLoadCorruptFileReturnsDefaults(t *testing.T) {
 		{"json invalido", "{ isto nao e json"},
 		{"json truncado", `{"presetId": "youtube"`},
 		{"array no lugar do objeto", `["whatsapp-status"]`},
-		{"vazio", ""},
+		{"empty", ""},
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
@@ -237,7 +237,7 @@ func TestSaveValidatesBeforeWriting(t *testing.T) {
 		cfg     Config
 		wantMsg string
 	}{
-		{"preset vazio", Config{PresetID: "  ", Language: "pt", MaxParallel: 1, AudioSuffix: "-audio"}, "presetId"},
+		{"preset empty", Config{PresetID: "  ", Language: "pt", MaxParallel: 1, AudioSuffix: "-audio"}, "presetId"},
 		{"size negativo", Config{PresetID: "custom", SizeMB: -1, Language: "pt", MaxParallel: 1, AudioSuffix: "-audio"}, "sizeMB"},
 		{"size acima do limite", Config{PresetID: "custom", SizeMB: MaxSizeMB + 1, Language: "pt", MaxParallel: 1, AudioSuffix: "-audio"}, "sizeMB"},
 		{"crf acima do limite", Config{PresetID: "custom", CRF: 52, Language: "pt", MaxParallel: 1, AudioSuffix: "-audio"}, "crf"},
@@ -250,7 +250,7 @@ func TestSaveValidatesBeforeWriting(t *testing.T) {
 			store := newTestStore(t)
 			err := store.Save(tt.cfg)
 			if err == nil {
-				t.Fatal("Save deveria falhar")
+				t.Fatal("Save should falhar")
 			}
 			if !errors.Is(err, ErrInvalidConfig) {
 				t.Errorf("error %v is not ErrInvalidConfig", err)
@@ -389,7 +389,7 @@ func TestValidate(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.cfg.Validate()
 			if tt.wantErr && err == nil {
-				t.Error("Validate deveria falhar")
+				t.Error("Validate should falhar")
 			}
 			if !tt.wantErr && err != nil {
 				t.Errorf("Validate = %v, want nil", err)

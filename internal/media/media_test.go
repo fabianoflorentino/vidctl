@@ -142,7 +142,7 @@ func TestProbeRejectsBrokenFFprobePath(t *testing.T) {
 		t.Errorf("error %v is not ErrNotConfigured", err)
 	}
 	if !strings.Contains(err.Error(), "nao-existe") {
-		t.Errorf("mensagem %q deveria citar o caminho configurado", err)
+		t.Errorf("mensagem %q should citar o caminho configurado", err)
 	}
 }
 

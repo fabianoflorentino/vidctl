@@ -59,7 +59,7 @@ func TestBuildArgs(t *testing.T) {
 			contains: []string{"-vn", "-map", "0:a:0"},
 		},
 		{
-			name:     "progresso do ffmpeg habilitado antes do destino",
+			name:     "progresso do ffmpeg habilitado before do destino",
 			spec:     base,
 			contains: []string{"-progress", "pipe:1", "-nostats", "/out/x.mp3"},
 		},
@@ -74,7 +74,7 @@ func TestBuildArgs(t *testing.T) {
 			absent: []string{"-ac", "-ar"},
 		},
 		{
-			name:     "trim -ss/-to antes do -i",
+			name:     "trim -ss/-to before do -i",
 			spec:     base.withTrim(60, 120),
 			contains: []string{"-ss", "60.000", "-to", "120.000", "-i", "/videos/entrada.mp4"},
 		},
@@ -150,7 +150,7 @@ func TestValidate(t *testing.T) {
 		{"valid", valid, ""},
 		{"sem entrada", Spec{}, "pick a video"},
 		{"formato desconhecido", valid.withCodec("ogg"), "format"},
-		{"formato vazio", valid.withCodec(""), "format"},
+		{"formato empty", valid.withCodec(""), "format"},
 		{"bitrate em flac", valid.withCodec("flac").withBitrate(192), "does not apply"},
 		{"bitrate em wav", valid.withCodec("wav").withBitrate(192), "does not apply"},
 		{"bitrate em copy", valid.withCodec("copy").withBitrate(128), "does not apply"},
@@ -174,7 +174,7 @@ func TestValidate(t *testing.T) {
 				return
 			}
 			if err == nil {
-				t.Fatal("Validate deveria falhar")
+				t.Fatal("Validate should falhar")
 			}
 			if !strings.Contains(err.Error(), tt.wantMsg) {
 				t.Errorf("message %q does not contain %q", err, tt.wantMsg)
@@ -199,20 +199,20 @@ func TestSuggestOutput(t *testing.T) {
 		wantErr bool
 	}{
 		{"mp3 com sufixo", "/videos/meu clip.mov", "mp3", "-audio", "meu clip-audio.mp3", false},
-		{"sufixo vazio vira default", "/videos/a.mp4", "opus", "", "a-audio.opus", false},
+		{"sufixo empty vira default", "/videos/a.mp4", "opus", "", "a-audio.opus", false},
 		{"aac", "/videos/a.mkv", "aac", "-worst", "a-worst.aac", false},
 		{"flac", "/videos/a.webm", "flac", "-audio", "a-audio.flac", false},
 		{"wav", "/videos/a.ts", "wav", "-audio", "a-audio.wav", false},
 		{"copy", "/videos/a.mp4", "copy", "-audio", "a-audio.mka", false},
 		{"unknown codec", "/videos/a.mp4", "ogg", "-audio", "", true},
-		{"caminho vazio", "", "mp3", "-audio", "", true},
+		{"caminho empty", "", "mp3", "-audio", "", true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := SuggestOutput(tt.path, tt.codec, tt.suffix)
 			if tt.wantErr {
 				if err == nil {
-					t.Fatal("esperava erro")
+					t.Fatal("expected erro")
 				}
 				return
 			}
@@ -240,7 +240,7 @@ func TestExtension(t *testing.T) {
 		}
 	}
 	if _, err := Extension("ogg"); err == nil {
-		t.Error("Extension(ogg) deveria falhar")
+		t.Error("Extension(ogg) should falhar")
 	}
 }
 
