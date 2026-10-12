@@ -23,7 +23,7 @@ func fileDropOption() *options.DragAndDrop {
 }
 
 func main() {
-	a := app.NewApp()
+	a := newApp()
 
 	dlog.Printf("[main] vidctl iniciado com VIDCTL_DEBUG ativo")
 
@@ -39,7 +39,7 @@ func main() {
 		},
 		BackgroundColour: &options.RGBA{R: 13, G: 12, B: 10, A: 1},
 		DragAndDrop:      fileDropOption(),
-		OnStartup:        app.OnStartupFor(a),
+		OnStartup:        app.OnStartupFor(a.App),
 		Bind: []interface{}{
 			a,
 		},
