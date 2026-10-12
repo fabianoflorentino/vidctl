@@ -699,16 +699,20 @@
         function applyLang(l) {
           var d = I18N[l] || I18N.pt;
           document.documentElement.lang = l === 'zh' ? 'zh-CN' : l === 'pt' ? 'pt-BR' : l === 'es' ? 'es' : 'en';
-          var setText = function (node) {
-            var k = node.getAttribute('data-i18n');
-            if (d[k]) node.innerHTML = d[k];
-          };
+          // Text swaps only apply to plain data-i18n elements. Elements that are
+          // only a translated attribute (data-i18n-attr, e.g. the demo aria-label)
+          // must not have their inner content overwritten.
           var nodes = document.querySelectorAll('[data-i18n]');
-          for (var i = 0; i < nodes.length; i++) setText(nodes[i]);
+          for (var i = 0; i < nodes.length; i++) {
+            var el = nodes[i];
+            if (el.hasAttribute('data-i18n-attr')) continue;
+            var k = el.getAttribute('data-i18n');
+            if (d[k]) el.innerHTML = d[k];
+          }
           var attrs = document.querySelectorAll('[data-i18n-attr]');
           for (var j = 0; j < attrs.length; j++) {
-            var el = attrs[j], k = el.getAttribute('data-i18n');
-            el.setAttribute(el.getAttribute('data-i18n-attr'), d[k] || '');
+            var ael = attrs[j], ak = ael.getAttribute('data-i18n');
+            ael.setAttribute(ael.getAttribute('data-i18n-attr'), d[ak] || '');
           }
           var hl = document.getElementById('lang');
           if (hl) hl.value = l;
