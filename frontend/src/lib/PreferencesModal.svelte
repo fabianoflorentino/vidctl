@@ -3,6 +3,7 @@
   import RadioCardGroup from './RadioCardGroup.svelte'
   import InfoTip from './InfoTip.svelte'
   import type { RadioOption } from './RadioCardGroup.svelte'
+  import Toggle from './Toggle.svelte'
   import { t, LANGS, type LangId } from './i18n.svelte'
 
   type ThemeChoice = 'system' | 'light' | 'dark'
@@ -17,6 +18,8 @@
     ffmpegPath: string
     ffprobePath: string
     audioSuffix: string
+    notifyOnDone: boolean
+    openFolderOnDone: boolean
     onclose?: () => void
     ontheme?: (theme: ThemeChoice) => void
     onlanguage?: (lang: LangId) => void
@@ -25,6 +28,8 @@
     onffmpegpath?: (value: string) => void
     onffprobepath?: (value: string) => void
     onaudiosuffix?: (value: string) => void
+    onnotifydone?: (value: boolean) => void
+    onopenfolder?: (value: boolean) => void
   }
 
   let {
@@ -37,6 +42,8 @@
     ffmpegPath,
     ffprobePath,
     audioSuffix,
+    notifyOnDone,
+    openFolderOnDone,
     onclose = () => {},
     ontheme,
     onlanguage,
@@ -45,6 +52,8 @@
     onffmpegpath,
     onffprobepath,
     onaudiosuffix,
+    onnotifydone,
+    onopenfolder,
   }: Props = $props()
 
   const themeOptions = $derived<RadioOption[]>([
@@ -134,6 +143,22 @@
         oninput={(e) => onaudiosuffix?.(e.currentTarget.value)}
       />
     </label>
+  </div>
+
+  <div class="modal-section">
+    <h2>{t('prefs.notifications')}</h2>
+    <Toggle
+      title={t('prefs.notifyDone')}
+      description={t('prefs.notifyDoneDesc')}
+      checked={notifyOnDone}
+      onchange={(v) => onnotifydone?.(v)}
+    />
+    <Toggle
+      title={t('prefs.openFolder')}
+      description={t('prefs.openFolderDesc')}
+      checked={openFolderOnDone}
+      onchange={(v) => onopenfolder?.(v)}
+    />
   </div>
 
   <div class="modal-section">

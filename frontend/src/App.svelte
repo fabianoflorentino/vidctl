@@ -129,6 +129,8 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   let ffmpegPath = $state('')
   let ffprobePath = $state('')
   let audioSuffix = $state('-audio')
+  let notifyOnDone = $state(false)
+  let openFolderOnDone = $state(false)
   let configReady = $state(false)
   let saveTimer: ReturnType<typeof setTimeout> | undefined
 
@@ -156,6 +158,8 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
       ffmpegPath,
       ffprobePath,
       audioSuffix,
+      notifyOnDone,
+      openFolderOnDone,
       language,
     })
   }
@@ -1053,6 +1057,8 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
       ffmpegPath = saved.ffmpegPath ?? ''
       ffprobePath = saved.ffprobePath ?? ''
       audioSuffix = saved.audioSuffix ?? '-audio'
+      notifyOnDone = saved.notifyOnDone ?? false
+      openFolderOnDone = saved.openFolderOnDone ?? false
 
       const p = presetList.find((x) => x.id === selectedPresetId)
       if (p?.mode === 'size' && !hasSavedSize) sizeMB = p.sizeMB
@@ -1670,6 +1676,8 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   {ffmpegPath}
   {ffprobePath}
   {audioSuffix}
+  {notifyOnDone}
+  {openFolderOnDone}
   onclose={() => (prefsOpen = false)}
   ontheme={setTheme}
   onlanguage={(l) => (language = l)}
@@ -1678,4 +1686,6 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   onffmpegpath={(v) => (ffmpegPath = v)}
   onffprobepath={(v) => (ffprobePath = v)}
   onaudiosuffix={(v) => (audioSuffix = v)}
+  onnotifydone={(v) => (notifyOnDone = v)}
+  onopenfolder={(v) => (openFolderOnDone = v)}
 />
