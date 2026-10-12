@@ -381,6 +381,17 @@ a {
   font-size: 12px;
 }
 
+.dsel {
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--dim);
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 3px 8px;
+  cursor: pointer;
+}
+
 .affmpeg {
   display: inline-flex;
   align-items: center;

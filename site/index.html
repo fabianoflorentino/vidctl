@@ -73,6 +73,12 @@
               <span class="abrand"><b>VIDCTL</b><small data-i18n="demo.subtitle">compressor de vídeo</small></span>
               <span class="aend">
                 <span class="atheme" id="theme-pill">☀</span>
+                <select id="dlang" class="dsel" aria-label="Idioma / Language / Idioma / 语言">
+                  <option value="pt">PT</option>
+                  <option value="en">EN</option>
+                  <option value="es">ES</option>
+                  <option value="zh">中文</option>
+                </select>
                 <span class="affmpeg"><i></i><span data-i18n="topbar.ffmpegOk">ffmpeg OK</span></span>
               </span>
             </header>
@@ -693,25 +699,30 @@
         function applyLang(l) {
           var d = I18N[l] || I18N.pt;
           document.documentElement.lang = l === 'zh' ? 'zh-CN' : l === 'pt' ? 'pt-BR' : l === 'es' ? 'es' : 'en';
-          document.querySelectorAll('[data-i18n]').forEach(function (el) {
-            var k = el.getAttribute('data-i18n');
-            if (!d[k]) return;
-            el.innerHTML = d[k];
-          });
-          document.querySelectorAll('[data-i18n-attr]').forEach(function (el) {
-            var k = el.getAttribute('data-i18n');
+          var setText = function (node) {
+            var k = node.getAttribute('data-i18n');
+            if (d[k]) node.innerHTML = d[k];
+          };
+          var nodes = document.querySelectorAll('[data-i18n]');
+          for (var i = 0; i < nodes.length; i++) setText(nodes[i]);
+          var attrs = document.querySelectorAll('[data-i18n-attr]');
+          for (var j = 0; j < attrs.length; j++) {
+            var el = attrs[j], k = el.getAttribute('data-i18n');
             el.setAttribute(el.getAttribute('data-i18n-attr'), d[k] || '');
-          });
+          }
+          var hl = document.getElementById('lang');
+          if (hl) hl.value = l;
+          var dl = document.getElementById('dlang');
+          if (dl) dl.value = l;
         }
         var sel = document.getElementById('lang');
+        var dsel = document.getElementById('dlang');
         var saved = null;
-        try { saved = localStorage.getItem(LS); } catch (e) { /* sem persistência */ }
-        if (saved && I18N[saved]) { sel.value = saved; applyLang(saved); }
-        else { applyLang('pt'); }
-        sel.addEventListener('change', function () {
-          applyLang(sel.value);
-          try { localStorage.setItem(LS, sel.value); } catch (e) { /* sem persistência */ }
-        });
+        try { saved = localStorage.getItem(LS); } catch (e) { /* no persistence */ }
+        if (!saved || !I18N[saved]) saved = 'pt';
+        if (sel) { sel.value = saved; sel.addEventListener('change', function () { applyLang(sel.value); try { localStorage.setItem(LS, sel.value); } catch (e) {} }); }
+        if (dsel) { dsel.value = saved; dsel.addEventListener('change', function () { if (sel) sel.value = dsel.value; applyLang(dsel.value); try { localStorage.setItem(LS, dsel.value); } catch (e) {} }); }
+        applyLang(saved);
       })();
     </script>
   </body>
