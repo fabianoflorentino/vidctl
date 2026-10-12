@@ -519,6 +519,30 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
     }
   }
 
+  function fmtHumanSec(sec: number): string {
+    const m = Math.floor(sec / 60)
+    const s = Math.round(sec % 60)
+    return m === 0 ? `${s}s` : `${m}min${String(s).padStart(2, '0')}s`
+  }
+
+  // Monta a mensagem do conselho no idioma atual usando o payload estruturado
+  // do backend; cai no texto legado (Message) quando o código é desconhecido.
+  function adviceMessage(a: Awaited<ReturnType<typeof GetAdvice>>): string {
+    if (a.code !== 'low') return a.message
+    const p = a.params ?? {}
+    const scopeKey = a.scope === 'part' ? 'advice.scopePart' : 'advice.scopeFull'
+    let msg = t('advice.lowBase', {
+      kbps: Math.round(p.kbps ?? a.kbps),
+      minKbps: Math.round(p.minKbps ?? a.minKbps),
+      height: Math.round(p.height ?? 0),
+      scope: t(scopeKey, { sec: fmtHumanSec(p.sec ?? 0) }),
+    })
+    if (a.sug === 'size') msg += t('advice.raiseTarget', { mb: Math.round(p.mb ?? 0) })
+    else if (a.sug === 'split') msg += t('advice.splitParts', { min: Math.round(p.min ?? 0), parts: Math.round(p.parts ?? 0) })
+    else if (a.sug === 'crf') msg += t('advice.useCrf')
+    return msg
+  }
+
   $effect(() => {
     if (!anyBusy) {
       usage = null
@@ -1261,7 +1285,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
             </div>
             {#if advice && !advice.ok}
               <div class="advice">
-                <p class="advice-msg">{advice.message}</p>
+                <p class="advice-msg">{adviceMessage(advice)}</p>
                 {#if (advice.suggestion.sizeMB ?? 0) > 0 || (advice.suggestion.minutesEach ?? 0) > 0}
                   <button class="btn small" onclick={applyAdvice}>{t('advice.apply')}</button>
                 {/if}

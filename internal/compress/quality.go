@@ -23,11 +23,18 @@ type Suggestion struct {
 
 // Advice is the pre-encode quality estimation for the current settings.
 type Advice struct {
-	OK         bool       `json:"ok"`
-	Kbps       int        `json:"kbps"`
-	MinKbps    int        `json:"minKbps"`
-	Message    string     `json:"message"`
-	Suggestion Suggestion `json:"suggestion"`
+	OK      bool       `json:"ok"`
+	Kbps    int        `json:"kbps"`
+	MinKbps int        `json:"minKbps"`
+	Message string     `json:"message"`
+	// Code, Scope, Sug and Params are the structured payload so the frontend
+	// can render the advice in the user's language. Message stays only as a
+	// fallback for older clients.
+	Code   string             `json:"code,omitempty"`
+	Scope  string             `json:"scope,omitempty"` // "full" | "part"
+	Sug    string             `json:"sug,omitempty"`   // "size" | "split" | "crf"
+	Params map[string]float64 `json:"params,omitempty"`
+	Suggestion Suggestion     `json:"suggestion"`
 }
 
 // minKbpsForHeight returns a conservative average video bitrate per
@@ -80,32 +87,60 @@ func Advise(info *media.Info, preset presets.Preset, job Job) Advice {
 }
 
 func lowAdvice(kbps, minKbps int, segSec float64, info *media.Info, preset presets.Preset, job Job, audioBits float64) Advice {
-	scope := fmt.Sprintf("para um vídeo de %s", humanSec(info.DurationSec))
+	scope := "full"
+	scopeText := fmt.Sprintf("para um vídeo de %s", humanSec(info.DurationSec))
 	if job.Split != nil {
-		scope = fmt.Sprintf("para cada parte de %s", humanSec(segSec))
+		scope = "part"
+		scopeText = fmt.Sprintf("para cada parte de %s", humanSec(segSec))
 	}
-	msg := fmt.Sprintf("≈%d kbps de vídeo %s — abaixo dos ~%d kbps recomendados para %dp; a qualidade vai cair muito.", kbps, scope, minKbps, info.Height)
+	scopeSec := info.DurationSec
+	if job.Split != nil {
+		scopeSec = segSec
+	}
+	msg := fmt.Sprintf("≈%d kbps de vídeo %s — abaixo dos ~%d kbps recomendados para %dp; a qualidade vai cair muito.", kbps, scopeText, minKbps, info.Height)
 
+	params := map[string]float64{
+		"kbps":    float64(kbps),
+		"minKbps": float64(minKbps),
+		"height":  float64(info.Height),
+		"sec":     scopeSec,
+	}
 	need := &Suggestion{}
+	sug := "crf"
 	needMB := math.Ceil(((float64(minKbps)*1000 + audioBits) * segSec) / 0.95 / 8 / 1048576)
 	switch {
 	case needMB <= maxTargetMB:
+		sug = "size"
 		need.SizeMB = needMB
+		params["mb"] = needMB
 		msg += fmt.Sprintf(" Sugestão: suba o alvo para ~%.0f MB.", needMB)
 	default:
 		perPartSec := (maxTargetMB * 0.95 * 8 * 1048576) / (float64(minKbps)*1000 + audioBits)
 		minutes := int(math.Floor(perPartSec / 60))
 		segs, err := split.Plan(info.DurationSec, split.Spec{MinutesEach: float64(minutes)})
 		if minutes >= 1 && err == nil && len(segs) >= 2 && len(segs) <= split.MaxParts {
+			sug = "split"
 			need.MinutesEach = minutes
 			need.Parts = len(segs)
+			params["min"] = float64(minutes)
+			params["parts"] = float64(len(segs))
 			msg += fmt.Sprintf(" Sugestão: corte em partes de ~%d min (%d partes).", minutes, len(segs))
 		} else {
 			msg += " Com o limite de tamanho atual não há como manter a qualidade — prefira um preset CRF (ex.: YouTube)."
 		}
 	}
 
-	return Advice{OK: false, Kbps: kbps, MinKbps: minKbps, Message: msg, Suggestion: *need}
+	return Advice{
+		OK:         false,
+		Kbps:       kbps,
+		MinKbps:    minKbps,
+		Message:    msg,
+		Code:       "low",
+		Scope:      scope,
+		Sug:        sug,
+		Params:     params,
+		Suggestion: *need,
+	}
 }
 
 func humanSec(sec float64) string {

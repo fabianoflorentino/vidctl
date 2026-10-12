@@ -54,6 +54,10 @@ export namespace compress {
 	    kbps: number;
 	    minKbps: number;
 	    message: string;
+	    code?: string;
+	    scope?: string;
+	    sug?: string;
+	    params?: Record<string, number>;
 	    suggestion: Suggestion;
 	
 	    static createFrom(source: any = {}) {
@@ -66,6 +70,10 @@ export namespace compress {
 	        this.kbps = source["kbps"];
 	        this.minKbps = source["minKbps"];
 	        this.message = source["message"];
+	        this.code = source["code"];
+	        this.scope = source["scope"];
+	        this.sug = source["sug"];
+	        this.params = source["params"];
 	        this.suggestion = this.convertValues(source["suggestion"], Suggestion);
 	    }
 	
