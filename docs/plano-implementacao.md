@@ -37,7 +37,7 @@ Branch            | Fase | PR
 `feat/ajustes`    | 5 — Ajustes por arquivo | mergeado
 `feat/audio`      | 6 — Extração de áudio | mergeado
 `feat/notificacoes`| 7 — Notificação + abrir pasta | mergeado
-`feat/updates`    | 8 — Verificação de atualização | pendente
+`feat/updates`    | 8 — Verificação de atualização | entregue na v2.6.0
 `feat/presets`    | 9 — Presets personalizados | pendente
 `feat/i18n`       | 10 — i18n pt-BR/en/es/zh + base em inglês | mergeado
 `feat/split-tempo`| 11 — Corte por tempo | pendente
@@ -556,6 +556,15 @@ só comprime vídeo; extração é um botão novo no card do arquivo.
 **Objetivo:** avisar se há release mais nova (sem exigir internet nem quebrar o
 modo offline atual).
 
+> **Status: ✅ implementada e entregue na v2.6.0** — ver `feat/updates`
+> (mergeado). `internal/update` consulta `/releases/latest` com timeout de 5 s,
+> cache por sessão (sem singleflight duplicado — o fetch roda sob a trava) e
+> filtra o asset zip por plataforma; offline/timeout/HTTP erro → `Info{Ok:false}`
+> sem erro. A versão do binário vem de `internal/version.Version`, injetada via
+> `-ldflags` no Makefile e no release.yml. Binding `App.CheckUpdate()` e
+> `App.OpenRelease(url)` (BrowserOpenURL); front exibe badge "vX.Y.Z disponível"
+> + botão de setas na topbar, nunca bloqueando o boot.
+
 ### Backend
 - `internal/update`: consulta `GET
   https://api.github.com/repos/fabianoflorentino/vidctl/releases/latest` com
@@ -947,7 +956,7 @@ v2.2.1  → ícone unificado nos instaladores            [entregue]
 v2.3.0  → Fase 6 (extrair áudio)                      [entregue]
 v2.4.0  → Fase 10 (i18n + base em inglês)                 [entregue]
 v2.5.0  → Fase 7 (notificações)                       [entregue — feat/notificacoes]
-v2.6.0  → Fase 8 (check update)                       [usa a API de releases por tag + fluxo de publish novo]
+v2.6.0  → Fase 8 (check update)                       [entregue — feat/updates]
 v2.7.0  → Fase 9 (presets custom)                     [depende de config]
 v2.8.0  → Fase 12 (transcrição srt/vtt/txt)
 ```

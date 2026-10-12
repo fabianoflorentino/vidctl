@@ -69,6 +69,10 @@ arquivo** (escala, corte, remover áudio, FPS, rotação, thumbnail). 100% offli
 - **Notificações do sistema**: aviso do desktop quando uma tarefa termina ou
   falha, e opção de abrir automaticamente a pasta do arquivo de saída ao
   concluir — os dois toggles ficam nas Preferências
+- **Verificação de atualização**: ao abrir, o app consulta o GitHub e, se houver
+  versão nova, mostra um badge na barra de cima ("v2.6.0 disponível") com link
+  para a release; dá para reexecutar a checagem no botão de setas. Offline não
+  é erro — apenas nada aparece
 - No Windows, conversões e sondagens de arquivo não abrem janelas de console
 
 ## Instalação
@@ -360,6 +364,19 @@ uma tarefa da fila termina:
 As notificações usam o sistema nativo de cada plataforma (toast no Windows,
 Notification Center no macOS, `notify-send` no Linux) e nunca interferem no
 resultado da conversão: um desktop sem notificador apenas ignora o aviso.
+
+## Verificação de atualização
+
+O vidctl confere, ao abrir, se há release mais nova na
+[página de releases](https://github.com/fabianoflorentino/vidctl/releases):
+- Sempre que existe uma versão nova, o **badge** (ex.: `v2.6.0 disponível`)
+  aparece na barra de cima, ao lado das Preferências; clica nele para abrir a
+  release no navegador.
+- O ícone de **atualizar** (setas) na mesma barra reexecuta a verificação a
+  qualquer momento.
+- A checagem consulta a API pública do GitHub com timeout de 5 s e **cache por
+  sessão**; offline, timeout ou erro HTTP são silenciosos (`Ok=false`) — o app
+  nunca trava nem bloqueia o boot por causa da atualização.
 
 ## Usabilidade
 

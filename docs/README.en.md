@@ -70,6 +70,10 @@ cut, remove audio, FPS, rotation, thumbnail). 100% offline.
 - **System notifications**: a desktop alert when a task finishes or fails, and
   an option to open the output file folder automatically on success — both
   toggles live in Preferences
+- **Update check**: on launch the app queries GitHub and, if a newer version
+  exists, shows a badge in the top bar ("v2.6.0 available") linking to the
+  release; the refresh button re-runs the check. Offline is not an error — it
+  just shows nothing
 - On Windows, conversions and file probing do not open console windows
 
 ## Installation
@@ -358,6 +362,18 @@ queue task finishes:
 Notifications use the native notifier of each platform (toast on Windows,
 Notification Center on macOS, `notify-send` on Linux) and never affect the
 conversion result: a desktop without a notifier simply ignores the alert.
+
+## Update check
+
+vidctl checks, on launch, whether a newer release exists on the
+[releases page](https://github.com/fabianoflorentino/vidctl/releases):
+- Whenever a new version exists, the **badge** (e.g. `v2.6.0 available`)
+  appears in the top bar, next to Preferences; clicking it opens the release in
+  the browser.
+- The **refresh** icon (arrows) in the same bar re-runs the check at any time.
+- The check hits the public GitHub API with a 5 s timeout and a **per-session
+  cache**; offline, timeout or HTTP errors are silent (`Ok=false`) — the app
+  never freezes or blocks boot because of the update check.
 
 ## Usability
 

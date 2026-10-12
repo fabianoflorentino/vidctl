@@ -14,7 +14,12 @@ operacional dos pacotes.
 
 ## [Unreleased]
 
-Nada ainda — em desenvolvimento.
+- **Verificação de atualização** (fase 8): ao abrir, o app consulta a release
+  mais recente do GitHub (`internal/update`, timeout de 5 s e cache por sessão)
+  e mostra o badge "vX.Y.Z disponível" na barra de cima quando há versão nova —
+  clicar abre a release no navegador. Um botão de setas reexecuta a checagem;
+  offline e erros de rede são silenciosos. A versão do binário agora é embutida
+  via `-ldflags` (Makefile e workflow de release).
 
 ## [2.5.0] — 2026-10-12
 

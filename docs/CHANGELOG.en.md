@@ -14,7 +14,12 @@ system of the packages.
 
 ## [Unreleased]
 
-Nothing yet — in development.
+- **Update check** (phase 8): on launch the app queries the latest GitHub
+  release (`internal/update`, 5 s timeout and per-session cache) and shows the
+  badge "vX.Y.Z available" in the top bar when a newer version exists —
+  clicking opens the release in the browser. A refresh button re-runs the
+  check; offline and network errors are silent. The binary version is now
+  baked in via `-ldflags` (Makefile and release workflow).
 
 ## [2.5.0] — 2026-10-12
 
