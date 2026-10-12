@@ -109,3 +109,11 @@ export function SuggestAudioOutput(arg1, arg2) {
 export function SystemTheme() {
   return window['go']['main']['App']['SystemTheme']();
 }
+
+export function CheckUpdate() {
+  return window['go']['main']['App']['CheckUpdate']();
+}
+
+export function OpenRelease(arg1) {
+  return window['go']['main']['App']['OpenRelease'](arg1);
+}
