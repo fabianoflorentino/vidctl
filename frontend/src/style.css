@@ -274,6 +274,33 @@ button {
   color: var(--fg);
 }
 
+.update-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--accent);
+  background: var(--inset);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  transition: filter 0.15s ease;
+}
+
+.update-badge:hover {
+  filter: brightness(1.1);
+}
+
+.update-badge .update-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
 /* banner + alert */
 .banner {
   display: flex;

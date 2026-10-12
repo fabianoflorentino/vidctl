@@ -25,9 +25,11 @@
     ExtractAudio,
     OpenAudioDialog,
     SystemTheme,
+    CheckUpdate,
+    OpenRelease,
   } from '../wailsjs/go/main/App.js'
   import { EventsOn, EventsOff, OnFileDrop, OnFileDropOff, Environment } from '../wailsjs/runtime/runtime.js'
-  import type { main, presets, media, config, encode, audio } from '../wailsjs/go/models.js'
+  import type { presets, media, config, encode, audio, update } from '../wailsjs/go/models.js'
   import { compress as bindings, config as configBindings } from '../wailsjs/go/models.js'
   import StatusPage from './lib/StatusPage.svelte'
   import VideoRow from './lib/VideoRow.svelte'
@@ -355,6 +357,21 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   })
 
   let prefsOpen = $state(false)
+
+  let updateInfo = $state<update.Info | null>(null)
+  let checkingUpdate = false
+
+  async function checkUpdate() {
+    if (checkingUpdate) return
+    checkingUpdate = true
+    try {
+      updateInfo = await CheckUpdate()
+    } catch {
+      updateInfo = { ok: false, hasUpdate: false, current: '', latest: '', url: '', assetURL: '' }
+    } finally {
+      checkingUpdate = false
+    }
+  }
   let audioSpec = $state<audio.Spec | undefined>(undefined)
   let audioInvalid = $state('')
   let audioOutputPath = $state('')
@@ -915,6 +932,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
     DebugEnabled()
       .then((v) => (debug = v))
       .catch(() => {})
+    checkUpdate()
     window.addEventListener('error', (ev) => {
       dbg(`ERRO JS: ${ev.message} em ${ev.filename}:${ev.lineno}:${ev.colno}`)
     })
@@ -1236,6 +1254,24 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   </span>
   <span class="topbar-title">vidctl</span>
   <div class="topbar-end">
+    {#if updateInfo?.ok && updateInfo.hasUpdate && updateInfo.latest}
+      <button
+        class="update-badge"
+        onclick={() => OpenRelease(updateInfo!.url)}
+        title={t('update.title')}
+        aria-label={t('update.title')}
+      >
+        <span class="update-dot" aria-hidden="true"></span>
+        {updateInfo.latest}
+        {t('update.available')}
+      </button>
+    {/if}
+    <button class="icon-btn" onclick={checkUpdate} aria-label={t('update.check')} title={t('update.check')}>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M21 12a9 9 0 1 1-2.64-6.36" />
+        <path d="M21 3v6h-6" />
+      </svg>
+    </button>
     <button class="icon-btn" onclick={() => (prefsOpen = true)} aria-label={t('topbar.prefs')} title={t('topbar.prefs')}>
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
         <path d="M4 7h16M4 12h16M4 17h16" />
