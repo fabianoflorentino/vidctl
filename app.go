@@ -18,6 +18,7 @@ import (
 	"github.com/fabianoflorentino/vidctl/internal/estimate"
 	"github.com/fabianoflorentino/vidctl/internal/events"
 	"github.com/fabianoflorentino/vidctl/internal/media"
+	"github.com/fabianoflorentino/vidctl/internal/notify"
 	"github.com/fabianoflorentino/vidctl/internal/presets"
 	"github.com/fabianoflorentino/vidctl/internal/sysinfo"
 	wailsruntime "github.com/wailsapp/wails/v2/pkg/runtime"
@@ -49,11 +50,33 @@ func NewApp() *App {
 // newApp returns an App with an explicit settings store; a nil store disables
 // persistence. Tests pass a store rooted in a temporary directory.
 func newApp(store *config.Store) *App {
-	return &App{
+	a := &App{
 		jobs:  compress.NewManager(),
 		sys:   sysinfo.NewCollector(),
 		store: store,
 		enc:   &encode.Detector{},
+	}
+	a.jobs.SetOnFinish(a.notifyFinish)
+	return a
+}
+
+// notifyFinish applies the notification preferences when a task reaches a
+// terminal state: a desktop alert on success or failure, and an automatic
+// reveal of the output folder when the job succeeded. It is a side effect of
+// the queue finishing the task, never part of the job's own result.
+func (a *App) notifyFinish(kind, label, state, outputPath string, err error) {
+	cfg := a.loadConfig()
+	if cfg.NotifyOnDone {
+		message := fmt.Sprintf("%s finished", label)
+		if state == compress.StateError {
+			message = fmt.Sprintf("%s failed: %v", label, err)
+		}
+		notify.Send("vidctl", message)
+	}
+	if cfg.OpenFolderOnDone && state == compress.StateDone && outputPath != "" {
+		if err := a.OpenFolder(outputPath); err != nil {
+			dlog.Printf("[app] could not open output folder %q: %v", outputPath, err)
+		}
 	}
 }
 

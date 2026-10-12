@@ -77,6 +77,14 @@ type Manager struct {
 	seq         int64
 	run         func(ctx context.Context, jobID string, job Job) error
 	runAudio    func(ctx context.Context, jobID string, task Task) error
+	onFinish    func(kind, label, state, outputPath string, err error)
+}
+
+// SetOnFinish installs a handler notified whenever a task reaches a terminal
+// done or error state. The handler runs outside the queue lock, so side
+// effects (desktop notifications, opening the output folder) can block freely.
+func (m *Manager) SetOnFinish(fn func(kind, label, state, outputPath string, err error)) {
+	m.onFinish = fn
 }
 
 // NewManager creates a queue manager that runs one job at a time.
@@ -319,10 +327,16 @@ func (m *Manager) worker(ctx context.Context, e *taskEntry) {
 	}
 	m.running--
 	final := e.state
+	kind := e.task.Kind
+	label := e.task.Label
+	outPath := e.outputPath
 	m.mu.Unlock()
 
 	dlog.Printf("[queue] worker finished job=%s state=%s err=%v", e.task.JobID, final, err)
 	m.pump()
+	if (final == StateDone || final == StateError) && m.onFinish != nil {
+		m.onFinish(kind, label, final, outPath, err)
+	}
 }
 
 // find returns the entry with the given ID. Callers must hold m.mu.

@@ -447,3 +447,84 @@ func TestQueueRunsTwoJobsToCompletion(t *testing.T) {
 		t.Errorf("dones = %+v; want dois arquivos distintos", dones)
 	}
 }
+
+type finishCall struct {
+	kind, label, state, outputPath string
+	err                            error
+}
+
+func TestOnFinishReportsDone(t *testing.T) {
+	calls := make(chan finishCall, 2)
+	m := NewManager()
+	m.SetOnFinish(func(kind, label, state, outputPath string, err error) {
+		calls <- finishCall{kind, label, state, outputPath, err}
+	})
+	m.run = func(_ context.Context, _ string, job Job) error {
+		return nil
+	}
+
+	id, _ := m.Enqueue(Task{
+		Kind:  events.KindCompress,
+		Label: "done.mp4",
+		Job:   Job{InputPath: "in.mp4", OutputPath: "/tmp/out.mp4", PresetID: "whatsapp-status"},
+	})
+
+	select {
+	case f := <-calls:
+		if f.kind != events.KindCompress || f.label != "done.mp4" || f.state != StateDone || f.err != nil {
+			t.Errorf("finish callback = %+v; want done/ok", f)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("onFinish did not fire for a done job")
+	}
+	waitState(t, m, id, StateDone)
+}
+
+func TestOnFinishReportsError(t *testing.T) {
+	calls := make(chan finishCall, 2)
+	m := NewManager()
+	m.SetOnFinish(func(kind, label, state, outputPath string, err error) {
+		calls <- finishCall{kind, label, state, outputPath, err}
+	})
+	wantErr := errors.New("ffmpeg exploded")
+	m.run = func(_ context.Context, _ string, _ Job) error {
+		return wantErr
+	}
+
+	id, _ := m.Enqueue(Task{Kind: events.KindCompress, Label: "bad.mp4", Job: Job{InputPath: "in.mp4", PresetID: "whatsapp-status"}})
+
+	select {
+	case f := <-calls:
+		if f.state != StateError || !errors.Is(f.err, wantErr) || f.label != "bad.mp4" {
+			t.Errorf("finish callback = %+v; want error job", f)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("onFinish did not fire for a failed job")
+	}
+	waitState(t, m, id, StateError)
+}
+
+func TestOnFinishSkipsCanceled(t *testing.T) {
+	started := make(chan struct{})
+	calls := make(chan finishCall, 1)
+	m := NewManager()
+	m.SetOnFinish(func(kind, label, state, outputPath string, err error) {
+		calls <- finishCall{kind, label, state, outputPath, err}
+	})
+	m.run = func(ctx context.Context, _ string, _ Job) error {
+		close(started)
+		<-ctx.Done()
+		return ctx.Err()
+	}
+
+	id, _ := m.Enqueue(Task{Kind: events.KindCompress, Label: "cancel.mp4", Job: Job{InputPath: "in.mp4", PresetID: "whatsapp-status"}})
+	<-started
+	m.Cancel(id)
+	waitState(t, m, id, StateCanceled)
+
+	select {
+	case f := <-calls:
+		t.Fatalf("onFinish fired for a canceled task: %+v", f)
+	case <-time.After(100 * time.Millisecond):
+	}
+}
