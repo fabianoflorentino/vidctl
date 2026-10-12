@@ -37,7 +37,7 @@ type Spec struct {
 }
 
 // ErrInvalidSpec reports an extraction request the app cannot honor.
-var ErrInvalidSpec = errors.New("especificação de áudio inválida")
+var ErrInvalidSpec = errors.New("invalid audio specification")
 
 // codecSpec describes how ffmpeg encodes one output format.
 type codecSpec struct {
