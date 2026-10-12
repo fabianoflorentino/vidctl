@@ -14,12 +14,21 @@ system of the packages.
 
 ## [Unreleased]
 
+Nothing yet — in development.
+
+## [2.5.0] — 2026-10-12
+
 - **System notifications** (phase 7): a desktop alert when a task finishes or
   fails (`notifyOnDone`) and an option to reveal the output folder on success
   (`openFolderOnDone`), both configurable in the new "Notifications" section of
   Preferences. The backend delivers via `beeep` (toast on Windows, Notification
   Center on macOS, `notify-send` on Linux) and opens the folder with the
   platform file manager; notifications never affect the conversion result.
+- **Code organization**: the Wails binding facade moved to `internal/app` (the
+  root now keeps only the entrypoint and a thin adapter that pins the `main.App`
+  namespace for the frontend), and system theme detection moved to
+  `internal/systemtheme`; the English, Spanish and Chinese `README`/`CHANGELOG`
+  moved to `docs/`, with links and the project tree updated.
 
 ## [2.4.0] — 2026-10-12
 

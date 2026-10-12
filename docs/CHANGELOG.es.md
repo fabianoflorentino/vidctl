@@ -14,6 +14,10 @@ solo el sistema operativo de los paquetes.
 
 ## [Unreleased]
 
+Nada aún — en desarrollo.
+
+## [2.5.0] — 2026-10-12
+
 - **Notificaciones del sistema** (fase 7): aviso del escritorio cuando una
   tarea termina o falla (`notifyOnDone`) y la opción de revelar la carpeta del
   archivo de salida al finalizar (`openFolderOnDone`), configurables en la
@@ -21,6 +25,11 @@ solo el sistema operativo de los paquetes.
   `beeep` (toast en Windows, Centro de notificaciones en macOS, `notify-send`
   en Linux) y abre la carpeta con el gestor de archivos del sistema; las
   notificaciones nunca afectan el resultado de la conversión.
+- **Organización del código**: la fachada de bindings del Wails se movió a
+  `internal/app` (la raíz conserva solo el entrypoint y un adaptador fino que
+  fija el namespace `main.App` del front) y la detección del tema del sistema a
+  `internal/systemtheme`; los `README`/`CHANGELOG` en inglés, español y chino
+  se movieron a `docs/`, con enlaces y el árbol del proyecto actualizados.
 
 ## [2.4.0] — 2026-10-12
 

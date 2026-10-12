@@ -12,10 +12,17 @@ changelog：它们之间的差异仅在于包的操作系统。
 
 ## [Unreleased]
 
+暂无 — 开发中。
+
+## [2.5.0] — 2026-10-12
+
 - **系统通知**（阶段 7）：当任务完成或失败时发出桌面通知（`notifyOnDone`），
   并可在成功时自动打开输出文件所在文件夹（`openFolderOnDone`），在“设置”新增的
   “通知”区域中配置。后端通过 `beeep` 发送（Windows 的 toast、macOS 的通知中心、
   Linux 的 `notify-send`），并用系统文件管理器打开文件夹；通知绝不会影响转换结果。
+- **代码组织**：Wails 绑定门面移入 `internal/app`（根目录只保留入口与一个固定前端
+  `main.App` 命名空间的轻量适配器），系统主题检测移入 `internal/systemtheme`；
+  英文、西班牙文和中文的 `README`/`CHANGELOG` 移入 `docs/`，链接与项目结构树已更新。
 
 ## [2.4.0] — 2026-10-12
 

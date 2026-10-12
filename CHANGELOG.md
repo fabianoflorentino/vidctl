@@ -14,6 +14,10 @@ operacional dos pacotes.
 
 ## [Unreleased]
 
+Nada ainda — em desenvolvimento.
+
+## [2.5.0] — 2026-10-12
+
 - **Notificações do sistema** (fase 7): aviso do desktop quando uma tarefa
   termina ou falha (`notifyOnDone`) e a opção de revelar a pasta do arquivo de
   saída ao concluir (`openFolderOnDone`), configuráveis na nova seção
@@ -21,6 +25,12 @@ operacional dos pacotes.
   Windows, central de notificações no macOS, `notify-send` no Linux) e abre a
   pasta com o gerenciador de arquivos do sistema; notificações nunca afetam o
   resultado da conversão.
+- **Organização do código**: a fachada de bindings do Wails foi movida para
+  `internal/app` (a raiz guarda só o `main` e um adaptador fino que mantém o
+  namespace `main.App` do front) e a detecção de tema do sistema para
+  `internal/systemtheme`; os `README`/`CHANGELOG` em inglês, espanhol e
+  chinês foram movidos para `docs/`, com links e a árvore do projeto
+  atualizados.
 
 ## [2.4.0] — 2026-10-12
 

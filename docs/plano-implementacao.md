@@ -946,7 +946,7 @@ v2.2.0  → Fases 1–5 + 13–15 (config, fila, estimativa, codec/hw, ajustes, 
 v2.2.1  → ícone unificado nos instaladores            [entregue]
 v2.3.0  → Fase 6 (extrair áudio)                      [entregue]
 v2.4.0  → Fase 10 (i18n + base em inglês)                 [entregue]
-v2.5.0  → Fase 7 (notificações)                       [depende de config; branch feat/notificacoes]
+v2.5.0  → Fase 7 (notificações)                       [entregue — feat/notificacoes]
 v2.6.0  → Fase 8 (check update)                       [usa a API de releases por tag + fluxo de publish novo]
 v2.7.0  → Fase 9 (presets custom)                     [depende de config]
 v2.8.0  → Fase 12 (transcrição srt/vtt/txt)
