@@ -22,13 +22,25 @@ Regras antes de considerar uma tarefa concluída:
 - Toda alteração de código (fix, feature, refactor) deve vir acompanhada de
   testes que cubram o comportamento alterado.
 - Rodar sempre: `go test ./...`
-- Cobertura do projeto deve ficar em **>= 80%** (gate no CI).
-- Antes de abrir o PR: `make check` (vet + testes + gofmt + svelte-check).
+- Cobertura do projeto deve ficar em **>= 80%** (gate no CI e no `make check`).
+- Manter os testes unitários acima de 80% a cada mudança; se a alteração ou
+  cena nova baixar a cobertura, completar com testes antes de abrir o PR.
+
+## Internacionalização (4 idiomas)
+- Toda feature nova vira conteúdo em **4 idiomas** (pt-BR, en, es e zh-CN): o
+  app usa os dicionários de `frontend/src/lib/i18n.svelte.ts` para strings da
+  UI; o backend continua com mensagens-fonte em inglês (contrato com o front).
+- O site (`site/index.html` + `site/css/main.css`) reflete as features e seus
+  textos nas 4 línguas, incluindo o seletor de idiomas.
+- Não traduzir: código, comentários, mensagens de commit, identificadores e o
+  plano interno (`docs/plano-implementacao.md`), que permanecem como estão.
 
 ## Documentação
-- Comportamento novo ou alterado deve refletir no `README.md` e, quando
-  aplicável, em `docs/`.
-- Formatos, presets e comandos mudaram? Atualize a doc do respectivo recurso.
+- Comportamento novo ou alterado deve refletir na documentação **em 4 idiomas:
+  `README.md` (e `.en/.es/.zh-CN`), `CHANGELOG.md` (e `.en/.es/.zh-CN`),
+  `docs/instalacao.*.md` e o site.
+- Formatos, presets e comandos mudaram? Atualize a doc do respectivo recurso em
+  todas as línguas, nunca só na versão em português.
 - Registrar a mudança em `CHANGELOG.md`, na seção `[Unreleased]`, enquanto não
   houver versão de release correspondente.
 
