@@ -68,6 +68,9 @@ corte, quitar audio, FPS, rotación, thumbnail). 100 % offline.
 - **Configuración persistente**: preset, tamaño, CRF y carpeta de destino
   vuelven como estaban al siguiente inicio; puedes apuntar ffmpeg/ffprobe fuera
   del PATH en Preferencias
+- **Notificaciones del sistema**: aviso del escritorio cuando una tarea termina
+  o falla, y opción de abrir automáticamente la carpeta del archivo de salida
+  al finalizar — los dos interruptores están en Preferencias
 - En Windows, las conversiones y las sondas de archivo no abren ventanas de
   consola
 
@@ -179,10 +182,10 @@ inválido, la app abre con los valores predeterminados en lugar de fallar.
 | `notifyOnDone` | `false` | notificar al terminar |
 | `openFolderOnDone` | `false` | abrir la carpeta de salida al terminar |
 
-`maxParallel` ya aplica a la cola de conversiones (aplicado al inicio y al
-guardar Preferencias); `notifyOnDone`, `openFolderOnDone` y `language` se
-conservan en el archivo pero solo tienen efecto con las fases de notificación e
-i18n del [plan](docs/plano-implementacao.md).
+`maxParallel` aplica a la cola de conversiones (aplicado al inicio y al guardar
+Preferencias); `notifyOnDone` y `openFolderOnDone` controlan las
+[notificaciones](#notificaciones). `language` conserva el idioma elegido en la
+interfaz.
 
 También puedes editar el archivo a mano: los valores fuera de rango (CRF sobre
 51, `maxParallel` bajo 1) se corrigen al leer, y el resto se conserva, incluidos
@@ -348,6 +351,22 @@ a elemento o **vaciar cola** (quita terminados, errores y cancelados).
   elemento no tumba a los demás. Cada trabajo muestra el **tiempo de conversión**:
   transcurrido durante el proceso y total al terminar — útil para comparar
   presets y codificadores.
+
+## Notificaciones
+
+En **Preferencias**, la sección **Notificaciones** controla lo que ocurre
+cuando una tarea de la cola termina:
+
+- **Avisar al finalizar** (`notifyOnDone`): muestra una notificación del
+  sistema — "finalizado" o "falló" — cuando una compresión o extracción de
+  audio llega a su fin.
+- **Abrir carpeta al finalizar** (`openFolderOnDone`): revela en el gestor de
+  archivos la carpeta del vídeo de salida cuando la tarea termina con éxito.
+
+Las notificaciones usan el sistema nativo de cada plataforma (toast en Windows,
+Notification Center en macOS, `notify-send` en Linux) y nunca interfieren con el
+resultado de la conversión: un escritorio sin notificador simplemente ignora el
+aviso.
 
 ## Usabilidad
 

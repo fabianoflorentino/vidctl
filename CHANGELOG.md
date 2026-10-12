@@ -14,7 +14,13 @@ operacional dos pacotes.
 
 ## [Unreleased]
 
-Nada ainda — em desenvolvimento.
+- **Notificações do sistema** (fase 7): aviso do desktop quando uma tarefa
+  termina ou falha (`notifyOnDone`) e a opção de revelar a pasta do arquivo de
+  saída ao concluir (`openFolderOnDone`), configuráveis na nova seção
+  "Notificações" das Preferências. O backend entrega via `beeep` (toast no
+  Windows, central de notificações no macOS, `notify-send` no Linux) e abre a
+  pasta com o gerenciador de arquivos do sistema; notificações nunca afetam o
+  resultado da conversão.
 
 ## [2.4.0] — 2026-10-12
 

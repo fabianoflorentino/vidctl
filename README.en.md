@@ -67,6 +67,9 @@ cut, remove audio, FPS, rotation, thumbnail). 100% offline.
 - **Persistent configuration**: preset, size, CRF and destination folder come
   back as they were on the next boot; you can point ffmpeg/ffprobe outside the
   PATH in Preferences
+- **System notifications**: a desktop alert when a task finishes or fails, and
+  an option to open the output file folder automatically on success — both
+  toggles live in Preferences
 - On Windows, conversions and file probing do not open console windows
 
 ## Installation
@@ -176,10 +179,10 @@ the default values instead of failing.
 | `notifyOnDone` | `false` | notify when finished |
 | `openFolderOnDone` | `false` | open the output folder when finished |
 
-`maxParallel` already applies to the conversion queue (applied at startup and
-when saving Preferences); `notifyOnDone`, `openFolderOnDone` and `language` are
-preserved in the file but only take effect with the notification and i18n phases
-of the [plan](docs/plano-implementacao.md).
+`maxParallel` applies to the conversion queue (applied at startup and when
+saving Preferences); `notifyOnDone` and `openFolderOnDone` control the
+[notifications](#notifications). `language` keeps the interface language
+chosen in Preferences.
 
 You can also edit the file by hand: out-of-range values (CRF above 51,
 `maxParallel` below 1) are fixed on read, and everything else is preserved,
@@ -340,6 +343,21 @@ or **clear the queue** (removes finished, failed and canceled items).
   item does not bring the others down. Every job shows **conversion time**:
   elapsed during processing and total when done — useful for comparing presets
   and encoders.
+
+## Notifications
+
+In **Preferences**, the **Notifications** section controls what happens when a
+queue task finishes:
+
+- **Notify when finished** (`notifyOnDone`): shows a system notification —
+  "finished" or "failed" — when a compression or audio extraction comes to an
+  end.
+- **Open folder on done** (`openFolderOnDone`): reveals the output video
+  folder in the file manager when the task finishes successfully.
+
+Notifications use the native notifier of each platform (toast on Windows,
+Notification Center on macOS, `notify-send` on Linux) and never affect the
+conversion result: a desktop without a notifier simply ignores the alert.
 
 ## Usability
 

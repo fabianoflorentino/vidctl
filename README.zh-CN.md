@@ -31,6 +31,7 @@
 - 无需联网：字体和界面打包在二进制中
 - 启动时检查 `ffmpeg`/`ffprobe` 并在缺失时提示；“重新检查”按钮会重新读取系统 PATH，因此可以在应用打开时安装 ffmpeg，无需重启
 - **持久化配置**：预设、大小、CRF 和输出文件夹在下一次启动时恢复原样；也可以在“设置”中将 ffmpeg/ffprobe 指向 PATH 之外的位置
+- **系统通知**：任务完成或失败时发出桌面通知，并可在成功时自动打开输出文件所在文件夹 —— 两个开关都位于“设置”中
 - 在 Windows 上，转换和文件探测不会打开控制台窗口
 
 ## 安装
@@ -135,8 +136,8 @@ flowchart LR
 | `notifyOnDone` | `false` | 完成时通知 |
 | `openFolderOnDone` | `false` | 完成时打开输出文件夹 |
 
-`maxParallel` 已经作用于转换队列（启动和保存“设置”时应用）；`notifyOnDone`、
-`openFolderOnDone` 和 `language` 会保留在文件中，但只在[计划](docs/plano-implementacao.md)中的通知和 i18n 阶段才生效。
+`maxParallel` 已经作用于转换队列（启动和保存“设置”时应用）；`notifyOnDone` 和
+`openFolderOnDone` 控制[通知](#通知)。`language` 保留界面中选择的语言。
 
 你也可以手动编辑文件：越界值（CRF 超过 51、`maxParallel` 低于 1）会在读取时修正，其余内容（包括未来版本的字段）都会保留。
 
@@ -232,6 +233,15 @@ vidctl 一次处理**一个视频**：“切换视频…”（或将新文件拖
 - 同时运行的任务数来自 `config.json` 中的 `maxParallel`（默认 **1** = 串行）；编辑文件并重新打开应用使其生效。使用默认值时，压缩和音频提取不会争抢 CPU。
 - “切换视频…”会使用所选视频作为新目标（与 ⋮ → “切换文件”行为相同）；切换时队列不会新增额外任务。
 - 进度按任务显示（`compress:queued`、`compress:start`、`compress:progress`、`compress:done`、`compress:error`），因此某个项目出错不会拖垮其他项目。每个任务都会显示**转换用时**：处理期间已用时间和完成时的总时间 — 便于对比预设和编码器。
+
+## 通知
+
+在**设置**中，**通知**区域控制队列任务完成时的行为：
+
+- **完成时通知**（`notifyOnDone`）：当压缩或音频提取结束时显示系统通知 —— “已完成”或“失败”。
+- **完成后打开文件夹**（`openFolderOnDone`）：任务成功完成时，在文件管理器中显示输出视频所在的文件夹。
+
+通知使用各平台的原生通知器（Windows 的 toast、macOS 的通知中心、Linux 的 `notify-send`），绝不会影响转换结果：没有通知器的桌面环境只会忽略该提醒。
 
 ## 易用性
 

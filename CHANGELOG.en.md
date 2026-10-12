@@ -14,7 +14,12 @@ system of the packages.
 
 ## [Unreleased]
 
-Nothing yet — in development.
+- **System notifications** (phase 7): a desktop alert when a task finishes or
+  fails (`notifyOnDone`) and an option to reveal the output folder on success
+  (`openFolderOnDone`), both configurable in the new "Notifications" section of
+  Preferences. The backend delivers via `beeep` (toast on Windows, Notification
+  Center on macOS, `notify-send` on Linux) and opens the folder with the
+  platform file manager; notifications never affect the conversion result.
 
 ## [2.4.0] — 2026-10-12
 
