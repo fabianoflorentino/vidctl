@@ -23,18 +23,18 @@ type Suggestion struct {
 
 // Advice is the pre-encode quality estimation for the current settings.
 type Advice struct {
-	OK      bool       `json:"ok"`
-	Kbps    int        `json:"kbps"`
-	MinKbps int        `json:"minKbps"`
-	Message string     `json:"message"`
+	OK      bool   `json:"ok"`
+	Kbps    int    `json:"kbps"`
+	MinKbps int    `json:"minKbps"`
+	Message string `json:"message"`
 	// Code, Scope, Sug and Params are the structured payload so the frontend
 	// can render the advice in the user's language. Message stays only as a
 	// fallback for older clients.
-	Code   string             `json:"code,omitempty"`
-	Scope  string             `json:"scope,omitempty"` // "full" | "part"
-	Sug    string             `json:"sug,omitempty"`   // "size" | "split" | "crf"
-	Params map[string]float64 `json:"params,omitempty"`
-	Suggestion Suggestion     `json:"suggestion"`
+	Code       string             `json:"code,omitempty"`
+	Scope      string             `json:"scope,omitempty"` // "full" | "part"
+	Sug        string             `json:"sug,omitempty"`   // "size" | "split" | "crf"
+	Params     map[string]float64 `json:"params,omitempty"`
+	Suggestion Suggestion         `json:"suggestion"`
 }
 
 // minKbpsForHeight returns a conservative average video bitrate per
