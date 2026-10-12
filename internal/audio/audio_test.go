@@ -37,7 +37,7 @@ func TestBuildArgs(t *testing.T) {
 		{
 			name: "flac lossless sem bitrate",
 			spec: Spec{InputPath: "a.mp4", OutputPath: "o.flac", Codec: "flac", BitrateKbps: 999},
-			// O 999 não chega lá: o Validate barra bitrate em lossless.
+			// 999 never gets there: Validate rejects bitrate on lossless.
 			contains: []string{"-c:a", "flac"},
 			absent:   []string{"-b:a"},
 		},

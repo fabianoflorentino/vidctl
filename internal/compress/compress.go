@@ -262,8 +262,8 @@ func execute(ctx context.Context, cmd *exec.Cmd, jobID, stage string, duration, 
 	return nil
 }
 
-// thumbSeek escolhe o frame da thumbnail: 5s após o início (depois de tela
-// preta/intro), ou a metade quando o vídeo é curto demais para 5s.
+// thumbSeek picks the thumbnail frame: 5s after the start (past intro/black
+// screens), or the middle when the video is too short for 5s.
 func thumbSeek(durationSec float64) float64 {
 	pos := durationSec / 2
 	if pos > 5 {
@@ -351,8 +351,8 @@ func Run(ctx context.Context, jobID string, job Job) error {
 			sizeBytes = out.Size()
 			sizeMB = float64(sizeBytes) / (1024 * 1024)
 		}
-		// A thumbnail sai do primeiro segmento (início do vídeo), num frame de
-		// conteúdo perto do começo — não do meio/último segmento.
+		// The thumbnail comes from the first segment (start of the video), on a
+		// content frame near the beginning — not the middle/last segment.
 		if job.ThumbnailPath != "" && seg.Index == 1 {
 			thumb, err := buildThumbnail(ctx, outPath, job.ThumbnailPath, thumbSeek(effectiveDuration(job, seg)))
 			if err != nil {

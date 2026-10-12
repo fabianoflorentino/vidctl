@@ -181,8 +181,8 @@ func TestSaveCreatesDirectoryAndPrivateFile(t *testing.T) {
 	if _, err := os.Stat(store.Path()); err != nil {
 		t.Fatalf("arquivo não criado: %v", err)
 	}
-	// O Windows não tem bit de permissão POSIX: o que o Go reporta lá é um
-	// valor derivado dos atributos do arquivo, então o 0600 só é checável
+	// Windows has no POSIX permission bit: what Go reports there is a
+	// value derived from the file attributes, so 0600 is only checkable
 	// onde o chmod existe de verdade.
 	if runtime.GOOS != "windows" {
 		if perm := fileMode(t, store.Path()); perm != 0o600 {
@@ -287,7 +287,7 @@ func TestSaveRejectsUnwritableDir(t *testing.T) {
 
 func TestSaveFailsWhenTargetIsADirectory(t *testing.T) {
 	store := newTestStore(t)
-	// O rename não substitui um diretório por um arquivo.
+	// Rename does not replace a directory with a file.
 	if err := os.MkdirAll(store.Path(), 0o700); err != nil {
 		t.Fatal(err)
 	}
@@ -312,8 +312,8 @@ func TestNormalize(t *testing.T) {
 		want Config
 	}{
 		{
-			// SizeMB e CRF ficam em 0 de propósito: 0 significa "não usado" e
-			// compress.EffectivePreset só aplica o override quando > 0.
+			// SizeMB and CRF stay 0 on purpose: 0 means "unused" and
+			// compress.EffectivePreset only applies the override when > 0.
 			name: "campos de texto vazios voltam ao default",
 			in:   Config{},
 			want: Config{PresetID: "whatsapp-status", Language: "pt", MaxParallel: 1, AudioSuffix: "-audio"},
@@ -400,8 +400,8 @@ func TestValidate(t *testing.T) {
 
 func TestSaveNormalizesBeforeWriting(t *testing.T) {
 	store := newTestStore(t)
-	// MaxParallel 0 é inválido e reprovado; mas um valor alto e um idioma em
-	// maiúsculas devem ser normalizados no arquivo sem falhar o Save.
+	// MaxParallel 0 is invalid and rejected; a high value and an uppercase
+	// language must be normalized in the file without failing Save.
 	cfg := Config{PresetID: "youtube", Language: "EN", MaxParallel: 4}
 	if err := store.Save(cfg); err != nil {
 		t.Fatalf("Save: %v", err)

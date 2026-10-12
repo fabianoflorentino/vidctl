@@ -82,8 +82,8 @@ func TestResolveWithMissingOverrideIsAnError(t *testing.T) {
 	ClearOverrides()
 	t.Cleanup(ClearOverrides)
 
-	// O PATH tem um ffmpeg válido, mas o override aponta para arquivo nenhum:
-	// o app precisa avisar em vez de usar silenciosamente o outro binário.
+	// The PATH has a valid ffmpeg, but the override points at no file:
+	// the app must warn instead of silently using the other binary.
 	dir := t.TempDir()
 	fakeBin(t, dir, "ffmpeg", "#!/bin/sh\n")
 

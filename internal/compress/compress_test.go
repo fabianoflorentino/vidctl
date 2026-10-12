@@ -169,7 +169,7 @@ func TestRunFailsWithBrokenOverride(t *testing.T) {
 	t.Cleanup(cmdutil.ClearOverrides)
 
 	// O ffmpeg do PATH funciona, mas o override aponta para arquivo nenhum:
-	// o app não pode cair silenciosamente no binário do PATH.
+	// the app must not silently fall back to the PATH binary.
 	pathDir := t.TempDir()
 	for name, script := range map[string]string{"ffmpeg": fakeFFmpegOK, "ffprobe": fakeFFprobe} {
 		if err := os.WriteFile(filepath.Join(pathDir, name), []byte(script), 0o755); err != nil {

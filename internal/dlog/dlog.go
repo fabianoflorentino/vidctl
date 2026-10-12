@@ -1,5 +1,5 @@
-// Package dlog emite rastros de diagnóstico no stderr quando o modo local de
-// depuração (VIDCTL_DEBUG) está ativo. Sem a variável, cada chamada é um no-op.
+// Package dlog emits diagnostic traces to stderr when the local debug mode
+// (VIDCTL_DEBUG) is active. Without the variable, every call is a no-op.
 package dlog
 
 import (
@@ -17,7 +17,7 @@ func Enabled() bool {
 	return v != "" && v != "0"
 }
 
-// Printf registra uma linha de diagnóstico quando o modo está ativo.
+// Printf writes a diagnostic line when debug mode is active.
 func Printf(format string, args ...any) {
 	if !Enabled() {
 		return
@@ -25,7 +25,7 @@ func Printf(format string, args ...any) {
 	logger.Printf(format, args...)
 }
 
-// SetOutput redireciona a saída do rastro (usado por testes).
+// SetOutput redirects the trace output (used by tests).
 func SetOutput(w io.Writer) {
 	logger.SetOutput(w)
 }

@@ -104,7 +104,7 @@ func TestProbeUsesConfiguredFFprobe(t *testing.T) {
 	skipOnWindows(t)
 	t.Cleanup(cmdutil.ClearOverrides)
 
-	// ffprobe não está no PATH; só o caminho configurado responde.
+	// ffprobe is not on the PATH; only the configured path answers.
 	t.Setenv("PATH", t.TempDir())
 	custom := filepath.Join(t.TempDir(), "ffprobe")
 	script := probeScript(

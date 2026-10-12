@@ -92,8 +92,8 @@ func TestSizeMatchesCompressRun(t *testing.T) {
 	}
 	actualMB := float64(st.Size()) / (1024 * 1024)
 
-	// O áudio silencioso real gasta bem menos que os 96k reservados no
-	// orçamento e o x264 flutua um pouco em volta do alvo: faixa larga.
+	// Real silent audio spends far less than the 96k reserved in the
+	// budget and x264 drifts a bit around the target: use a wide range.
 	t.Logf("estimativa %.3f MB; saída real %.3f MB", got.TargetSizeMB, actualMB)
 	if actualMB < got.TargetSizeMB*0.80 || actualMB > got.TargetSizeMB*1.10 {
 		t.Errorf("saída real %.3f MB fugiu da estimativa %.3f MB", actualMB, got.TargetSizeMB)

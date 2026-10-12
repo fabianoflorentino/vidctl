@@ -62,7 +62,7 @@ func TestIsFFmpeg(t *testing.T) {
 }
 
 func TestFFmpegCPUPercentNormalized(t *testing.T) {
-	// não há ffmpeg rodando neste teste: resultado deve ser 0 e dentro do intervalo
+	// no ffmpeg runs in this test: the result must be 0 and within range
 	got := ffmpegCPUPercent(t.Context())
 	if got < 0 || got > 100 {
 		t.Errorf("ffmpegCPUPercent = %v, fora de 0..100", got)
@@ -147,7 +147,7 @@ func TestSnapshotNvidiaMissingCached(t *testing.T) {
 	if !c.gpuProbed || c.gpuOK {
 		t.Errorf("esperava cache de indisponibilidade, got probed=%v ok=%v", c.gpuProbed, c.gpuOK)
 	}
-	// segundo Snapshot usa o cache e não retorna GPU
+	// second Snapshot uses the cache and returns no GPU
 	s2 := c.Snapshot()
 	if s2.GPU != -1 {
 		t.Errorf("GPU cacheado = %v, want -1", s2.GPU)

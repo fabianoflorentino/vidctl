@@ -45,7 +45,7 @@ func TestAdviseGoodClipNoWarning(t *testing.T) {
 }
 
 func TestAdviseLongNoSplitSuggestsCut(t *testing.T) {
-	// o caso do usuário: vídeo longo (30min, 960p) no alvo de 10 MB sem corte
+	// the user case: a long video (30min, 960p) at the 10 MB target with no cut
 	info := &media.Info{DurationSec: 1800, Height: 960, HasAudio: true}
 	a := Advise(info, whatsappPreset(), Job{})
 	if a.OK {
@@ -79,7 +79,7 @@ func TestAdviseSplitPartsSuggestsBiggerTarget(t *testing.T) {
 }
 
 func TestAdviseSmallResolutionSuggestsSize(t *testing.T) {
-	// 3min em 240p: faltam ~67 kbps → subir alvo (não corta)
+	// 3min at 240p: ~67 kbps short → raise the target (no cut)
 	info := &media.Info{DurationSec: 180, Height: 240, HasAudio: true}
 	job := Job{}
 	preset := presets.Preset{Mode: "size", SizeMB: 1, AudioBitrate: "64k"}
@@ -101,7 +101,7 @@ func TestAdviseInvalidSplitSilent(t *testing.T) {
 }
 
 func TestAdviseNoAudioUsesVideoOnly(t *testing.T) {
-	// sem áudio o orçamento de vídeo é maior, mas 10 MB em 300s ainda dá só ~266 kbps < 400
+	// without audio the video budget is bigger, but 10 MB over 300s still yields only ~266 kbps < 400
 	info := &media.Info{DurationSec: 300, Height: 240, HasAudio: false}
 	a := Advise(info, whatsappPreset(), Job{})
 	if a.OK {
@@ -116,7 +116,7 @@ func TestAdviseNoAudioUsesVideoOnly(t *testing.T) {
 }
 
 func TestAdviseBudgetImpossibleMessage(t *testing.T) {
-	// 10 MB para 6h: orçamento estoura → aviso com kbps 0
+	// 10 MB for 6h: budget overflows → warning with kbps 0
 	info := &media.Info{DurationSec: 21600, Height: 1080, HasAudio: true}
 	a := Advise(info, whatsappPreset(), Job{})
 	if a.OK || a.Kbps != 0 {
