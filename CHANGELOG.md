@@ -1,5 +1,8 @@
 # Changelog
 
+**Português (Brasil) · [English](CHANGELOG.en.md) · [Español](CHANGELOG.es.md) ·
+[中文（简体）](CHANGELOG.zh-CN.md)**
+
 Todas as mudanças relevantes do vidctl, no formato
 [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/), com
 versionamento [SemVer](https://semver.org/lang/pt-BR/) e o release por
