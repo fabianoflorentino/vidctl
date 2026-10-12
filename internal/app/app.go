@@ -1,4 +1,4 @@
-package main
+package app
 
 import (
 	"context"
@@ -21,6 +21,7 @@ import (
 	"github.com/fabianoflorentino/vidctl/internal/notify"
 	"github.com/fabianoflorentino/vidctl/internal/presets"
 	"github.com/fabianoflorentino/vidctl/internal/sysinfo"
+	"github.com/fabianoflorentino/vidctl/internal/systemtheme"
 	wailsruntime "github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
@@ -85,9 +86,10 @@ func (a *App) GetUsage() sysinfo.Snapshot {
 	return a.sys.Snapshot()
 }
 
-// startup wires the event emitter (queue observation + frontend dispatch) and
-// applies the persisted tool paths and parallelism.
-func (a *App) startup(ctx context.Context) {
+// Startup wires the event emitter (queue observation + frontend dispatch) and
+// applies the persisted tool paths and parallelism. It runs on the Wails
+// OnStartup hook; exported so the main package can hand it to the runtime.
+func (a *App) Startup(ctx context.Context) {
 	a.ctx = ctx
 	events.SetEmitter(func(name string, data any) {
 		a.jobs.Observe(name, data)
@@ -97,6 +99,11 @@ func (a *App) startup(ctx context.Context) {
 	a.applyToolPaths(cfg)
 	a.jobs.SetMaxParallel(cfg.MaxParallel)
 	dlog.Printf("[app] startup done; maxParallel=%d ffmpeg=%q ffprobe=%q", cfg.MaxParallel, cfg.FFmpegPath, cfg.FFprobePath)
+}
+
+// SystemTheme is exposed to the frontend: "dark" | "light".
+func (a *App) SystemTheme() string {
+	return systemtheme.Detect()
 }
 
 // loadConfig returns the persisted settings, or the defaults when there is no

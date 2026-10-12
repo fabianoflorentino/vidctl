@@ -1,4 +1,4 @@
-package main
+package app
 
 import (
 	"context"
@@ -72,7 +72,7 @@ func newTestApp(t *testing.T) *App {
 
 func TestStartup(t *testing.T) {
 	a := newTestApp(t)
-	a.startup(context.Background())
+	a.Startup(context.Background())
 	if a.ctx == nil {
 		t.Error("startup deve definir o contexto")
 	}
@@ -100,7 +100,7 @@ func TestStartupAppliesConfiguredToolPaths(t *testing.T) {
 	if err := a2.store.Save(cfg); err != nil {
 		t.Fatal(err)
 	}
-	a2.startup(context.Background())
+	a2.Startup(context.Background())
 	events.SetEmitter(nil)
 
 	got, ok := cmdutil.Override("ffmpeg")
@@ -112,7 +112,7 @@ func TestStartupAppliesConfiguredToolPaths(t *testing.T) {
 func TestStartupWithoutStoreKeepsDefaults(t *testing.T) {
 	t.Cleanup(cmdutil.ClearOverrides)
 	a := newApp(nil)
-	a.startup(context.Background())
+	a.Startup(context.Background())
 	events.SetEmitter(nil)
 
 	if _, ok := cmdutil.Override("ffmpeg"); ok {
@@ -1156,5 +1156,12 @@ func TestOpenFolderOnDone(t *testing.T) {
 	}
 	if string(got) != outDir {
 		t.Errorf("xdg-open received %q; want %q", got, outDir)
+	}
+}
+
+func TestSystemThemeBinding(t *testing.T) {
+	a := NewApp()
+	if got := a.SystemTheme(); got != "dark" && got != "light" {
+		t.Errorf("SystemTheme() = %q, want dark|light", got)
 	}
 }
