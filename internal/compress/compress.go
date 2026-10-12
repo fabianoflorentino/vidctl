@@ -55,7 +55,7 @@ func ffmpegPath() (string, error) {
 		return "", err
 	}
 	if err != nil {
-		return "", errors.New("ffmpeg não encontrado. Instale o ffmpeg para usar o vidctl.")
+		return "", errors.New("ffmpeg not found. Install ffmpeg to use vidctl.")
 	}
 	return p, nil
 }
@@ -282,10 +282,10 @@ func Run(ctx context.Context, jobID string, job Job) error {
 		return err
 	}
 	if job.InputPath == "" || job.OutputPath == "" {
-		return fail(errors.New("caminho de entrada ou saída não pode ser vazio"))
+		return fail(errors.New("input or output path cannot be empty"))
 	}
 	if job.InputPath == job.OutputPath {
-		return fail(errors.New("o arquivo de saída não pode ser igual ao de entrada"))
+		return fail(errors.New("output file cannot be the same as the input"))
 	}
 	if err := Validate(job); err != nil {
 		return fail(err)
@@ -297,7 +297,7 @@ func Run(ctx context.Context, jobID string, job Job) error {
 	}
 	preset, ok := EffectivePreset(job)
 	if !ok {
-		return fail(errors.New("preset desconhecido: " + job.PresetID))
+		return fail(errors.New("unknown preset: " + job.PresetID))
 	}
 	if !encode.ValidCodec(preset.Codec) {
 		return fail(errors.New("codec desconhecido: " + preset.Codec))
@@ -307,7 +307,7 @@ func Run(ctx context.Context, jobID string, job Job) error {
 	}
 
 	if preset.Mode == "size" && preset.SizeMB <= 0 {
-		return fail(errors.New("tamanho alvo deve ser maior que zero"))
+		return fail(errors.New("target size must be greater than zero"))
 	}
 
 	segs := []split.Segment{{Index: 1, StartSec: 0, EndSec: info.DurationSec}}
@@ -320,7 +320,7 @@ func Run(ctx context.Context, jobID string, job Job) error {
 	}
 
 	if err := os.MkdirAll(filepath.Dir(job.OutputPath), 0o755); err != nil {
-		return fail(fmt.Errorf("falha ao criar pasta de saída: %w", err))
+		return fail(fmt.Errorf("could not create the output folder: %w", err))
 	}
 
 	total := len(segs)
@@ -363,7 +363,7 @@ func Run(ctx context.Context, jobID string, job Job) error {
 				if ctxErr := ctx.Err(); ctxErr != nil {
 					return ctxErr
 				}
-				return fail(fmt.Errorf("falha ao gerar thumbnail: %w", err))
+				return fail(fmt.Errorf("failed to generate thumbnail: %w", err))
 			}
 		}
 		events.EmitDone(jobID, events.KindCompress, outPath, sizeBytes, sizeMB)
@@ -402,13 +402,13 @@ func encodeSegment(ctx context.Context, jobID, logID string, job Job, preset pre
 			stage1 := "pass1/2" + suffix
 			events.EmitProgress(jobID, events.KindCompress, stage1, base1)
 			if err := execute(ctx, pass1, jobID, stage1, effectiveDuration(job, seg), base1, span1); err != nil {
-				return wrapStage("pass 1 falhou", suffix, err)
+				return wrapStage("pass 1 failed", suffix, err)
 			}
 
 			stage2 := "pass2/2" + suffix
 			events.EmitProgress(jobID, events.KindCompress, stage2, base2)
 			if err := execute(ctx, pass2, jobID, stage2, effectiveDuration(job, seg), base2, span2); err != nil {
-				return wrapStage("pass 2 falhou", suffix, err)
+				return wrapStage("pass 2 failed", suffix, err)
 			}
 			removePassLogs(logID)
 			return nil
@@ -426,7 +426,7 @@ func encodeSegment(ctx context.Context, jobID, logID string, job Job, preset pre
 		stage := "encoding" + suffix
 		events.EmitProgress(jobID, events.KindCompress, stage, base)
 		if err := execute(ctx, cmd, jobID, stage, effectiveDuration(job, seg), base, span); err != nil {
-			return wrapStage("falha ao comprimir", suffix, err)
+			return wrapStage("failed to compress", suffix, err)
 		}
 		return nil
 	}
@@ -440,7 +440,7 @@ func encodeSegment(ctx context.Context, jobID, logID string, job Job, preset pre
 	stage := "encoding" + suffix
 	events.EmitProgress(jobID, events.KindCompress, stage, base)
 	if err := execute(ctx, cmd, jobID, stage, effectiveDuration(job, seg), base, span); err != nil {
-		return wrapStage("falha ao comprimir", suffix, err)
+		return wrapStage("failed to compress", suffix, err)
 	}
 	return nil
 }

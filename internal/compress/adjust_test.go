@@ -66,14 +66,14 @@ func TestValidate(t *testing.T) {
 		job  Job
 		want string
 	}{
-		{"corte invertido", Job{TrimStartSec: 20, TrimEndSec: 10}, "fim do corte"},
-		{"corte igual", Job{TrimStartSec: 10, TrimEndSec: 10}, "fim do corte"},
-		{"corte negativo", Job{TrimStartSec: -1}, "negativos"},
+		{"corte invertido", Job{TrimStartSec: 20, TrimEndSec: 10}, "end of the cut"},
+		{"corte igual", Job{TrimStartSec: 10, TrimEndSec: 10}, "end of the cut"},
+		{"corte negativo", Job{TrimStartSec: -1}, "negative"},
 		{"fps negativo", Job{FPS: -1}, "FPS"},
-		{"rotação inválida", Job{Rotate: 45}, "rotação"},
-		{"escala inválida", Job{Scale: "hd"}, "escala"},
-		{"preset nvenc inválido", Job{NvencPreset: "fast"}, "preset NVENC"},
-		{"split + trim", Job{Split: &split.Spec{Parts: 2}, TrimStartSec: 5}, "não podem ser combinados"},
+		{"rotação inválida", Job{Rotate: 45}, "rotation"},
+		{"escala inválida", Job{Scale: "hd"}, "scale"},
+		{"preset nvenc inválido", Job{NvencPreset: "fast"}, "NVENC preset"},
+		{"split + trim", Job{Split: &split.Spec{Parts: 2}, TrimStartSec: 5}, "cannot be combined"},
 	}
 	for _, tc := range invalid {
 		t.Run(tc.name, func(t *testing.T) {
@@ -215,7 +215,7 @@ func TestRunRejectsInvalidAdjustments(t *testing.T) {
 		TrimStartSec: 30,
 		TrimEndSec:   10,
 	})
-	if e := findErr(got); !strings.Contains(e, "fim do corte") {
+	if e := findErr(got); !strings.Contains(e, "end of the cut") {
 		t.Errorf("esperava erro de corte invertido, got %q", e)
 	}
 }

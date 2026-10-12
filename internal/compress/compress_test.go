@@ -324,7 +324,7 @@ func TestExecuteFails(t *testing.T) {
 func TestRunEmptyPaths(t *testing.T) {
 	got := captureCompressEvents(t)
 	Run(context.Background(), "j1", Job{})
-	if err := findErr(got); !strings.Contains(err, "pode ser vazio") {
+	if err := findErr(got); !strings.Contains(err, "cannot be empty") {
 		t.Errorf("erro inesperado: %q", err)
 	}
 }
@@ -332,7 +332,7 @@ func TestRunEmptyPaths(t *testing.T) {
 func TestRunSameInputOutput(t *testing.T) {
 	got := captureCompressEvents(t)
 	Run(context.Background(), "j2", Job{InputPath: "x.mp4", OutputPath: "x.mp4"})
-	if err := findErr(got); !strings.Contains(err, "igual ao de entrada") {
+	if err := findErr(got); !strings.Contains(err, "same as the input") {
 		t.Errorf("erro inesperado: %q", err)
 	}
 }
@@ -357,7 +357,7 @@ func TestRunUnknownPreset(t *testing.T) {
 	fakeToolchain(t)
 	got := captureCompressEvents(t)
 	Run(context.Background(), "j4", Job{InputPath: "in.mp4", OutputPath: "out.mp4", PresetID: "nope"})
-	if err := findErr(got); !strings.Contains(err, "preset desconhecido") {
+	if err := findErr(got); !strings.Contains(err, "unknown preset") {
 		t.Errorf("erro inesperado: %q", err)
 	}
 }
@@ -371,7 +371,7 @@ func TestRunMkdirFailure(t *testing.T) {
 	}
 	got := captureCompressEvents(t)
 	Run(context.Background(), "j5", Job{InputPath: "in.mp4", OutputPath: filepath.Join(blocker, "out.mp4"), PresetID: "whatsapp-status"})
-	if err := findErr(got); !strings.Contains(err, "falha ao criar pasta") {
+	if err := findErr(got); !strings.Contains(err, "could not create the output folder") {
 		t.Errorf("erro inesperado: %q", err)
 	}
 }
@@ -421,7 +421,7 @@ func TestRunSizePass1Failure(t *testing.T) {
 
 	got := captureCompressEvents(t)
 	Run(context.Background(), "j7", Job{InputPath: "in.mp4", OutputPath: filepath.Join(t.TempDir(), "out.mp4"), PresetID: "whatsapp-status"})
-	if err := findErr(got); !strings.Contains(err, "pass 1 falhou") {
+	if err := findErr(got); !strings.Contains(err, "pass 1 failed") {
 		t.Errorf("erro inesperado: %q", err)
 	}
 }
@@ -462,7 +462,7 @@ func TestRunCrfFailure(t *testing.T) {
 
 	got := captureCompressEvents(t)
 	Run(context.Background(), "j9", Job{InputPath: "in.mp4", OutputPath: filepath.Join(t.TempDir(), "out.mp4"), PresetID: "youtube"})
-	if err := findErr(got); !strings.Contains(err, "falha ao comprimir") {
+	if err := findErr(got); !strings.Contains(err, "failed to compress") {
 		t.Errorf("erro inesperado: %q", err)
 	}
 }

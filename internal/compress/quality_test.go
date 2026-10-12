@@ -57,7 +57,7 @@ func TestAdviseLongNoSplitSuggestsCut(t *testing.T) {
 	if a.Suggestion.Parts < 2 {
 		t.Errorf("esperava parts ≥ 2, got %+v", a.Suggestion)
 	}
-	if !strings.Contains(a.Message, "corte em partes") {
+	if !strings.Contains(a.Message, "cut into parts") {
 		t.Errorf("mensagem deveria sugerir corte: %q", a.Message)
 	}
 }
@@ -73,7 +73,7 @@ func TestAdviseSplitPartsSuggestsBiggerTarget(t *testing.T) {
 	if a.Suggestion.SizeMB < 40 || a.Suggestion.SizeMB > maxTargetMB {
 		t.Fatalf("SizeMB sugerido = %v, esperava ~49", a.Suggestion.SizeMB)
 	}
-	if !strings.Contains(a.Message, "suba o alvo") || !strings.Contains(a.Message, "cada parte de 5min") {
+	if !strings.Contains(a.Message, "raise the target") || !strings.Contains(a.Message, "for each part of 5min") {
 		t.Errorf("mensagem inesperada: %q", a.Message)
 	}
 }
@@ -122,7 +122,7 @@ func TestAdviseBudgetImpossibleMessage(t *testing.T) {
 	if a.OK || a.Kbps != 0 {
 		t.Fatalf("esperava aviso kbps=0, got %+v", a)
 	}
-	if !strings.Contains(a.Message, "abaixo dos ~2000 kbps") {
+	if !strings.Contains(a.Message, "below the ~2000 kbps") {
 		t.Errorf("mensagem: %q", a.Message)
 	}
 	if a.Suggestion.MinutesEach == 0 && a.Suggestion.SizeMB == 0 {

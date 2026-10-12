@@ -88,16 +88,16 @@ func Advise(info *media.Info, preset presets.Preset, job Job) Advice {
 
 func lowAdvice(kbps, minKbps int, segSec float64, info *media.Info, preset presets.Preset, job Job, audioBits float64) Advice {
 	scope := "full"
-	scopeText := fmt.Sprintf("para um vídeo de %s", humanSec(info.DurationSec))
+	scopeText := fmt.Sprintf("for a video of %s", humanSec(info.DurationSec))
 	if job.Split != nil {
 		scope = "part"
-		scopeText = fmt.Sprintf("para cada parte de %s", humanSec(segSec))
+		scopeText = fmt.Sprintf("for each part of %s", humanSec(segSec))
 	}
 	scopeSec := info.DurationSec
 	if job.Split != nil {
 		scopeSec = segSec
 	}
-	msg := fmt.Sprintf("≈%d kbps de vídeo %s — abaixo dos ~%d kbps recomendados para %dp; a qualidade vai cair muito.", kbps, scopeText, minKbps, info.Height)
+	msg := fmt.Sprintf("≈%d kbps of video %s — below the ~%d kbps recommended for %dp; quality will drop hard.", kbps, scopeText, minKbps, info.Height)
 
 	params := map[string]float64{
 		"kbps":    float64(kbps),
@@ -113,7 +113,7 @@ func lowAdvice(kbps, minKbps int, segSec float64, info *media.Info, preset prese
 		sug = "size"
 		need.SizeMB = needMB
 		params["mb"] = needMB
-		msg += fmt.Sprintf(" Sugestão: suba o alvo para ~%.0f MB.", needMB)
+		msg += fmt.Sprintf(" Suggestion: raise the target to ~%.0f MB.", needMB)
 	default:
 		perPartSec := (maxTargetMB * 0.95 * 8 * 1048576) / (float64(minKbps)*1000 + audioBits)
 		minutes := int(math.Floor(perPartSec / 60))
@@ -124,9 +124,9 @@ func lowAdvice(kbps, minKbps int, segSec float64, info *media.Info, preset prese
 			need.Parts = len(segs)
 			params["min"] = float64(minutes)
 			params["parts"] = float64(len(segs))
-			msg += fmt.Sprintf(" Sugestão: corte em partes de ~%d min (%d partes).", minutes, len(segs))
+			msg += fmt.Sprintf(" Suggestion: cut into parts of ~%d min (%d parts).", minutes, len(segs))
 		} else {
-			msg += " Com o limite de tamanho atual não há como manter a qualidade — prefira um preset CRF (ex.: YouTube)."
+			msg += " With the current size limit there is no way to keep quality — prefer a CRF preset (e.g., YouTube)."
 		}
 	}
 

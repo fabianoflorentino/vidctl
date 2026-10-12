@@ -34,7 +34,7 @@ cover:
 check:
 	go vet ./...
 	go test ./...
-	test -z "$$(gofmt -l .)"
+	test -z "$$(gofmt -l . | grep -v '^\.agents/' | grep -v '^pkg/aur/')"
 	npm --prefix frontend run check
 
 .PHONY: smoke

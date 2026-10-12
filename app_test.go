@@ -232,7 +232,7 @@ func TestSaveConfigWithoutStore(t *testing.T) {
 	if err == nil {
 		t.Fatal("SaveConfig sem store deveria falhar")
 	}
-	if !strings.Contains(err.Error(), "configuração") {
+	if !strings.Contains(err.Error(), "configuration") {
 		t.Errorf("mensagem inesperada: %q", err)
 	}
 }
@@ -514,10 +514,10 @@ printf '%s\n' '{"streams":[{"codec_type":"video","codec_name":"h264","width":320
 	if len(acks) != 4 {
 		t.Fatalf("acks = %d; queria 4", len(acks))
 	}
-	if acks[0].JobID != "" || !strings.Contains(acks[0].Error, "Nenhum vídeo") {
+	if acks[0].JobID != "" || !strings.Contains(acks[0].Error, "no video") {
 		t.Errorf("ack[0] = %+v; queria erro de vídeo", acks[0])
 	}
-	if acks[1].JobID != "" || !strings.Contains(acks[1].Error, "Nenhum preset") {
+	if acks[1].JobID != "" || !strings.Contains(acks[1].Error, "no preset") {
 		t.Errorf("ack[1] = %+v; queria erro de preset", acks[1])
 	}
 	// Position do enqueue depende do timing do worker; o essencial é enfileirar
@@ -805,10 +805,10 @@ func TestResolveEncoder(t *testing.T) {
 		t.Errorf("hardware concreto não deve mudar, got %q", concrete.Hardware)
 	}
 
-	if _, err := a.resolveEncoder(compress.Job{Codec: "av1"}); err == nil || !strings.Contains(err.Error(), "codec desconhecido") {
+	if _, err := a.resolveEncoder(compress.Job{Codec: "av1"}); err == nil || !strings.Contains(err.Error(), "unknown codec") {
 		t.Errorf("codec inválido deveria dar erro, got %v", err)
 	}
-	if _, err := a.resolveEncoder(compress.Job{Hardware: "cuda"}); err == nil || !strings.Contains(err.Error(), "codificador de hardware desconhecido") {
+	if _, err := a.resolveEncoder(compress.Job{Hardware: "cuda"}); err == nil || !strings.Contains(err.Error(), "unknown hardware encoder") {
 		t.Errorf("hardware inválido deveria dar erro, got %v", err)
 	}
 
@@ -848,7 +848,7 @@ func TestCompressRejectsInvalidAdjustments(t *testing.T) {
 
 func TestExtractAudioValidation(t *testing.T) {
 	a := newTestApp(t)
-	if _, err := a.ExtractAudio(audio.Spec{}); err == nil || !strings.Contains(err.Error(), "Nenhum vídeo") {
+	if _, err := a.ExtractAudio(audio.Spec{}); err == nil || !strings.Contains(err.Error(), "no video") {
 		t.Errorf("spec vazio deveria falhar citando o vídeo, got %v", err)
 	}
 	spec := audio.Spec{InputPath: "in.mp4", Codec: "ogg", OutputPath: "out.mp3"}

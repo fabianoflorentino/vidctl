@@ -100,27 +100,27 @@ func effectiveDuration(job Job, seg split.Segment) float64 {
 // Validate rejects inconsistent per-file adjustments before a job is queued.
 func Validate(job Job) error {
 	if job.TrimStartSec < 0 || job.TrimEndSec < 0 {
-		return errors.New("os tempos de corte não podem ser negativos")
+		return errors.New("cut times cannot be negative")
 	}
 	if job.TrimEndSec > 0 && job.TrimEndSec <= job.TrimStartSec {
-		return errors.New("o fim do corte deve ser maior que o início")
+		return errors.New("the end of the cut must be greater than the start")
 	}
 	switch job.Rotate {
 	case 0, 90, 180, 270:
 	default:
-		return fmt.Errorf("rotação inválida: %d° (use 0, 90, 180 ou 270)", job.Rotate)
+		return fmt.Errorf("invalid rotation: %d° (use 0, 90, 180 or 270)", job.Rotate)
 	}
 	if job.FPS < 0 {
-		return errors.New("FPS inválido")
+		return errors.New("invalid FPS")
 	}
 	if job.NvencPreset != "" && !encode.ValidNvencPreset(job.NvencPreset) {
-		return fmt.Errorf("preset NVENC inválido: %q (use p1..p7)", job.NvencPreset)
+		return fmt.Errorf("invalid NVENC preset: %q (use p1..p7)", job.NvencPreset)
 	}
 	if job.Scale != "" && job.Scale != ScaleOriginal && !strings.Contains(job.Scale, "x") {
-		return fmt.Errorf("escala inválida: %q (use LARGURAxALTURA)", job.Scale)
+		return fmt.Errorf("invalid scale: %q (use WIDTHxHEIGHT)", job.Scale)
 	}
 	if job.Split != nil && (job.TrimStartSec > 0 || job.TrimEndSec > 0) {
-		return errors.New("corte manual e divisão em partes não podem ser combinados")
+		return errors.New("manual cut and split into parts cannot be combined")
 	}
 	return nil
 }
