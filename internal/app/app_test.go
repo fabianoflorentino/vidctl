@@ -72,7 +72,7 @@ func newTestApp(t *testing.T) *App {
 
 func TestStartup(t *testing.T) {
 	a := newTestApp(t)
-	a.Startup(context.Background())
+	a.startup(context.Background())
 	if a.ctx == nil {
 		t.Error("startup deve definir o contexto")
 	}
@@ -100,7 +100,7 @@ func TestStartupAppliesConfiguredToolPaths(t *testing.T) {
 	if err := a2.store.Save(cfg); err != nil {
 		t.Fatal(err)
 	}
-	a2.Startup(context.Background())
+	a2.startup(context.Background())
 	events.SetEmitter(nil)
 
 	got, ok := cmdutil.Override("ffmpeg")
@@ -112,7 +112,7 @@ func TestStartupAppliesConfiguredToolPaths(t *testing.T) {
 func TestStartupWithoutStoreKeepsDefaults(t *testing.T) {
 	t.Cleanup(cmdutil.ClearOverrides)
 	a := newApp(nil)
-	a.Startup(context.Background())
+	a.startup(context.Background())
 	events.SetEmitter(nil)
 
 	if _, ok := cmdutil.Override("ffmpeg"); ok {

@@ -86,10 +86,10 @@ func (a *App) GetUsage() sysinfo.Snapshot {
 	return a.sys.Snapshot()
 }
 
-// Startup wires the event emitter (queue observation + frontend dispatch) and
+// startup wires the event emitter (queue observation + frontend dispatch) and
 // applies the persisted tool paths and parallelism. It runs on the Wails
-// OnStartup hook; exported so the main package can hand it to the runtime.
-func (a *App) Startup(ctx context.Context) {
+// OnStartup hook.
+func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 	events.SetEmitter(func(name string, data any) {
 		a.jobs.Observe(name, data)
@@ -99,6 +99,13 @@ func (a *App) Startup(ctx context.Context) {
 	a.applyToolPaths(cfg)
 	a.jobs.SetMaxParallel(cfg.MaxParallel)
 	dlog.Printf("[app] startup done; maxParallel=%d ffmpeg=%q ffprobe=%q", cfg.MaxParallel, cfg.FFmpegPath, cfg.FFprobePath)
+}
+
+// OnStartupFor returns the Wails OnStartup callback wired to a. It is a
+// package-level function, so the binding generator never exposes it to the
+// frontend (only methods of bound structs become bindings).
+func OnStartupFor(a *App) func(context.Context) {
+	return a.startup
 }
 
 // SystemTheme is exposed to the frontend: "dark" | "light".
