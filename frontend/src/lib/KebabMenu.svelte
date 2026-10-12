@@ -11,7 +11,7 @@
     onselect?: (id: string) => void
   }
 
-  let { items, label = 'Mais ações', onselect }: Props = $props()
+  let { items, label = 'More actions', onselect }: Props = $props()
 
   let open = $state(false)
 

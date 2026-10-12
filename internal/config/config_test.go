@@ -40,7 +40,7 @@ func TestDefaults(t *testing.T) {
 		t.Errorf("defaults devem deixar os caminhos vazios: %+v", cfg)
 	}
 	if cfg.NotifyOnDone || cfg.OpenFolderOnDone {
-		t.Errorf("as notificações devem começar desligadas: %+v", cfg)
+		t.Errorf("notifications must start off: %+v", cfg)
 	}
 	if cfg.AudioSuffix != "-audio" {
 		t.Errorf("AudioSuffix = %q, want -audio", cfg.AudioSuffix)
@@ -72,10 +72,10 @@ func TestDirWithoutHome(t *testing.T) {
 	clearConfigHome(t)
 
 	if _, err := Dir(); err == nil {
-		t.Error("Dir deveria falhar sem nenhuma pasta de configuração")
+		t.Error("Dir should fail with no configuration folder")
 	}
 	if _, err := NewStore(""); err == nil {
-		t.Error("NewStore(\"\") deveria falhar sem nenhuma pasta de configuração")
+		t.Error("NewStore(\"\") should fail with no configuration folder")
 	}
 }
 
@@ -133,7 +133,7 @@ func TestLoadCorruptFileReturnsDefaults(t *testing.T) {
 			}
 			cfg, err := store.Load()
 			if err != nil {
-				t.Fatalf("Load() com arquivo corrompido não pode falhar: %v", err)
+				t.Fatalf("Load() with a corrupt file must not fail: %v", err)
 			}
 			if cfg != Defaults() {
 				t.Errorf("Load() = %+v, want defaults", cfg)
@@ -179,14 +179,14 @@ func TestSaveCreatesDirectoryAndPrivateFile(t *testing.T) {
 		t.Fatalf("Save: %v", err)
 	}
 	if _, err := os.Stat(store.Path()); err != nil {
-		t.Fatalf("arquivo não criado: %v", err)
+		t.Fatalf("file not created: %v", err)
 	}
 	// Windows has no POSIX permission bit: what Go reports there is a
 	// value derived from the file attributes, so 0600 is only checkable
 	// onde o chmod existe de verdade.
 	if runtime.GOOS != "windows" {
 		if perm := fileMode(t, store.Path()); perm != 0o600 {
-			t.Errorf("permissões = %o, want 600", perm)
+			t.Errorf("permissions = %o, want 600", perm)
 		}
 	}
 }
@@ -223,11 +223,11 @@ func TestSaveLeavesNoTempFileBehind(t *testing.T) {
 	}
 	for _, e := range entries {
 		if strings.HasSuffix(e.Name(), ".tmp") {
-			t.Errorf("arquivo temporário sobrou: %s", e.Name())
+			t.Errorf("temporary file left behind: %s", e.Name())
 		}
 	}
 	if len(entries) != 1 {
-		t.Errorf("diretório tem %d arquivos, want só o config: %v", len(entries), entries)
+		t.Errorf("directory has %d files, want only the config: %v", len(entries), entries)
 	}
 }
 
@@ -253,13 +253,13 @@ func TestSaveValidatesBeforeWriting(t *testing.T) {
 				t.Fatal("Save deveria falhar")
 			}
 			if !errors.Is(err, ErrInvalidConfig) {
-				t.Errorf("erro %v não é ErrInvalidConfig", err)
+				t.Errorf("error %v is not ErrInvalidConfig", err)
 			}
 			if !strings.Contains(err.Error(), tt.wantMsg) {
-				t.Errorf("mensagem %q não menciona %q", err, tt.wantMsg)
+				t.Errorf("message %q does not mention %q", err, tt.wantMsg)
 			}
 			if _, statErr := os.Stat(store.Path()); statErr == nil {
-				t.Error("Save inválido não pode criar o arquivo")
+				t.Error("invalid Save must not create the file")
 			}
 		})
 	}
@@ -267,10 +267,10 @@ func TestSaveValidatesBeforeWriting(t *testing.T) {
 
 func TestSaveRejectsUnwritableDir(t *testing.T) {
 	if runtime.GOOS == "windows" {
-		t.Skip("o Windows não respeita o bit de escrita do diretório")
+		t.Skip("Windows ignores the directory write bit")
 	}
 	if os.Getuid() == 0 {
-		t.Skip("root ignora as permissões do diretório")
+		t.Skip("root ignores directory permissions")
 	}
 	dir := t.TempDir()
 	if err := os.Chmod(dir, 0o500); err != nil {
@@ -281,7 +281,7 @@ func TestSaveRejectsUnwritableDir(t *testing.T) {
 		t.Fatalf("NewStore: %v", err)
 	}
 	if err := store.Save(Defaults()); err == nil {
-		t.Error("Save em diretório sem escrita deveria falhar")
+		t.Error("Save in a non-writable directory should fail")
 	}
 }
 
@@ -292,7 +292,7 @@ func TestSaveFailsWhenTargetIsADirectory(t *testing.T) {
 		t.Fatal(err)
 	}
 	if err := store.Save(Defaults()); err == nil {
-		t.Error("Save deveria falhar quando o destino é um diretório")
+		t.Error("Save should fail when the target is a directory")
 	}
 	entries, err := os.ReadDir(filepath.Dir(store.Path()))
 	if err != nil {
@@ -300,7 +300,7 @@ func TestSaveFailsWhenTargetIsADirectory(t *testing.T) {
 	}
 	for _, e := range entries {
 		if strings.HasSuffix(e.Name(), ".tmp") {
-			t.Errorf("arquivo temporário sobrou após falha: %s", e.Name())
+			t.Errorf("temporary file left behind after failure: %s", e.Name())
 		}
 	}
 }
@@ -319,27 +319,27 @@ func TestNormalize(t *testing.T) {
 			want: Config{PresetID: "whatsapp-status", Language: "pt", MaxParallel: 1, AudioSuffix: "-audio"},
 		},
 		{
-			name: "espaços em volta dos caminhos são removidos",
+			name: "spaces around paths are trimmed",
 			in:   Config{PresetID: "youtube", OutputDir: "  /tmp  ", FFmpegPath: " /opt/ffmpeg ", Language: "EN", MaxParallel: 2},
 			want: Config{PresetID: "youtube", OutputDir: "/tmp", FFmpegPath: "/opt/ffmpeg", Language: "en", MaxParallel: 2, AudioSuffix: "-audio"},
 		},
 		{
-			name: "crf acima do limite é limitado",
+			name: "crf above the limit is clamped",
 			in:   Config{PresetID: "custom", CRF: 99, Language: "pt", MaxParallel: 1, AudioSuffix: "-audio"},
 			want: Config{PresetID: "custom", CRF: MaxCRF, Language: "pt", MaxParallel: 1, AudioSuffix: "-audio"},
 		},
 		{
-			name: "crf negativo é limitado",
+			name: "negative crf is clamped",
 			in:   Config{PresetID: "custom", CRF: -10, Language: "pt", MaxParallel: 1, AudioSuffix: "-audio"},
 			want: Config{PresetID: "custom", CRF: MinCRF, Language: "pt", MaxParallel: 1, AudioSuffix: "-audio"},
 		},
 		{
-			name: "size negativo é limitado a zero",
+			name: "negative size is clamped to zero",
 			in:   Config{PresetID: "custom", SizeMB: -5, Language: "pt", MaxParallel: 1, AudioSuffix: "-audio"},
 			want: Config{PresetID: "custom", SizeMB: 0, Language: "pt", MaxParallel: 1, AudioSuffix: "-audio"},
 		},
 		{
-			name: "size acima do limite é limitado",
+			name: "size above the limit is clamped",
 			in:   Config{PresetID: "custom", SizeMB: MaxSizeMB * 4, Language: "pt", MaxParallel: 1, AudioSuffix: "-audio"},
 			want: Config{PresetID: "custom", SizeMB: MaxSizeMB, Language: "pt", MaxParallel: 1, AudioSuffix: "-audio"},
 		},
@@ -349,12 +349,12 @@ func TestNormalize(t *testing.T) {
 			want: Config{PresetID: "custom", Language: "pt", MaxParallel: 1, AudioSuffix: "-audio"},
 		},
 		{
-			name: "sufixo de áudio vazio volta ao default",
+			name: "empty audio suffix falls back to the default",
 			in:   Config{PresetID: "custom", Language: "pt", MaxParallel: 1, AudioSuffix: "  "},
 			want: Config{PresetID: "custom", Language: "pt", MaxParallel: 1, AudioSuffix: "-audio"},
 		},
 		{
-			name: "sufixo de áudio personalizado é preservado",
+			name: "custom audio suffix is preserved",
 			in:   Config{PresetID: "custom", Language: "pt", MaxParallel: 1, AudioSuffix: "-music"},
 			want: Config{PresetID: "custom", Language: "pt", MaxParallel: 1, AudioSuffix: "-music"},
 		},
@@ -375,15 +375,15 @@ func TestValidate(t *testing.T) {
 		wantErr bool
 	}{
 		{"defaults", Defaults(), false},
-		{"idioma vazio é aceito", Config{PresetID: "custom", MaxParallel: 1}, false},
+		{"empty language is accepted", Config{PresetID: "custom", MaxParallel: 1}, false},
 		{"idioma en", Config{PresetID: "custom", Language: "en", MaxParallel: 1}, false},
 		{"idioma es", Config{PresetID: "custom", Language: "es", MaxParallel: 1}, false},
 		{"idioma zh", Config{PresetID: "custom", Language: "zh", MaxParallel: 1}, false},
-		{"idioma em maiúsculo", Config{PresetID: "custom", Language: "PT", MaxParallel: 1}, false},
+		{"uppercase language", Config{PresetID: "custom", Language: "PT", MaxParallel: 1}, false},
 		{"crf no limite", Config{PresetID: "custom", CRF: MaxCRF, Language: "pt", MaxParallel: 1, AudioSuffix: "-audio"}, false},
 		{"preset em branco", Config{PresetID: "\t", Language: "pt", MaxParallel: 1, AudioSuffix: "-audio"}, true},
-		{"idioma inválido", Config{PresetID: "custom", Language: "de", MaxParallel: 1}, true},
-		{"paralelismo inválido", Config{PresetID: "custom", Language: "pt", MaxParallel: 0}, true},
+		{"invalid language", Config{PresetID: "custom", Language: "de", MaxParallel: 1}, true},
+		{"invalid parallelism", Config{PresetID: "custom", Language: "pt", MaxParallel: 0}, true},
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
@@ -412,7 +412,7 @@ func TestSaveNormalizesBeforeWriting(t *testing.T) {
 	}
 	var raw map[string]any
 	if err := json.Unmarshal(data, &raw); err != nil {
-		t.Fatalf("config.json inválido: %v", err)
+		t.Fatalf("invalid config.json: %v", err)
 	}
 	if raw["language"] != "en" {
 		t.Errorf("language no arquivo = %v, want en normalizado", raw["language"])

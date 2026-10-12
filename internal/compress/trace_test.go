@@ -35,6 +35,6 @@ func TestTraceExecNoopWithoutDebug(t *testing.T) {
 	traceExec("job-trace", "encoding", cmd)
 
 	if buf.Len() != 0 {
-		t.Errorf("sem VIDCTL_DEBUG o trace não deveria escrever: %q", buf.String())
+		t.Errorf("without VIDCTL_DEBUG the trace should not write: %q", buf.String())
 	}
 }

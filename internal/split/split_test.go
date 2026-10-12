@@ -189,7 +189,7 @@ func TestPlanByMinutes(t *testing.T) {
 func TestPlanByMinutesMaxParts(t *testing.T) {
 	_, err := Plan(61*60, Spec{MinutesEach: 1})
 	if err == nil || !strings.Contains(err.Error(), "maximum") {
-		t.Fatalf("err = %v, want erro de máximo de partes", err)
+		t.Fatalf("err = %v, want maximum-parts error", err)
 	}
 }
 

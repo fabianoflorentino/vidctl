@@ -12,7 +12,7 @@ import (
 
 func skipOnWindows(t *testing.T) {
 	if runtime.GOOS == "windows" {
-		t.Skip("fake shell bins não executam no Windows")
+		t.Skip("fake shell bins do not run on Windows")
 	}
 }
 
@@ -26,7 +26,7 @@ func fakeFFmpeg(t *testing.T, encoders, probeFail string) string {
 		exit 0
 	fi
 	if [ -n "$FAKE_PROBE_FAIL" ] && case "$*" in *"$FAKE_PROBE_FAIL"*) true ;; *) false ;; esac; then
-		echo "encoder indisponível no probe" >&2
+		echo "encoder unavailable in the probe" >&2
 		exit 1
 	fi
 	exit 0
@@ -81,10 +81,10 @@ func TestDetectorAvailability(t *testing.T) {
 			t.Errorf("videotoolbox esperava apenas h264 com erro de probe, got %+v", vt)
 		}
 	} else if vt != nil {
-		t.Errorf("videotoolbox não deveria aparecer fora do macOS, got %+v", vt)
+		t.Errorf("videotoolbox should not appear outside macOS, got %+v", vt)
 	}
 	if findInfo(avail, HWAMF) != nil {
-		t.Errorf("amf não deveria aparecer fora do Windows, got %+v", avail.Hardware)
+		t.Errorf("amf should not appear outside Windows, got %+v", avail.Hardware)
 	}
 }
 
@@ -116,10 +116,10 @@ func TestDetectorCachesAndRefreshes(t *testing.T) {
 	d.Refresh()
 	after, err := d.Availability()
 	if err != nil {
-		t.Fatalf("Availability() pós-refresh error: %v", err)
+		t.Fatalf("Availability() after refresh error: %v", err)
 	}
 	if len(after.Hardware) != 0 {
-		t.Errorf("após refresh esperava 0 backends, got %+v", after.Hardware)
+		t.Errorf("after refresh expected 0 backends, got %+v", after.Hardware)
 	}
 }
 
@@ -143,7 +143,7 @@ func TestDetectorListParsesOnlyVideo(t *testing.T) {
 		t.Errorf("esperava libx264/h264_nvenc na lista, got %v", names)
 	}
 	if contains(names, "aac") {
-		t.Errorf("encoders de áudio não devem entrar na lista, got %v", names)
+		t.Errorf("audio encoders must not enter the list, got %v", names)
 	}
 }
 
@@ -152,9 +152,9 @@ func TestProbeEncoderFailure(t *testing.T) {
 	fakeFFmpeg(t, encodersList, "h264_qsv")
 	err := probeEncoder(mustResolve(t), "h264_qsv")
 	if err == nil {
-		t.Fatal("esperava erro ao forçar probe falho")
+		t.Fatal("expected an error when forcing a failed probe")
 	}
-	if !strings.Contains(err.Error(), "indisponível") {
+	if !strings.Contains(err.Error(), "unavailable") {
 		t.Errorf("erro deveria carregar a mensagem do stderr, got %v", err)
 	}
 }
@@ -172,7 +172,7 @@ func TestDetectorBackendWithoutCodecs(t *testing.T) {
 		t.Fatalf("nvenc deveria aparecer listado mesmo com probe falho, got %+v", avail.Hardware)
 	}
 	if nvenc.Codecs == nil {
-		t.Error("codecs não pode ser nil: viraria null no JSON e quebraria o frontend")
+		t.Error("codecs must not be nil: it would become null in the JSON and break the frontend")
 	}
 	if len(nvenc.Codecs) != 0 {
 		t.Errorf("codecs deveria estar vazio, got %v", nvenc.Codecs)
@@ -193,10 +193,10 @@ func expectedBackends() int {
 
 func TestSupportedOnGOOS(t *testing.T) {
 	if supportedOnGOOS(HWAMF) != (runtime.GOOS == "windows") {
-		t.Errorf("amf deveria ser oferecido só no Windows, got %v", supportedOnGOOS(HWAMF))
+		t.Errorf("amf should only be offered on Windows, got %v", supportedOnGOOS(HWAMF))
 	}
 	if supportedOnGOOS(HWVideotoolbox) != (runtime.GOOS == "darwin") {
-		t.Errorf("videotoolbox deveria ser oferecido só no macOS, got %v", supportedOnGOOS(HWVideotoolbox))
+		t.Errorf("videotoolbox should only be offered on macOS, got %v", supportedOnGOOS(HWVideotoolbox))
 	}
 	for _, id := range []string{HWNVENC, HWQSV, ""} {
 		if !supportedOnGOOS(id) {

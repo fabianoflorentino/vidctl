@@ -48,13 +48,13 @@ func TestBuildArgs(t *testing.T) {
 			absent:   []string{"-b:a"},
 		},
 		{
-			name:     "copy só remux",
+			name:     "copy is remux only",
 			spec:     Spec{InputPath: "a.mp4", OutputPath: "o.mka", Codec: "copy"},
 			contains: []string{"-c:a", "copy"},
 			absent:   []string{"-b:a"},
 		},
 		{
-			name:     "map da primeira faixa de áudio",
+			name:     "maps the first audio track",
 			spec:     base,
 			contains: []string{"-vn", "-map", "0:a:0"},
 		},
@@ -95,12 +95,12 @@ func TestBuildArgs(t *testing.T) {
 			args := buildArgs(tt.spec)
 			for _, want := range tt.contains {
 				if !containsSeq(args, want) {
-					t.Errorf("argv %v não contém %q", args, want)
+					t.Errorf("argv %v does not contain %q", args, want)
 				}
 			}
 			for _, not := range tt.absent {
 				if containsSeq(args, not) {
-					t.Errorf("argv %v não deveria conter %q", args, not)
+					t.Errorf("argv %v should not contain %q", args, not)
 				}
 			}
 		})
@@ -147,7 +147,7 @@ func TestValidate(t *testing.T) {
 		spec    Spec
 		wantMsg string
 	}{
-		{"válido", valid, ""},
+		{"valid", valid, ""},
 		{"sem entrada", Spec{}, "pick a video"},
 		{"formato desconhecido", valid.withCodec("ogg"), "format"},
 		{"formato vazio", valid.withCodec(""), "format"},
@@ -156,11 +156,11 @@ func TestValidate(t *testing.T) {
 		{"bitrate em copy", valid.withCodec("copy").withBitrate(128), "does not apply"},
 		{"bitrate baixo", valid.withBitrate(16), "between 32 and 320"},
 		{"bitrate alto", valid.withBitrate(400), "between 32 and 320"},
-		{"canais inválidos", valid.withChannels(3), "channels"},
+		{"invalid channels", valid.withChannels(3), "channels"},
 		{"canais negativos", valid.withChannels(-1), "channels"},
 		{"trim invertido", valid.withTrim(30, 10), "greater than the start"},
 		{"trim negativo", valid.withTrim(-1, 0), "negative"},
-		{"fim igual ao início", valid.withTrim(30, 30), "greater than the start"},
+		{"end equal to start", valid.withTrim(30, 30), "greater than the start"},
 		{"normalizar com copy", valid.withCodec("copy").withNormalize(), "copy"},
 		{"sem destino", valid.withOutput(""), "destination"},
 	}
@@ -177,7 +177,7 @@ func TestValidate(t *testing.T) {
 				t.Fatal("Validate deveria falhar")
 			}
 			if !strings.Contains(err.Error(), tt.wantMsg) {
-				t.Errorf("mensagem %q não contém %q", err, tt.wantMsg)
+				t.Errorf("message %q does not contain %q", err, tt.wantMsg)
 			}
 		})
 	}
@@ -204,7 +204,7 @@ func TestSuggestOutput(t *testing.T) {
 		{"flac", "/videos/a.webm", "flac", "-audio", "a-audio.flac", false},
 		{"wav", "/videos/a.ts", "wav", "-audio", "a-audio.wav", false},
 		{"copy", "/videos/a.mp4", "copy", "-audio", "a-audio.mka", false},
-		{"código desconhecido", "/videos/a.mp4", "ogg", "-audio", "", true},
+		{"unknown codec", "/videos/a.mp4", "ogg", "-audio", "", true},
 		{"caminho vazio", "", "mp3", "-audio", "", true},
 	}
 	for _, tt := range tests {
@@ -248,7 +248,7 @@ func TestValidCodecsStable(t *testing.T) {
 	a := strings.Join(ValidCodecs(), ",")
 	b := strings.Join(ValidCodecs(), ",")
 	if a != b || !strings.Contains(a, "mp3") || !strings.Contains(a, "copy") {
-		t.Errorf("lista de codecs instável ou incompleta: %q", a)
+		t.Errorf("codec list unstable or incomplete: %q", a)
 	}
 }
 
@@ -258,6 +258,6 @@ func TestSuggestOutputJoinsWithDir(t *testing.T) {
 		t.Fatal(err)
 	}
 	if filepath.Base(got) != got {
-		t.Errorf("SuggestOutput deve devolver só o nome do arquivo, got %q", got)
+		t.Errorf("SuggestOutput should return only the file name, got %q", got)
 	}
 }

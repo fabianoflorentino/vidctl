@@ -18,7 +18,7 @@ func TestResolveWithoutOverrideUsesPath(t *testing.T) {
 		t.Fatalf("Resolve: %v", err)
 	}
 	if got != want {
-		t.Errorf("Resolve() = %q, want o binário do PATH %q", got, want)
+		t.Errorf("Resolve() = %q, want the PATH binary %q", got, want)
 	}
 }
 
@@ -74,7 +74,7 @@ func TestSetOverrideEmptyRemovesPrevious(t *testing.T) {
 		t.Fatalf("Resolve: %v", err)
 	}
 	if got != want {
-		t.Errorf("Resolve() = %q, want o binário do PATH %q", got, want)
+		t.Errorf("Resolve() = %q, want the PATH binary %q", got, want)
 	}
 }
 
@@ -92,13 +92,13 @@ func TestResolveWithMissingOverrideIsAnError(t *testing.T) {
 
 	_, err := Resolve("ffmpeg")
 	if err == nil {
-		t.Fatal("Resolve deveria falhar com override inválido")
+		t.Fatal("Resolve should fail with an invalid override")
 	}
 	if !errors.Is(err, ErrNotConfigured) {
-		t.Errorf("erro %v não é ErrNotConfigured", err)
+		t.Errorf("error %v is not ErrNotConfigured", err)
 	}
 	if !strings.Contains(err.Error(), "ffmpeg") || !strings.Contains(err.Error(), missing) {
-		t.Errorf("mensagem %q deveria citar o binário e o caminho", err)
+		t.Errorf("message %q should mention the binary and the path", err)
 	}
 }
 
@@ -111,13 +111,13 @@ func TestResolveWithDirectoryOverrideIsAnError(t *testing.T) {
 
 	_, err := Resolve("ffmpeg")
 	if err == nil {
-		t.Fatal("Resolve deveria falhar com override apontando para diretório")
+		t.Fatal("Resolve should fail with an override pointing at a directory")
 	}
 	if !errors.Is(err, ErrNotConfigured) {
-		t.Errorf("erro %v não é ErrNotConfigured", err)
+		t.Errorf("error %v is not ErrNotConfigured", err)
 	}
 	if !strings.Contains(err.Error(), "directory") {
-		t.Errorf("mensagem %q deveria dizer que é um diretório", err)
+		t.Errorf("message %q should say it is a directory", err)
 	}
 }
 
@@ -131,7 +131,7 @@ func TestResolvePathFailureIsNotNotConfigured(t *testing.T) {
 		t.Fatal("Resolve deveria falhar")
 	}
 	if errors.Is(err, ErrNotConfigured) {
-		t.Errorf("falta no PATH não deve virar ErrNotConfigured: %v", err)
+		t.Errorf("missing from PATH must not become ErrNotConfigured: %v", err)
 	}
 }
 
@@ -140,7 +140,7 @@ func TestOverrideReportsConfiguredPath(t *testing.T) {
 	t.Cleanup(ClearOverrides)
 
 	if _, ok := Override("ffprobe"); ok {
-		t.Error("ffprobe não deveria ter override no início do teste")
+		t.Error("ffprobe should have no override at the start of the test")
 	}
 	SetOverride("ffprobe", "/opt/ffprobe")
 	path, ok := Override("ffprobe")
@@ -174,7 +174,7 @@ func TestOverridesAreIndependentPerBinary(t *testing.T) {
 	SetOverride("ffmpeg", custom)
 
 	if _, ok := Override("ffprobe"); ok {
-		t.Error("setar ffmpeg não pode afetar ffprobe")
+		t.Error("setting ffmpeg must not affect ffprobe")
 	}
 }
 

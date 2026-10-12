@@ -26,7 +26,7 @@ func TestEmitProgress(t *testing.T) {
 	}
 	p, ok := evts[0].(ProgressEvent)
 	if !ok {
-		t.Fatalf("payload não é ProgressEvent: %T", evts[0])
+		t.Fatalf("payload is not ProgressEvent: %T", evts[0])
 	}
 	if p.JobID != "job-1" || p.Kind != KindCompress || p.Stage != "pass1/2" || p.Percent != 42.5 {
 		t.Errorf("ProgressEvent inesperado: %+v", p)
@@ -45,7 +45,7 @@ func TestEmitDone(t *testing.T) {
 	}
 	d, ok := evts[0].(DoneEvent)
 	if !ok {
-		t.Fatalf("payload não é DoneEvent: %T", evts[0])
+		t.Fatalf("payload is not DoneEvent: %T", evts[0])
 	}
 	if d.JobID != "job-2" || d.Kind != KindCompress || d.OutputPath != "/tmp/out.mp4" || d.SizeBytes != 1024 || d.SizeMB != 0.001 {
 		t.Errorf("DoneEvent inesperado: %+v", d)
@@ -64,7 +64,7 @@ func TestEmitError(t *testing.T) {
 	}
 	e, ok := evts[0].(ErrorEvent)
 	if !ok {
-		t.Fatalf("payload não é ErrorEvent: %T", evts[0])
+		t.Fatalf("payload is not ErrorEvent: %T", evts[0])
 	}
 	if e.JobID != "job-3" || e.Kind != KindCompress || e.Error != "deu ruim" {
 		t.Errorf("ErrorEvent inesperado: %+v", e)
@@ -83,7 +83,7 @@ func TestEmitQueued(t *testing.T) {
 	}
 	q, ok := evts[0].(QueuedEvent)
 	if !ok {
-		t.Fatalf("payload não é QueuedEvent: %T", evts[0])
+		t.Fatalf("payload is not QueuedEvent: %T", evts[0])
 	}
 	if q.JobID != "job-5" || q.Position != 3 {
 		t.Errorf("QueuedEvent inesperado: %+v", q)
@@ -102,7 +102,7 @@ func TestEmitStart(t *testing.T) {
 	}
 	s, ok := evts[0].(StartEvent)
 	if !ok {
-		t.Fatalf("payload não é StartEvent: %T", evts[0])
+		t.Fatalf("payload is not StartEvent: %T", evts[0])
 	}
 	if s.JobID != "job-6" {
 		t.Errorf("StartEvent inesperado: %+v", s)

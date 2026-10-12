@@ -4,7 +4,7 @@
     label?: string
   }
 
-  let { text, label = 'Mais informações' }: Props = $props()
+  let { text, label = 'More information' }: Props = $props()
 </script>
 
 <details class="help">

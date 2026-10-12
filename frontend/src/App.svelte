@@ -86,12 +86,12 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
       theme = saved
     }
   } catch {
-    /* localStorage indisponível: segue o sistema */
+    /* localStorage unavailable: follow the system */
   }
 
   // O WebKitGTK (Linux) costuma reportar prefers-color-scheme: light mesmo com
   // o desktop escuro; o tema real vem do backend (gsettings/registry/defaults)
-  // e o matchMedia só acompanha mudanças ao vivo.
+  // and matchMedia only tracks live changes.
   $effect(() => {
     if (theme !== 'system') return
     if (!systemResolved) return
@@ -108,7 +108,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
     try {
       localStorage.setItem('vidctl-theme', next)
     } catch {
-      /* sem persistência disponível; tema vale para a sessão */
+      /* no persistence available; theme lasts for the session */
     }
   }
 
@@ -160,8 +160,8 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
     })
   }
 
-  // Evita gravar de volta o que acabou de ser lido e writes em mudanças que não
-  // alteram nada (o Stepper emite o mesmo valor ao receber foco).
+  // Avoid saving back what was just read, and writes that change nothing (the
+  // Stepper emits the same value on focus).
   let lastSavedConfig = ''
 
   function scheduleSaveConfig() {
@@ -189,8 +189,8 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
     return dir.includes('\\') && !dir.includes('/') ? '\\' : '/'
   }
 
-  // Pasta de destino: a preferência salva quando existe; senão, a pasta do
-  // arquivo de origem (nunca o diretório de trabalho do app).
+  // Target folder: the saved preference when it exists; otherwise the source
+  // file folder (never the app working directory).
   function targetDir(): string {
     if (outputDir) return outputDir.replace(/[\\/]+$/, '') + sepFor(outputDir)
     const last = Math.max(inputPath.lastIndexOf('/'), inputPath.lastIndexOf('\\'))
@@ -232,11 +232,11 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
 
   function applyPatch(item: QueueItem, p: EventPatch) {
     if (!p.allowed.includes(item.state)) {
-      dbg(`patch rejeitado job=${item.jobId} estado=${item.state} permitido=${p.allowed.join(',')}`)
+      dbg(`patch rejected job=${item.jobId} state=${item.state} allowed=${p.allowed.join(',')}`)
       return
     }
     p.fn(item)
-    dbg(`patch job=${item.jobId} estado=${item.state} percent=${item.percent} stage=${item.stage}`)
+    dbg(`patch job=${item.jobId} state=${item.state} percent=${item.percent} stage=${item.stage}`)
     renumber()
   }
 
@@ -246,7 +246,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
       applyPatch(item, { allowed, fn })
       return
     }
-    dbg(`patch aguardando item job=${jobId} permitido=${allowed.join(',')}`)
+    dbg(`patch waiting for item job=${jobId} allowed=${allowed.join(',')}`)
     const list = bufferedEvents.get(jobId) ?? []
     list.push({ allowed, fn })
     bufferedEvents.set(jobId, list)
@@ -367,13 +367,13 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
 
   async function adoptFile(path: string) {
     if (!isVideoPath(path)) {
-      const msg = `extensão não suportada: ${path.split('.').pop() || path}`
-      dbg(`adoptFile rejeitado path=${path}`)
+      const msg = `unsupported extension: ${path.split('.').pop() || path}`
+      dbg(`adoptFile rejected path=${path}`)
       error = msg
       return
     }
-    // Novo vídeo: descarta o ajuste do anterior e volta as opções por arquivo
-    // ao default (corte, split, escala, áudio, codec/hardware).
+    // New video: drops the previous adjustments and resets the per-file options
+    // to default (cut, split, scale, audio, codec/hardware).
     resetPerFileOptions()
     inputPath = path
     outputPath = ''
@@ -393,7 +393,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
           thumb = ''
         })
     } catch (err) {
-      dbg(`adoptFile erro path=${path} err=${String(err)}`)
+      dbg(`adoptFile error path=${path} err=${String(err)}`)
       info = null
       error = String(err)
     }
@@ -421,7 +421,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   }
 
   function handleDrop(paths: string[]) {
-    // Modelo de alvo único: soltar vídeo troca o atual, sem enfileirar lote.
+    // Single-target model: dropping a video replaces the current one, no batch.
     const first = paths.find(isVideoPath) ?? paths[0]
     if (first) adoptFile(first)
   }
@@ -449,8 +449,9 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   }
 
   // No Linux o drop nativo do Wails faz o WebKit navegar para o arquivo solto
-  // ("tocar" o vídeo e derrubar a UI). Lá, o front lê text/uri-list do próprio
-  // evento de drop, que entrega os caminhos sem navegação.
+  // ("plays" the video and tears down the UI). There, the frontend reads
+  // text/uri-list from the drop event itself, which delivers paths without
+  // navigation.
   function handleWindowDrop(e: DragEvent) {
     if (!e.dataTransfer || !isFileDrag(e.dataTransfer)) return
     e.preventDefault()
@@ -468,7 +469,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
       dbg(`drop uri=${JSON.stringify(uri)} paths=${JSON.stringify(dropped)}`)
       if (dropped.length) handleDrop(dropped)
     } catch (err) {
-      dbg(`drop erro ${String(err)}`)
+      dbg(`drop error ${String(err)}`)
     }
   }
 
@@ -526,7 +527,8 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   }
 
   // Monta a mensagem do conselho no idioma atual usando o payload estruturado
-  // do backend; cai no texto legado (Message) quando o código é desconhecido.
+  // from the backend; falls back to the legacy text (Message) when the code is
+  // unknown.
   function adviceMessage(a: Awaited<ReturnType<typeof GetAdvice>>): string {
     if (a.code !== 'low') return a.message
     const p = a.params ?? {}
@@ -554,7 +556,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
         const s = await GetUsage()
         if (!stopped) usage = s
       } catch {
-        /* collector indisponível: mantém último valor */
+        /* collector unavailable: keep the last value */
       }
     }
     poll()
@@ -642,8 +644,8 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
     sectionState[key] = next
   }
 
-  // Scrollbar própria da sidebar: a scrollbar nativa (GTK/WebKit) vaza do
-  // painel e cresce demais no hover; aqui controlamos tamanho e posição.
+  // Sidebar-native scrollbar: the native one (GTK/WebKit) leaks out of the
+  // panel and grows too much on hover; here we control size and position.
   let sidebarEl = $state<HTMLElement | undefined>(undefined)
   let sbScrollTop = $state(0)
   let sbClientH = $state(0)
@@ -913,21 +915,21 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
       dbg(`ERRO JS: ${ev.message} em ${ev.filename}:${ev.lineno}:${ev.colno}`)
     })
     window.addEventListener('unhandledrejection', (ev) => {
-      dbg(`rejeição JS: ${String(ev.reason)}`)
+      dbg(`JS rejection: ${String(ev.reason)}`)
     })
     EventsOn('compress:queued', (e: QueuedEv) => {
-      dbg(`evento compress:queued job=${e.jobId} pos=${e.position}`)
+      dbg(`compress:queued event job=${e.jobId} pos=${e.position}`)
       patch(e.jobId, ['queued'], () => {})
     })
     EventsOn('compress:start', (e: StartEv) => {
-      dbg(`evento compress:start job=${e.jobId}`)
+      dbg(`compress:start event job=${e.jobId}`)
       patch(e.jobId, ['queued', 'running'], (i) => {
         i.state = 'running'
         i.startedAt = i.startedAt || Date.now()
       })
     })
     EventsOn('compress:progress', (e: ProgressEv) => {
-      dbg(`evento compress:progress job=${e.jobId} stage=${e.stage} percent=${e.percent}`)
+      dbg(`compress:progress event job=${e.jobId} stage=${e.stage} percent=${e.percent}`)
       patch(e.jobId, ['running'], (i) => {
         i.percent = e.percent
         i.stage = e.stage
@@ -936,7 +938,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
       })
     })
     EventsOn('compress:done', (e: DoneEv) => {
-      dbg(`evento compress:done job=${e.jobId} sizeBytes=${e.sizeBytes}`)
+      dbg(`compress:done event job=${e.jobId} sizeBytes=${e.sizeBytes}`)
       patch(e.jobId, ['running'], (i) => {
         i.outputPath = e.outputPath
         i.sizeBytes += e.sizeBytes
@@ -952,7 +954,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
       })
     })
     EventsOn('compress:error', (e: ErrorEv) => {
-      dbg(`evento compress:error job=${e.jobId} error=${e.error}`)
+      dbg(`compress:error event job=${e.jobId} error=${e.error}`)
       patch(e.jobId, ['queued', 'running'], (i) => {
         i.state = 'error'
         i.error = e.error
@@ -1009,10 +1011,10 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   async function refreshQueue() {
     try {
       const tasks = await GetTasks()
-      dbg(`refreshQueue -> ${tasks.length} tarefas`)
+      dbg(`refreshQueue -> ${tasks.length} tasks`)
       if (tasks.length) queue = tasks.map(fromTask)
     } catch {
-      /* fila indisponível: a sessão segue com a fila vazia */
+      /* queue unavailable: the session continues with an empty queue */
     }
   }
 
@@ -1023,7 +1025,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
       ffmpegMsg = st.message
     } catch {
       ffmpegOk = false
-      ffmpegMsg = 'não foi possível verificar o ffmpeg'
+      ffmpegMsg = t('banner.msgGeneric')
     }
   }
 
@@ -1038,8 +1040,8 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
     }
     if (saved) {
       language = langId((saved.language ?? 'pt') as string)
-      // Só aceita o preset se ele ainda existir na lista; um preset removido
-      // numa versão futura não pode deixar a sidebar sem seleção.
+      // Only accept the preset when it still exists in the list; a preset removed
+      // in a future version cannot leave the sidebar without a selection.
       if (presetList.some((p) => p.id === saved.presetId)) {
         selectedPresetId = saved.presetId
       }
@@ -1131,7 +1133,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
         partsTotal: jobParts(),
       })
     } catch (err) {
-      dbg(`compress() erro=${String(err)}`)
+      dbg(`compress() error=${String(err)}`)
       error = String(err)
     }
   }
@@ -1163,7 +1165,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
         outputPath: spec.outputPath,
       })
     } catch (err) {
-      dbg(`ExtractAudio erro=${String(err)}`)
+      dbg(`ExtractAudio error=${String(err)}`)
       error = String(err)
     }
   }
@@ -1174,8 +1176,8 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
     return !!ffmpegOk && !!info?.hasAudio && !!audioSpec && !audioInvalid && !!audioSpec.outputPath
   }
 
-  // Rótulo da caixa de áudio: usa o caminho sugerido pelo backend e, enquanto
-  // ele não chega, um placeholder com a mesma convenção (pasta + sufixo + ext).
+  // Audio box label: uses the backend-suggested path and, until it arrives, a
+  // placeholder with the same convention (folder + suffix + ext).
   function audioOutputLabel(): string {
     if (audioSpec?.outputPath) return audioSpec.outputPath
     const codec = audioSpec?.codec ?? 'mp3'

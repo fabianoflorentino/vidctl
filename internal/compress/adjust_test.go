@@ -22,12 +22,12 @@ func TestBuildVideoFilter(t *testing.T) {
 		job  Job
 		want string
 	}{
-		{"padrão", Job{}, defaultScaleFilter},
+		{"default", Job{}, defaultScaleFilter},
 		{"original omite scale", Job{Scale: ScaleOriginal}, ""},
 		{"custom", Job{Scale: "1920x1080"}, "scale=1920x1080:force_original_aspect_ratio=decrease"},
-		{"rotação 90", Job{Rotate: 90}, "transpose=1," + defaultScaleFilter},
-		{"rotação 180", Job{Rotate: 180}, "transpose=2," + defaultScaleFilter},
-		{"rotação 270", Job{Rotate: 270}, "transpose=3," + defaultScaleFilter},
+		{"rotation 90", Job{Rotate: 90}, "transpose=1," + defaultScaleFilter},
+		{"rotation 180", Job{Rotate: 180}, "transpose=2," + defaultScaleFilter},
+		{"rotation 270", Job{Rotate: 270}, "transpose=3," + defaultScaleFilter},
 		{"fps", Job{FPS: 30}, defaultScaleFilter + ",fps=30.000"},
 		{"ordem transpose→scale→fps", Job{Rotate: 90, Scale: "640x480", FPS: 24},
 			"transpose=1,scale=640x480:force_original_aspect_ratio=decrease,fps=24.000"},
@@ -57,7 +57,7 @@ func TestValidate(t *testing.T) {
 	}
 	for _, job := range valid {
 		if err := Validate(job); err != nil {
-			t.Errorf("job %+v deveria ser válido: %v", job, err)
+			t.Errorf("job %+v should be valid: %v", job, err)
 		}
 	}
 
@@ -70,9 +70,9 @@ func TestValidate(t *testing.T) {
 		{"corte igual", Job{TrimStartSec: 10, TrimEndSec: 10}, "end of the cut"},
 		{"corte negativo", Job{TrimStartSec: -1}, "negative"},
 		{"fps negativo", Job{FPS: -1}, "FPS"},
-		{"rotação inválida", Job{Rotate: 45}, "rotation"},
-		{"escala inválida", Job{Scale: "hd"}, "scale"},
-		{"preset nvenc inválido", Job{NvencPreset: "fast"}, "NVENC preset"},
+		{"invalid rotation", Job{Rotate: 45}, "rotation"},
+		{"invalid scale", Job{Scale: "hd"}, "scale"},
+		{"invalid nvenc preset", Job{NvencPreset: "fast"}, "NVENC preset"},
 		{"split + trim", Job{Split: &split.Spec{Parts: 2}, TrimStartSec: 5}, "cannot be combined"},
 	}
 	for _, tc := range invalid {
@@ -111,7 +111,7 @@ func TestTrimArgsBeforeInput(t *testing.T) {
 		t.Fatalf("BudgetFor: %v", err)
 	}
 	if !containsStr(p2.Args, "-b:v", strconv.Itoa(budget.VideoBitrate)) {
-		t.Errorf("orçamento deveria usar a duração do corte (120s), args: %v", p2.Args)
+		t.Errorf("budget should use the cut duration (120s), args: %v", p2.Args)
 	}
 }
 
@@ -129,12 +129,12 @@ func TestRemoveAudioArgs(t *testing.T) {
 		t.Errorf("pass2 deveria incluir -an, args: %v", p2.Args)
 	}
 	if containsStr(p2.Args, "-c:a", "aac") {
-		t.Errorf("pass2 não deveria reencodar áudio, args: %v", p2.Args)
+		t.Errorf("pass2 should not re-encode audio, args: %v", p2.Args)
 	}
 
 	crf := buildCrfPass(context.Background(), job, presets.Preset{CRF: 23, AudioBitrate: "96k"}, info, split.Segment{})
 	if containsStr(crf.Args, "-c:a", "aac") {
-		t.Errorf("CRF com remover áudio não deveria incluir -c:a, args: %v", crf.Args)
+		t.Errorf("CRF with remove audio should not include -c:a, args: %v", crf.Args)
 	}
 }
 
@@ -154,7 +154,7 @@ func TestOriginalScaleOmitsVF(t *testing.T) {
 	job := Job{InputPath: "in.mp4", OutputPath: "out.mp4", Scale: ScaleOriginal}
 	cmd := buildCrfPass(context.Background(), job, presets.Preset{CRF: 23, AudioBitrate: "96k"}, &media.Info{DurationSec: 80, HasAudio: true}, split.Segment{})
 	if containsStr(cmd.Args, "-vf") {
-		t.Errorf("escala original não deveria ter -vf, args: %v", cmd.Args)
+		t.Errorf("original scale should not have -vf, args: %v", cmd.Args)
 	}
 }
 
@@ -175,7 +175,7 @@ func TestBuildThumbnail(t *testing.T) {
 		t.Errorf("args de thumbnail inesperados: %v", cmd.Args)
 	}
 	if last := cmd.Args[len(cmd.Args)-1]; last != "poster.png" {
-		t.Errorf("destino do thumbnail deveria ser o último arg, got %q", last)
+		t.Errorf("thumbnail destination should be the last arg, got %q", last)
 	}
 }
 
@@ -197,10 +197,10 @@ func TestRunGeneratesThumbnail(t *testing.T) {
 		t.Fatalf("erro inesperado: %s", e)
 	}
 	if _, err := os.Stat(thumb); err != nil {
-		t.Errorf("thumbnail não foi criada: %v", err)
+		t.Errorf("thumbnail not created: %v", err)
 	}
 	if _, err := os.Stat(out); err != nil {
-		t.Errorf("saída não foi criada: %v", err)
+		t.Errorf("output not created: %v", err)
 	}
 }
 

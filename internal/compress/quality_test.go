@@ -28,7 +28,7 @@ func TestAdviseCrfIsAlwaysOK(t *testing.T) {
 	info := &media.Info{DurationSec: 1800, Height: 1080, HasAudio: true}
 	a := Advise(info, presets.Preset{Mode: "crf", CRF: 23, AudioBitrate: "96k"}, Job{})
 	if !a.OK || a.Kbps != 0 {
-		t.Errorf("CRF não deve aconselhar: %+v", a)
+		t.Errorf("CRF should not advise: %+v", a)
 	}
 }
 
@@ -52,7 +52,7 @@ func TestAdviseLongNoSplitSuggestsCut(t *testing.T) {
 		t.Fatal("esperava aviso")
 	}
 	if a.Suggestion.MinutesEach < 1 {
-		t.Fatalf("esperava sugestão de minutos por parte, got %+v", a.Suggestion)
+		t.Fatalf("expected a per-part minutes suggestion, got %+v", a.Suggestion)
 	}
 	if a.Suggestion.Parts < 2 {
 		t.Errorf("esperava parts ≥ 2, got %+v", a.Suggestion)
@@ -88,7 +88,7 @@ func TestAdviseSmallResolutionSuggestsSize(t *testing.T) {
 		t.Fatal("esperava aviso")
 	}
 	if a.Suggestion.SizeMB <= 1 || a.Suggestion.MinutesEach != 0 {
-		t.Errorf("esperava sugestão só de tamanho, got %+v", a.Suggestion)
+		t.Errorf("expected a size-only suggestion, got %+v", a.Suggestion)
 	}
 }
 
@@ -96,7 +96,7 @@ func TestAdviseInvalidSplitSilent(t *testing.T) {
 	info := &media.Info{DurationSec: 1800, Height: 960, HasAudio: true}
 	a := Advise(info, whatsappPreset(), Job{Split: &split.Spec{Parts: 1}})
 	if !a.OK {
-		t.Errorf("split inválido é tratado pela UI de corte; advise deveria silenciar: %+v", a)
+		t.Errorf("invalid split is handled by the cut UI; advise should stay silent: %+v", a)
 	}
 }
 
@@ -108,7 +108,7 @@ func TestAdviseNoAudioUsesVideoOnly(t *testing.T) {
 		t.Fatalf("esperava aviso, got %+v", a)
 	}
 	if a.Kbps < 260 || a.Kbps > 270 {
-		t.Errorf("kbps = %d, esperava ~266 sem áudio", a.Kbps)
+		t.Errorf("kbps = %d, expected ~266 without audio", a.Kbps)
 	}
 	if a.Suggestion.SizeMB < 15 || a.Suggestion.SizeMB > 17 {
 		t.Errorf("SizeMB sugerido = %v, esperava ~16", a.Suggestion.SizeMB)
@@ -126,6 +126,6 @@ func TestAdviseBudgetImpossibleMessage(t *testing.T) {
 		t.Errorf("mensagem: %q", a.Message)
 	}
 	if a.Suggestion.MinutesEach == 0 && a.Suggestion.SizeMB == 0 {
-		t.Errorf("esperava alguma sugestão, got %+v", a.Suggestion)
+		t.Errorf("expected some suggestion, got %+v", a.Suggestion)
 	}
 }

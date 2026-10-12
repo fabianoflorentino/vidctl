@@ -13,7 +13,7 @@
     onchange?: (id: string) => void
   }
 
-  let { options, selected, name = 'opções', onchange }: Props = $props()
+  let { options, selected, name = 'options', onchange }: Props = $props()
 </script>
 
 <div class="radio-group" role="radiogroup" aria-label={name}>

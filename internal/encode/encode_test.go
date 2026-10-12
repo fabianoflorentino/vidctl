@@ -100,7 +100,7 @@ func TestQualityArgs(t *testing.T) {
 		}
 		for _, nw := range c.notWant {
 			if strings.Contains(got, nw) {
-				t.Errorf("QualityArgs(%q,%q,%v) = %q, não deveria conter %q", c.codec, c.hw, c.crf, got, nw)
+				t.Errorf("QualityArgs(%q,%q,%v) = %q, should not contain %q", c.codec, c.hw, c.crf, got, nw)
 			}
 		}
 	}
@@ -120,7 +120,7 @@ func TestSizeArgs(t *testing.T) {
 		}
 	}
 	if strings.Contains(nvenc, "-crf") {
-		t.Errorf("nvenc size args não deve conter -crf: %q", nvenc)
+		t.Errorf("nvenc size args must not contain -crf: %q", nvenc)
 	}
 	qsv := join(SizeArgs(CodecH264, HWQSV, 500000, 550000, 1100000))
 	if !strings.Contains(qsv, "-c:v h264_qsv") || strings.Contains(qsv, "-preset") {
@@ -143,7 +143,7 @@ func TestPass1Args(t *testing.T) {
 	}
 	qsv := Pass1Args(CodecH264, HWQSV, 1000)
 	if strings.Contains(join(qsv), "-preset") {
-		t.Errorf("qsv pass1 não deve incluir preset: %v", qsv)
+		t.Errorf("qsv pass1 must not include a preset: %v", qsv)
 	}
 }
 
@@ -161,7 +161,7 @@ func TestNvencPreset(t *testing.T) {
 		t.Errorf("NvencPreset(fast) = %q, want default %q", got, HWNVENCPreset)
 	}
 	if !ValidNvencPreset("p2") || ValidNvencPreset("") || ValidNvencPreset("x") {
-		t.Errorf("ValidNvencPreset inválido")
+		t.Errorf("invalid ValidNvencPreset")
 	}
 }
 
@@ -183,7 +183,7 @@ func TestQualityArgsPNvencPreset(t *testing.T) {
 	}
 	sw := join(QualityArgsP(CodecH264, "", 23, "p1"))
 	if strings.Contains(sw, "p1") {
-		t.Errorf("software não deve aceitar preset nvenc: %q", sw)
+		t.Errorf("software must not accept an nvenc preset: %q", sw)
 	}
 }
 

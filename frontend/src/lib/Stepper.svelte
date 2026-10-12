@@ -19,7 +19,7 @@
     fineStep,
     digits = 0,
     disabled = false,
-    ariaLabel = 'valor',
+    ariaLabel = 'value',
     onchange,
   }: Props = $props()
 

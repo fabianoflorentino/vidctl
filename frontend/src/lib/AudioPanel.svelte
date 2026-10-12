@@ -81,9 +81,9 @@
     return ''
   })
 
-  // O destino segue a pasta da configuração e o sufixo das Preferências. Com
-  // "salvar como…" o usuário escolhe um caminho próprio (manual) que não é
-  // sobrescrito ao trocar o formato.
+  // The destination follows the configured folder and the Preferences suffix.
+  // With "Save as…" the user picks a custom path (manual) that is not
+  // overwritten when the format changes.
   $effect(() => {
     const path = inputPath
     const fmt = codec

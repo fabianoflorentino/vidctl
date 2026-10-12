@@ -121,7 +121,7 @@ func TestSize(t *testing.T) {
 		wantCurrentMB float64
 	}{
 		{
-			name:          "modo size exato com áudio",
+			name:          "exact size mode with audio",
 			preset:        sizePreset,
 			info:          &media.Info{DurationSec: 80, SizeMB: 26, HasAudio: true},
 			wantAvail:     true,
@@ -132,7 +132,7 @@ func TestSize(t *testing.T) {
 			wantCurrentMB: 26,
 		},
 		{
-			name:          "sem áudio o orçamento todo vira vídeo",
+			name:          "without audio the whole budget becomes video",
 			preset:        sizePreset,
 			info:          &media.Info{DurationSec: 80, SizeMB: 26, HasAudio: false},
 			wantAvail:     true,
@@ -143,7 +143,7 @@ func TestSize(t *testing.T) {
 			wantCurrentMB: 26,
 		},
 		{
-			name:          "piso de bitrate aumenta a previsão",
+			name:          "bitrate floor raises the forecast",
 			preset:        presets.Preset{Mode: "size", SizeMB: 1, AudioBitrate: "64k"},
 			info:          &media.Info{DurationSec: 2000, SizeMB: 300, HasAudio: false},
 			wantAvail:     true,
@@ -154,21 +154,21 @@ func TestSize(t *testing.T) {
 			wantCurrentMB: 300,
 		},
 		{
-			name:      "alvo impossível devolve erro",
+			name:      "impossible target yields an error",
 			preset:    presets.Preset{Mode: "size", SizeMB: 1, AudioBitrate: "96k"},
 			info:      &media.Info{DurationSec: 3600, HasAudio: true},
 			wantErr:   true,
 			wantAvail: false,
 		},
 		{
-			name:      "duração inválida devolve erro",
+			name:      "invalid duration yields an error",
 			preset:    sizePreset,
 			info:      &media.Info{DurationSec: 0, HasAudio: true},
 			wantErr:   true,
 			wantAvail: false,
 		},
 		{
-			name:          "modo crf não tem estimativa determinística",
+			name:          "crf mode has no deterministic estimate",
 			preset:        presets.Preset{Mode: "crf", CRF: 23, AudioBitrate: "128k"},
 			info:          &media.Info{DurationSec: 80, SizeMB: 26, HasAudio: true},
 			wantAvail:     false,
@@ -189,7 +189,7 @@ func TestSize(t *testing.T) {
 			wantCurrentMB: 26,
 		},
 		{
-			name:      "split inválido devolve erro",
+			name:      "invalid split yields an error",
 			preset:    sizePreset,
 			info:      &media.Info{DurationSec: 80, SizeMB: 26, HasAudio: true},
 			spec:      &split.Spec{},
@@ -208,7 +208,7 @@ func TestSize(t *testing.T) {
 			wantCurrentMB: 0,
 		},
 		{
-			name:          "previsão maior que o original devolve economia negativa",
+			name:          "forecast bigger than the original yields a negative saving",
 			preset:        presets.Preset{Mode: "size", SizeMB: 10, AudioBitrate: "96k"},
 			info:          &media.Info{DurationSec: 80, SizeMB: 5, HasAudio: true},
 			wantAvail:     true,
@@ -259,6 +259,6 @@ func TestSize(t *testing.T) {
 
 func TestSizeWithoutInfo(t *testing.T) {
 	if _, err := Size(nil, presets.Preset{Mode: "size", SizeMB: 10}, nil); err == nil {
-		t.Error("esperava erro sem info do vídeo")
+		t.Error("expected an error without video info")
 	}
 }
