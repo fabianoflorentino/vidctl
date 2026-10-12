@@ -14,11 +14,21 @@ system of the packages.
 
 ## [Unreleased]
 
+Nothing yet — in development.
+
+## [2.4.0] — 2026-10-12
+
 - **i18n (pt-BR/en/es/zh)**: the interface gained dictionaries in Portuguese
   (Brazil, default), English, Spanish and Simplified Chinese (Mandarin). The
   language is chosen in Preferences and stays saved between runs
-  (`config.Language`). The code/documentation base starts being anglicized in
-  this batch.
+  (`config.Language`).
+- **Site and docs in 4 languages**: the landing page gained a language
+  switcher (PT/EN/ES/中文); `README`, `CHANGELOG` and the install guide have
+  pt-BR, en, es and zh-CN versions. The internal implementation plan stayed in
+  pt (it is disposable).
+- **English codebase**: comments (go doc style), user-facing messages, logs and
+  test labels were anglicized in the backend (Go) and frontend (Svelte/TS); the
+  UI dictionaries are the only source of pt text.
 
 ## [2.3.0] — 2026-10-11
 

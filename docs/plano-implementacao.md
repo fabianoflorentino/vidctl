@@ -39,7 +39,7 @@ Branch            | Fase | PR
 `feat/notificacao`| 7 — Notificação + abrir pasta | pendente
 `feat/updates`    | 8 — Verificação de atualização | pendente
 `feat/presets`    | 9 — Presets personalizados | pendente
-`feat/i18n`       | 10 — i18n pt-BR/en/es/zh + base em inglês | pendente
+`feat/i18n`       | 10 — i18n pt-BR/en/es/zh + base em inglês | mergeado
 `feat/split-tempo`| 11 — Corte por tempo | pendente
 `feat/transcricao`| 12 — Transcrição de vídeo | pendente
 `feat/sidebar`    | 13 — Barra lateral colapsável | pendente
@@ -61,7 +61,7 @@ Branch            | Fase | PR
 | 7 | Notificação ao concluir + abrir pasta | §7 | P |
 | 8 | Verificação de atualização no app | §8 | M |
 | 9 | Presets personalizados pelo usuário | §9 | M |
-| 10 | i18n (pt-BR/en/es/zh) + base em inglês | §10 | G |
+| 10 | i18n (pt-BR/en/es/zh) + base em inglês | §10 | G | ✅ |
 | 11 | Corte em segmentos por tempo (split) | §11 | G |
 | 12 | Transcrição de vídeo (legendas srt/vtt + texto) | §12 | G |
 | 13 | Barra lateral colapsável (UX) | §13 | P |
@@ -606,6 +606,11 @@ modo offline atual).
 
 ## Fase 10 — i18n (pt-BR/en/es/zh) + base em inglês
 
+> **Status: ✅ entregue na v2.4.0** — seletor de idioma nas Preferências,
+> dicionários pt-BR/en/es/zh, site e docs de uso traduzidos, e código/comentários
+> (Go e frontend) em inglês no padrão `go doc`. O plano interno e os dicionários
+> de UI ficaram em pt de propósito.
+
 **Objetivo:** interface em 4 idiomas — **pt-BR** (default), **en**, **es** e
 **zh (mandarim, chinês simplificado)** — e o código/documentação na **base em
 inglês** (comentários, mensagens de log e textos técnicos).
@@ -928,10 +933,10 @@ v2.1.0  → Fase 11 (split) + redesign de UI            [entregue]
 v2.2.0  → Fases 1–5 + 13–15 (config, fila, estimativa, codec/hw, ajustes, UX) [entregue]
 v2.2.1  → ícone unificado nos instaladores            [entregue]
 v2.3.0  → Fase 6 (extrair áudio)                      [entregue]
-v2.4.0  → Fase 7 (notificações)                       [depende de config]
-v2.5.0  → Fase 8 (check update)                       [usa a API de releases por tag + fluxo de publish novo]
-v2.6.0  → Fase 9 (presets custom)                     [depende de config]
-v2.7.0  → Fase 10 (i18n pt-BR/en/es/zh + base em inglês)
+v2.4.0  → Fase 10 (i18n + base em inglês)                 [entregue]
+v2.5.0  → Fase 7 (notificações)                       [depende de config]
+v2.6.0  → Fase 8 (check update)                       [usa a API de releases por tag + fluxo de publish novo]
+v2.7.0  → Fase 9 (presets custom)                     [depende de config]
 v2.8.0  → Fase 12 (transcrição srt/vtt/txt)
 ```
 

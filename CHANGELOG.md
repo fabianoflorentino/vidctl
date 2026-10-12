@@ -14,10 +14,20 @@ operacional dos pacotes.
 
 ## [Unreleased]
 
+Nada ainda — em desenvolvimento.
+
+## [2.4.0] — 2026-10-12
+
 - **i18n (pt-BR/en/es/zh)**: a interface ganhou dicionários em português
   (Brasil, padrão), inglês, espanhol e chinês simplificado (mandarim). O idioma
   é escolhido nas Preferências e fica salvo entre execuções (`config.Language`).
-  A base de código/documentação começa a ser anglicizada nesta leva.
+- **Site e documentação em 4 idiomas**: a landing page ganhou um seletor de
+  idioma (PT/EN/ES/中文); `README`, `CHANGELOG` e o guia de instalação têm
+  versões em pt-BR, en, es e zh-CN. O plano de implementação interno permaneceu
+  em pt (é descartável).
+- **Base do código em inglês**: comentários (padrão `go doc`), mensagens de
+  usuário, logs e rótulos de teste foram anglicizados no backend (Go) e no
+  frontend (Svelte/TS); os dicionários de UI são a única fonte de texto em pt.
 
 ## [2.3.0] — 2026-10-11
 
