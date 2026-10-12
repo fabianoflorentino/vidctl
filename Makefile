@@ -8,6 +8,8 @@ endif
 TAGS := $(if $(UI_TAG),-tags $(UI_TAG),)
 
 VERSION := $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
+MODULE  := $(shell go list -m)
+LDFLAGS := -X $(MODULE)/internal/version.Version=$(VERSION)
 
 .PHONY: dev
 dev:
@@ -15,7 +17,7 @@ dev:
 
 .PHONY: build
 build:
-	$(WAILS) build -clean $(TAGS)
+	$(WAILS) build -clean $(TAGS) -ldflags "$(LDFLAGS)"
 
 .PHONY: run
 run: build
