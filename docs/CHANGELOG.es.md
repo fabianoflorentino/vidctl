@@ -1,6 +1,6 @@
 # Changelog
 
-**Español · [Português (Brasil)](CHANGELOG.md) · [English](CHANGELOG.en.md) ·
+**Español · [Português (Brasil)](../CHANGELOG.md) · [English](CHANGELOG.en.md) ·
 [中文（简体）](CHANGELOG.zh-CN.md)**
 
 Todos los cambios relevantes de vidctl, en el formato

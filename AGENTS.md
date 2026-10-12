@@ -37,7 +37,8 @@ Regras antes de considerar uma tarefa concluída:
 
 ## Documentação
 - Comportamento novo ou alterado deve refletir na documentação **em 4 idiomas:
-  `README.md` (e `.en/.es/.zh-CN`), `CHANGELOG.md` (e `.en/.es/.zh-CN`),
+  `README.md` (pt fica na raiz; `.en/.es/.zh-CN` ficam em `docs/README.*.md`),
+  o mesmo para `CHANGELOG.md` (`docs/CHANGELOG.*.md`),
   `docs/instalacao.*.md` e o site.
 - Formatos, presets e comandos mudaram? Atualize a doc do respectivo recurso em
   todas as línguas, nunca só na versão em português.

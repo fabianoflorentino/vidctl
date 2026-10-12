@@ -1,7 +1,7 @@
 # vidctl
 
-**Português (Brasil) · [English](README.en.md) · [Español](README.es.md) ·
-[中文（简体）](README.zh-CN.md)**
+**Português (Brasil) · [English](docs/README.en.md) · [Español](docs/README.es.md) ·
+[中文（简体）](docs/README.zh-CN.md)**
 
 Compressor de vídeo desktop com backend Go (Wails + ffmpeg). Escolha o destino
 (WhatsApp, Instagram, Shorts, YouTube) e o app calcula automaticamente o
@@ -449,23 +449,25 @@ VIDCTL_SMOKE="/caminho/para/video.mp4" go test -run TestSmokeReal -v ./internal/
 ```text
 .
 ├── main.go                    # entrypoint Wails + opções da janela
-├── app.go                     # bindings expostos ao frontend (dialogs, compress, cancel)
 ├── internal/
+│   ├── app/                     # fachada de bindings do Wails (dialogs, compress, fila, config)
 │   ├── cmdutil/                 # criação de subprocessos e busca de binários (com override do PATH)
 │   ├── compress/                # pipeline ffmpeg: orçamento de bitrate, 2-pass e CRF, gestão de jobs
 │   ├── config/                  # preferências persistidas em config.json (leitura/escrita atômica)
 │   ├── events/                  # eventos backend → frontend (progress/done/error)
 │   ├── media/                   # leitura de metadados via ffprobe e miniaturas via ffmpeg
+│   ├── notify/                  # notificações do desktop (beeep — toast/notification center/notify-send)
 │   ├── presets/                 # perfis por plataforma (WhatsApp, Instagram, Shorts, YouTube)
 │   ├── split/                   # plano de corte em partes (N partes ou min/parte)
-│   └── sysinfo/                 # uso de CPU/memória/GPU para o painel de progresso
+│   ├── sysinfo/                 # uso de CPU/memória/GPU para o painel de progresso
+│   └── systemtheme/             # detecção de tema claro/escuro do sistema por SO
 ├── frontend/                    # UI Svelte 5 + Vite (bindings em frontend/wailsjs)
 ├── pkg/
 │   ├── aur/                     # PKGBUILD + scripts (instalação estilo AUR)
 │   ├── arch/                    # pkg/arch/install.sh (makepkg -si)
 │   ├── deb/ · rpm/              # descritores dos pacotes .deb e .rpm
 │   └── icon/ · vidctl.desktop
-├── docs/                        # instalação, backlog e planos de implementação
+├── docs/                        # README/CHANGELOG em 4 idiomas, instalação, backlog e planos
 ├── site/                      # landing page estática (Pages)
 ├── build/                     # recursos de build do Wails (ícone, darwin/windows)
 ├── .github/workflows/         # CI · Release (zips + deb + rpm) · Pages

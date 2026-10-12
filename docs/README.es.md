@@ -1,6 +1,6 @@
 # vidctl
 
-**Español · [Português (Brasil)](README.md) · [English](README.en.md) ·
+**Español · [Português (Brasil)](../README.md) · [English](README.en.md) ·
 [中文（简体）](README.zh-CN.md)**
 
 Compresor de vídeo de escritorio con backend Go (Wails + ffmpeg). Elige un
@@ -11,7 +11,7 @@ cortar la escena. Alimentado por encode **2-pass** cuando hay límite de tamaño
 GPU** opcionales (NVENC/QSV/AMF/VideoToolbox) y **ajustes por archivo** (escala,
 corte, quitar audio, FPS, rotación, thumbnail). 100 % offline.
 
-> Historial de versiones: [CHANGELOG.md](CHANGELOG.md)
+> Historial de versiones: [CHANGELOG.md](../CHANGELOG.md)
 
 ## Funciones
 
@@ -87,7 +87,7 @@ plataforma**:
 | `v1.x.y-linux` | zip + `.deb` + `.rpm` + checksums |
 
 Guía paso a paso, con verificación de integridad y el ffmpeg por sistema:
-**[docs/instalacao.md](docs/instalacao.md)**
+**[instalacao.md](instalacao.md)**
 
 ## Cómo funciona
 
@@ -461,23 +461,25 @@ VIDCTL_SMOKE="/ruta/al/video.mp4" go test -run TestSmokeReal -v ./internal/compr
 ```text
 .
 ├── main.go                    # entrypoint Wails + opciones de la ventana
-├── app.go                     # bindings expuestos al frontend (diálogos, compress, cancel)
 ├── internal/
+│   ├── app/                     # fachada de bindings del Wails (diálogos, compress, cola, config)
 │   ├── cmdutil/                 # creación de subprocesos y búsqueda de binarios (con override del PATH)
 │   ├── compress/                # pipeline ffmpeg: presupuesto de bitrate, 2-pass y CRF, gestión de jobs
 │   ├── config/                  # preferencias persistidas en config.json (lectura/escritura atómica)
 │   ├── events/                  # eventos backend → frontend (progress/done/error)
 │   ├── media/                   # lectura de metadatos vía ffprobe y miniaturas vía ffmpeg
+│   ├── notify/                  # notificaciones del escritorio (beeep — toast/Centro de notificaciones/notify-send)
 │   ├── presets/                 # perfiles por plataforma (WhatsApp, Instagram, Shorts, YouTube)
 │   ├── split/                   # plan de corte en partes (N partes o min/parte)
-│   └── sysinfo/                 # uso de CPU/memoria/GPU para el panel de progreso
+│   ├── sysinfo/                 # uso de CPU/memoria/GPU para el panel de progreso
+│   └── systemtheme/             # detección del tema claro/oscuro del sistema por SO
 ├── frontend/                    # UI Svelte 5 + Vite (bindings en frontend/wailsjs)
 ├── pkg/
 │   ├── aur/                     # PKGBUILD + scripts (instalación estilo AUR)
 │   ├── arch/                    # pkg/arch/install.sh (makepkg -si)
 │   ├── deb/ · rpm/              # descriptores de los paquetes .deb y .rpm
 │   └── icon/ · vidctl.desktop
-├── docs/                        # instalación, backlog y planes de implementación
+├── docs/                        # README/CHANGELOG en 4 idiomas, instalación, backlog y planes
 ├── site/                        # landing page estática (Pages)
 ├── build/                       # recursos de build del Wails (ícono, darwin/windows)
 ├── .github/workflows/           # CI · Release (zips + deb + rpm) · Pages

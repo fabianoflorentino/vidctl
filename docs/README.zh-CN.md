@@ -1,6 +1,6 @@
 # vidctl
 
-**中文（简体）· [Português (Brasil)](README.md) · [English](README.en.md) ·
+**中文（简体）· [Português (Brasil)](../README.md) · [English](README.en.md) ·
 [Español](README.es.md)**
 
 使用 Go 后端的桌面视频压缩工具（Wails + ffmpeg）。选择一个目标
@@ -9,7 +9,7 @@
 **CRF**，并支持可选的 **H.265/HEVC**、**GPU 加速**（NVENC/QSV/AMF/VideoToolbox）、
 **按文件调整**（缩放、裁剪、移除音频、FPS、旋转、缩略图）。100% 离线。
 
-> 版本历史：[CHANGELOG.md](CHANGELOG.md)
+> 版本历史：[CHANGELOG.md](../CHANGELOG.md)
 
 ## 功能
 
@@ -44,7 +44,7 @@
 | `v1.x.y-macos` | `vidctl-macos-arm64.zip` + 校验和 |
 | `v1.x.y-linux` | zip + `.deb` + `.rpm` + 校验和 |
 
-包含完整性校验和各系统 ffmpeg 的分步指南：**[docs/instalacao.md](docs/instalacao.md)**
+包含完整性校验和各系统 ffmpeg 的分步指南：**[instalacao.md](instalacao.md)**
 
 ## 工作原理
 
@@ -318,23 +318,25 @@ VIDCTL_SMOKE="/path/to/video.mp4" go test -run TestSmokeReal -v ./internal/compr
 ```text
 .
 ├── main.go                    # Wails 入口 + 窗口选项
-├── app.go                     # 暴露给前端的 bindings（对话框、compress、cancel）
 ├── internal/
+│   ├── app/                     # Wails 绑定门面（对话框、compress、队列、配置）
 │   ├── cmdutil/                 # 子进程创建与二进制查找（带 PATH override）
 │   ├── compress/                # ffmpeg 流程：码率预算、2-pass 和 CRF、任务管理
 │   ├── config/                  # 持久化偏好（config.json，原子读/写）
 │   ├── events/                  # 后端 → 前端事件（progress/done/error）
 │   ├── media/                   # 通过 ffprobe 读取元数据、通过 ffmpeg 生成缩略图
+│   ├── notify/                  # 桌面通知（beeep — toast/通知中心/notify-send）
 │   ├── presets/                 # 按平台配置（WhatsApp、Instagram、Shorts、YouTube）
 │   ├── split/                   # 分段切割计划（N 段或每段分钟）
-│   └── sysinfo/                 # 供进度面板使用的 CPU/内存/GPU 用量
+│   ├── sysinfo/                 # 供进度面板使用的 CPU/内存/GPU 用量
+│   └── systemtheme/             # 按操作系统检测浅色/深色主题
 ├── frontend/                    # Svelte 5 + Vite UI（bindings 在 frontend/wailsjs）
 ├── pkg/
 │   ├── aur/                     # PKGBUILD + 脚本（类 AUR 安装）
 │   ├── arch/                    # pkg/arch/install.sh（makepkg -si）
 │   ├── deb/ · rpm/              # .deb 和 .rpm 包描述
 │   └── icon/ · vidctl.desktop
-├── docs/                        # 安装指南、backlog 和实施计划
+├── docs/                        # 4 种语言的 README/CHANGELOG、安装指南、backlog 和实施计划
 ├── site/                        # 静态落地页（Pages）
 ├── build/                       # Wails 构建资源（图标、darwin/windows）
 ├── .github/workflows/           # CI · Release（zips + deb + rpm）· Pages
