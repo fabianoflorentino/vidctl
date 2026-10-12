@@ -18,6 +18,16 @@ pkg/*.deb
 pkg/*.rpm
 pkg/deb/vidctl/usr/
 
+# Artefatos locais do makepkg (AUR): fonte extraída, root build, tarballs e pacote
+pkg/aur/src/
+pkg/aur/pkg/
+pkg/aur/*.tar.gz
+pkg/aur/*.pkg.tar.zst
+pkg/aur/*.tar.zst
+
+# Checksum local das dependências do frontend (regravado pelo Wails)
+frontend/package.json.md5
+
 # Test / coverage
 coverage.out
 *.test
@@ -40,3 +50,5 @@ Thumbs.db
 .claude/
 agent/
 skills-lock.json
+# Saída local de ferramenta
+execution.out
