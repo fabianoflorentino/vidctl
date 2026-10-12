@@ -23,7 +23,8 @@ import (
 	wailsruntime "github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-// App is the root binding struct exposed to the frontend.
+// App exposes the application operations to the frontend through Wails
+// bindings: dialogs, media probing, compression queue and settings.
 type App struct {
 	ctx   context.Context
 	jobs  *compress.Manager
@@ -34,9 +35,9 @@ type App struct {
 
 const videoFilterPattern = "*.mp4;*.mkv;*.mov;*.avi;*.webm;*.m4v;*.ts;*.flv"
 
-// NewApp creates the application struct with the settings file in the default
-// user configuration directory. A machine without a writable configuration
-// directory still runs: it just does not remember anything between sessions.
+// NewApp returns an App whose settings live in the default user configuration
+// directory. A machine without a writable configuration directory still runs —
+// it just does not remember anything between sessions.
 func NewApp() *App {
 	store, err := config.NewStore("")
 	if err != nil {
@@ -45,8 +46,8 @@ func NewApp() *App {
 	return newApp(store)
 }
 
-// newApp creates the application with an explicit settings store. Tests pass a
-// store rooted in a temporary directory; a nil store disables persistence.
+// newApp returns an App with an explicit settings store; a nil store disables
+// persistence. Tests pass a store rooted in a temporary directory.
 func newApp(store *config.Store) *App {
 	return &App{
 		jobs:  compress.NewManager(),
@@ -61,7 +62,8 @@ func (a *App) GetUsage() sysinfo.Snapshot {
 	return a.sys.Snapshot()
 }
 
-// startup is called when the app starts.
+// startup wires the event emitter (queue observation + frontend dispatch) and
+// applies the persisted tool paths and parallelism.
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 	events.SetEmitter(func(name string, data any) {
@@ -71,7 +73,7 @@ func (a *App) startup(ctx context.Context) {
 	cfg := a.loadConfig()
 	a.applyToolPaths(cfg)
 	a.jobs.SetMaxParallel(cfg.MaxParallel)
-	dlog.Printf("[app] startup concluido; maxParallel=%d ffmpeg=%q ffprobe=%q", cfg.MaxParallel, cfg.FFmpegPath, cfg.FFprobePath)
+	dlog.Printf("[app] startup done; maxParallel=%d ffmpeg=%q ffprobe=%q", cfg.MaxParallel, cfg.FFmpegPath, cfg.FFprobePath)
 }
 
 // loadConfig returns the persisted settings, or the defaults when there is no
@@ -85,9 +87,9 @@ func (a *App) loadConfig() config.Config {
 	return cfg
 }
 
-// applyToolPaths points the binary lookup at the configured ffmpeg/ffprobe.
-// An unusable path stays configured so the preferences screen can show the
-// problem instead of the app silently using a different binary.
+// applyToolPaths points the binary lookup at the configured ffmpeg/ffprobe. An
+// unusable path stays configured so the preferences screen can show the problem
+// instead of the app silently using a different binary.
 func (a *App) applyToolPaths(cfg config.Config) {
 	cmdutil.SetOverride("ffmpeg", cfg.FFmpegPath)
 	cmdutil.SetOverride("ffprobe", cfg.FFprobePath)
@@ -102,7 +104,7 @@ func (a *App) GetConfig() config.Config {
 // the next job uses them without a restart.
 func (a *App) SaveConfig(cfg config.Config) error {
 	if a.store == nil {
-		return errors.New("sem pasta de configuração disponível para salvar as preferências")
+		return errors.New("no configuration folder available to save preferences")
 	}
 	if err := a.store.Save(cfg); err != nil {
 		return err
@@ -112,7 +114,7 @@ func (a *App) SaveConfig(cfg config.Config) error {
 	return nil
 }
 
-// SystemStatus reports the state of required external tools.
+// SystemStatus reports the state of the required external tools.
 type SystemStatus struct {
 	FFmpegOK bool   `json:"ffmpegOK"`
 	Message  string `json:"message"`
@@ -122,7 +124,7 @@ type SystemStatus struct {
 // suggesting better parameters when the video bitrate would be too low.
 func (a *App) GetAdvice(job compress.Job) (compress.Advice, error) {
 	if job.InputPath == "" {
-		return compress.Advice{}, errors.New("escolha um vídeo primeiro")
+		return compress.Advice{}, errors.New("pick a video first")
 	}
 	job, err := a.resolveEncoder(job)
 	if err != nil {
@@ -130,7 +132,7 @@ func (a *App) GetAdvice(job compress.Job) (compress.Advice, error) {
 	}
 	preset, ok := compress.EffectivePreset(job)
 	if !ok {
-		return compress.Advice{}, fmt.Errorf("preset desconhecido: %s", job.PresetID)
+		return compress.Advice{}, fmt.Errorf("unknown preset: %s", job.PresetID)
 	}
 	info, err := media.Probe(job.InputPath)
 	if err != nil {
@@ -140,11 +142,11 @@ func (a *App) GetAdvice(job compress.Job) (compress.Advice, error) {
 }
 
 // EstimateSize forecasts the output size of the current settings before
-// encoding, using the exact budget the 2-pass encoder will spend. CRF mode
-// has no deterministic forecast yet.
+// encoding, using the exact budget the 2-pass encoder will spend. CRF mode has
+// no deterministic forecast yet.
 func (a *App) EstimateSize(job compress.Job) (estimate.Result, error) {
 	if job.InputPath == "" {
-		return estimate.Result{}, errors.New("escolha um vídeo primeiro")
+		return estimate.Result{}, errors.New("pick a video first")
 	}
 	job, err := a.resolveEncoder(job)
 	if err != nil {
@@ -152,7 +154,7 @@ func (a *App) EstimateSize(job compress.Job) (estimate.Result, error) {
 	}
 	preset, ok := compress.EffectivePreset(job)
 	if !ok {
-		return estimate.Result{}, fmt.Errorf("preset desconhecido: %s", job.PresetID)
+		return estimate.Result{}, fmt.Errorf("unknown preset: %s", job.PresetID)
 	}
 	info, err := media.Probe(job.InputPath)
 	if err != nil {
@@ -173,7 +175,7 @@ func (a *App) CheckFFmpeg() SystemStatus {
 	if len(missing) > 0 {
 		return SystemStatus{
 			FFmpegOK: false,
-			Message:  "Faltam os programas: " + joinNames(missing) + ". Instale o ffmpeg para usar o vidctl.",
+			Message:  "Missing programs: " + joinNames(missing) + ". Install ffmpeg to use vidctl.",
 		}
 	}
 	return SystemStatus{FFmpegOK: true}
@@ -197,7 +199,7 @@ func (a *App) GetPresets() []presets.Preset {
 
 // GetEncoders probes which hardware encoders this machine can actually use and
 // returns them for the frontend selectors. The result is cached until
-// RefreshEncoders resets it ("verificar de novo").
+// RefreshEncoders resets it ("check again").
 func (a *App) GetEncoders() (encode.Availability, error) {
 	return a.enc.Availability()
 }
@@ -216,13 +218,13 @@ func (a *App) resolveEncoder(job compress.Job) (compress.Job, error) {
 		return job, err
 	}
 	if !encode.ValidCodec(job.Codec) {
-		return job, fmt.Errorf("codec desconhecido: %s", job.Codec)
+		return job, fmt.Errorf("unknown codec: %s", job.Codec)
 	}
 	if job.Hardware == "" {
 		return job, nil
 	}
 	if !encode.ValidHardware(job.Hardware) {
-		return job, fmt.Errorf("codificador de hardware desconhecido: %s", job.Hardware)
+		return job, fmt.Errorf("unknown hardware encoder: %s", job.Hardware)
 	}
 	if job.Hardware != encode.Auto {
 		return job, nil
@@ -246,18 +248,18 @@ func encoderIDs(avail encode.Availability) []string {
 	return ids
 }
 
-// OpenInputDialog opens the native dialog to pick a source video.
-// Returns "" when the user cancels.
+// OpenInputDialog opens the native dialog to pick a source video. Returns ""
+// when the user cancels.
 func (a *App) OpenInputDialog() (string, error) {
 	path, err := wailsruntime.OpenFileDialog(a.ctx, wailsruntime.OpenDialogOptions{
-		Title: "Selecione o vídeo",
+		Title: "Select the video",
 		Filters: []wailsruntime.FileFilter{{
-			DisplayName: "Vídeos",
+			DisplayName: "Videos",
 			Pattern:     videoFilterPattern,
 		}},
 	})
 	if err != nil {
-		return "", fmt.Errorf("falha ao abrir o seletor de arquivos: %w", err)
+		return "", fmt.Errorf("could not open the file picker: %w", err)
 	}
 	return path, nil
 }
@@ -266,14 +268,14 @@ func (a *App) OpenInputDialog() (string, error) {
 // Returns an empty slice when the user cancels.
 func (a *App) OpenMultipleDialog() ([]string, error) {
 	paths, err := wailsruntime.OpenMultipleFilesDialog(a.ctx, wailsruntime.OpenDialogOptions{
-		Title: "Selecione os vídeos",
+		Title: "Select the videos",
 		Filters: []wailsruntime.FileFilter{{
-			DisplayName: "Vídeos",
+			DisplayName: "Videos",
 			Pattern:     videoFilterPattern,
 		}},
 	})
 	if err != nil {
-		return nil, fmt.Errorf("falha ao abrir o seletor de arquivos: %w", err)
+		return nil, fmt.Errorf("could not open the file picker: %w", err)
 	}
 	return paths, nil
 }
@@ -282,15 +284,15 @@ func (a *App) OpenMultipleDialog() ([]string, error) {
 // Returns "" when the user cancels.
 func (a *App) OpenOutputDialog(suggestedName string) (string, error) {
 	path, err := wailsruntime.SaveFileDialog(a.ctx, wailsruntime.SaveDialogOptions{
-		Title:           "Salvar vídeo comprimido",
+		Title:           "Save the compressed video",
 		DefaultFilename: suggestedName,
 		Filters: []wailsruntime.FileFilter{{
-			DisplayName: "Vídeo MP4",
+			DisplayName: "Video MP4",
 			Pattern:     "*.mp4",
 		}},
 	})
 	if err != nil {
-		return "", fmt.Errorf("falha ao abrir o seletor de arquivos: %w", err)
+		return "", fmt.Errorf("could not open the file picker: %w", err)
 	}
 	return path, nil
 }
@@ -299,15 +301,15 @@ func (a *App) OpenOutputDialog(suggestedName string) (string, error) {
 // Returns "" when the user cancels.
 func (a *App) OpenThumbnailDialog(suggestedName string) (string, error) {
 	path, err := wailsruntime.SaveFileDialog(a.ctx, wailsruntime.SaveDialogOptions{
-		Title:           "Salvar thumbnail",
+		Title:           "Save thumbnail",
 		DefaultFilename: suggestedName,
 		Filters: []wailsruntime.FileFilter{{
-			DisplayName: "Imagem",
+			DisplayName: "Image",
 			Pattern:     "*.png;*.jpg;*.jpeg",
 		}},
 	})
 	if err != nil {
-		return "", fmt.Errorf("falha ao abrir o seletor de arquivos: %w", err)
+		return "", fmt.Errorf("could not open the file picker: %w", err)
 	}
 	return path, nil
 }
@@ -320,15 +322,15 @@ func (a *App) OpenAudioDialog(suggestedName, codec string) (string, error) {
 		return "", err
 	}
 	path, err := wailsruntime.SaveFileDialog(a.ctx, wailsruntime.SaveDialogOptions{
-		Title:           "Salvar áudio",
+		Title:           "Save audio",
 		DefaultFilename: suggestedName,
 		Filters: []wailsruntime.FileFilter{{
-			DisplayName: "Áudio",
+			DisplayName: "Audio",
 			Pattern:     "*." + ext,
 		}},
 	})
 	if err != nil {
-		return "", fmt.Errorf("falha ao abrir o seletor de arquivos: %w", err)
+		return "", fmt.Errorf("could not open the file picker: %w", err)
 	}
 	return path, nil
 }
@@ -352,10 +354,10 @@ func (a *App) GetThumbnail(path string, durationSec float64) (string, error) {
 // compress:queued with the initial position and runs it when a slot frees up.
 func (a *App) Compress(req compress.Job) (string, error) {
 	if req.InputPath == "" {
-		return "", errors.New("Nenhum vídeo selecionado")
+		return "", errors.New("no video selected")
 	}
 	if req.PresetID == "" {
-		return "", errors.New("Nenhum preset selecionado")
+		return "", errors.New("no preset selected")
 	}
 	req, err := a.resolveEncoder(req)
 	if err != nil {
@@ -376,15 +378,15 @@ type JobAck struct {
 // CompressMultiple enqueues every job of a batch in order, validating them
 // individually so one bad entry does not drop the rest of the batch.
 func (a *App) CompressMultiple(reqs []compress.Job) []JobAck {
-	dlog.Printf("[app] CompressMultiple recebidos=%d", len(reqs))
+	dlog.Printf("[app] CompressMultiple received=%d", len(reqs))
 	acks := make([]JobAck, 0, len(reqs))
 	for _, req := range reqs {
 		if req.InputPath == "" {
-			acks = append(acks, JobAck{Error: "Nenhum vídeo selecionado"})
+			acks = append(acks, JobAck{Error: "no video selected"})
 			continue
 		}
 		if req.PresetID == "" {
-			acks = append(acks, JobAck{Error: "Nenhum preset selecionado"})
+			acks = append(acks, JobAck{Error: "no preset selected"})
 			continue
 		}
 		req, err := a.resolveEncoder(req)
@@ -420,7 +422,7 @@ func newAudioTask(spec audio.Spec) compress.Task {
 // ffmpeg errors) surface as the item's error event.
 func (a *App) ExtractAudio(req audio.Spec) (string, error) {
 	if strings.TrimSpace(req.InputPath) == "" {
-		return "", errors.New("Nenhum vídeo selecionado")
+		return "", errors.New("no video selected")
 	}
 	if err := req.Validate(); err != nil {
 		return "", err
@@ -434,7 +436,7 @@ func (a *App) ExtractAudio(req audio.Spec) (string, error) {
 // output directory or next to the input, using the configured suffix.
 func (a *App) SuggestAudioOutput(inputPath, codec string) (string, error) {
 	if strings.TrimSpace(inputPath) == "" {
-		return "", errors.New("Nenhum vídeo selecionado")
+		return "", errors.New("no video selected")
 	}
 	cfg := a.loadConfig()
 	name, err := audio.SuggestOutput(inputPath, codec, cfg.AudioSuffix)
@@ -451,7 +453,7 @@ func (a *App) SuggestAudioOutput(inputPath, codec string) (string, error) {
 // GetTasks returns the status snapshot of every task in the queue.
 func (a *App) GetTasks() []compress.TaskStatus {
 	tasks := a.jobs.List()
-	dlog.Printf("[app] GetTasks -> %d tarefas", len(tasks))
+	dlog.Printf("[app] GetTasks -> %d tasks", len(tasks))
 	return tasks
 }
 

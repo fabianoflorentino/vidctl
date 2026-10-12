@@ -12,7 +12,7 @@ func countCache(t *testing.T) int {
 	t.Helper()
 	entries, err := os.ReadDir(filepath.Join(os.TempDir(), "vidctl-thumbs"))
 	if err != nil {
-		t.Fatalf("falha ao ler o diretório de cache: %v", err)
+		t.Fatalf("could not read the cache directory: %v", err)
 	}
 	return len(entries)
 }
@@ -52,7 +52,7 @@ func TestThumbDataURLCache(t *testing.T) {
 		t.Fatalf("ThumbDataURL (mtime novo): %v", err)
 	}
 	if got := countCache(t); got != before+1 {
-		t.Errorf("mudança de mtime deveria invalidar o cache: %d != %d", got, before+1)
+		t.Errorf("mtime change should invalidate the cache: %d != %d", got, before+1)
 	}
 }
 

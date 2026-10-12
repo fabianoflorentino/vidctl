@@ -6,6 +6,7 @@
   import type { RadioOption } from './RadioCardGroup.svelte'
   import { SuggestAudioOutput } from '../../wailsjs/go/main/App.js'
   import type { audio } from '../../wailsjs/go/models.js'
+  import { t } from './i18n.svelte'
 
   interface Props {
     inputPath: string
@@ -25,14 +26,14 @@
     manual = $bindable(false),
   }: Props = $props()
 
-  const FORMATS = [
-    { id: 'mp3', title: 'MP3', description: 'padrão da UI · 192 kbps' },
-    { id: 'opus', title: 'Opus', description: 'melhor voz · 128 kbps' },
-    { id: 'aac', title: 'AAC', description: 'sem encoder extra · 160 kbps' },
-    { id: 'flac', title: 'FLAC', description: 'lossless, sem bitrate' },
-    { id: 'wav', title: 'WAV', description: 'master / edição' },
-    { id: 'copy', title: 'Copiar', description: 'só remux, sem recodificar' },
-  ]
+  const FORMATS = $derived([
+    { id: 'mp3', title: 'MP3', description: t('audio.fmtMp3') },
+    { id: 'opus', title: 'Opus', description: t('audio.fmtOpus') },
+    { id: 'aac', title: 'AAC', description: t('audio.fmtAac') },
+    { id: 'flac', title: 'FLAC', description: t('audio.fmtFlac') },
+    { id: 'wav', title: 'WAV', description: t('audio.fmtWav') },
+    { id: 'copy', title: t('audio.fmtCopy'), description: t('audio.fmtCopy') },
+  ])
 
   const LOSSLESS: Record<string, boolean> = { flac: true, wav: true, copy: true }
 
@@ -45,13 +46,13 @@
   let trimStart = $state('')
   let trimEnd = $state('')
 
-  const codecOptions: RadioOption[] = FORMATS.map((f) => ({ id: f.id, title: f.title, description: f.description }))
+  const codecOptions: RadioOption[] = $derived(FORMATS.map((f) => ({ id: f.id, title: f.title, description: f.description })))
 
-  const channelOptions: RadioOption[] = [
-    { id: '0', title: 'Manter', description: 'usa os canais do vídeo' },
-    { id: '1', title: 'Mono', description: '1 canal' },
-    { id: '2', title: 'Estéreo', description: '2 canais' },
-  ]
+  const channelOptions: RadioOption[] = $derived([
+    { id: '0', title: t('audio.keep'), description: t('audio.keepDesc') },
+    { id: '1', title: t('audio.mono'), description: t('audio.monoDesc') },
+    { id: '2', title: t('audio.stereo'), description: t('audio.stereoDesc') },
+  ])
 
   function parseClock(input: string): number {
     const s = input.trim()
@@ -72,17 +73,17 @@
 
   const validation = $derived.by<string>(() => {
     if (Number.isNaN(trimStartSec) || Number.isNaN(trimEndSec)) {
-      return 'tempo de extração inválido — use mm:ss (ex.: 1:30)'
+      return t('audio.trimInvalid')
     }
     if (trimStartSec > 0 && trimEndSec > 0 && trimEndSec <= trimStartSec) {
-      return 'o fim da janela deve ser maior que o início'
+      return t('audio.trimOrder')
     }
     return ''
   })
 
-  // O destino segue a pasta da configuração e o sufixo das Preferências. Com
-  // "salvar como…" o usuário escolhe um caminho próprio (manual) que não é
-  // sobrescrito ao trocar o formato.
+  // The destination follows the configured folder and the Preferences suffix.
+  // With "Save as…" the user picks a custom path (manual) that is not
+  // overwritten when the format changes.
   $effect(() => {
     const path = inputPath
     const fmt = codec
@@ -129,43 +130,43 @@
   }
 </script>
 
-<div class="meta-k spacer">formato</div>
-<RadioCardGroup options={codecOptions} selected={codec} name="formato" onchange={selectCodec} />
+<div class="meta-k spacer">{t('audio.format')}</div>
+<RadioCardGroup options={codecOptions} selected={codec} name={t('audio.format')} onchange={selectCodec} />
 
 {#if !lossless}
   <div class="tune-row">
-    <span class="meta-k">bitrate (kbps)</span>
-    <Stepper value={bitrateKbps} min={32} max={320} step={16} ariaLabel="bitrate" onchange={(v) => (bitrateKbps = v)} />
+    <span class="meta-k">{t('audio.bitrate')}</span>
+    <Stepper value={bitrateKbps} min={32} max={320} step={16} ariaLabel={t('audio.bitrate')} onchange={(v) => (bitrateKbps = v)} />
   </div>
 {/if}
 
-<div class="meta-k spacer">canais</div>
-<RadioCardGroup options={channelOptions} selected={String(channels)} name="canais" onchange={(v) => (channels = Number(v))} />
+<div class="meta-k spacer">{t('audio.channels')}</div>
+<RadioCardGroup options={channelOptions} selected={String(channels)} name={t('audio.channels')} onchange={(v) => (channels = Number(v))} />
 
 <div class="spacer">
   <Toggle
-    title="normalizar (EBU R128)"
-    description="loudnorm single-pass para volume consistente"
+    title={t('audio.normalize')}
+    description={t('audio.normalizeDesc')}
     disabled={lossless}
     checked={normalize}
     onchange={(v) => (normalize = v)}
   />
-  <InfoTip text="Normaliza o volume segundo o padrão EBU R128. Não se aplica a Copiar." />
+  <InfoTip text={t('audio.normalizeTip')} />
 </div>
 
 <div class="trim-row">
   <div class="trim-field">
-    <span class="meta-k">início (mm:ss)</span>
-    <input class="text-input mono" value={trimStart} aria-label="início da extração" placeholder="0:00" oninput={(e) => (trimStart = e.currentTarget.value)} />
+    <span class="meta-k">{t('audio.start')}</span>
+    <input class="text-input mono" value={trimStart} aria-label={t('audio.start')} placeholder={t('audio.startPh')} oninput={(e) => (trimStart = e.currentTarget.value)} />
   </div>
   <div class="trim-field">
-    <span class="meta-k">fim (mm:ss)</span>
-    <input class="text-input mono" value={trimEnd} aria-label="fim da extração" placeholder="fim do vídeo" oninput={(e) => (trimEnd = e.currentTarget.value)} />
+    <span class="meta-k">{t('audio.end')}</span>
+    <input class="text-input mono" value={trimEnd} aria-label={t('audio.end')} placeholder={t('audio.endPh')} oninput={(e) => (trimEnd = e.currentTarget.value)} />
   </div>
 </div>
 
 {#if !hasAudio}
-  <div class="hint">este vídeo não tem faixa de áudio</div>
+  <div class="hint">{t('audio.noTrack')}</div>
 {/if}
 
 <style>

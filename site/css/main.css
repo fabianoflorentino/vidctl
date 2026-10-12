@@ -132,6 +132,17 @@ a {
   color: var(--ink);
 }
 
+.lang-switch select {
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--ink-dim);
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+
 .nav-links a.nav-gh {
   color: var(--accent);
 }

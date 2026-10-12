@@ -22,7 +22,7 @@ func ffmpegPath() (string, error) {
 		return "", err
 	}
 	if err != nil {
-		return "", errors.New("ffmpeg não encontrado. Instale o ffmpeg para usar o vidctl.")
+		return "", errors.New("ffmpeg not found. Install ffmpeg to use vidctl.")
 	}
 	return p, nil
 }
@@ -50,7 +50,7 @@ func thumbCachePath(path string, size, mtimeUnix int64) (string, error) {
 func ThumbDataURL(path string, durationSec float64) (string, error) {
 	st, err := os.Stat(path)
 	if err != nil {
-		return "", errors.New("não foi possível ler o arquivo de vídeo: " + path)
+		return "", errors.New("could not read the video file: " + path)
 	}
 
 	cache, err := thumbCachePath(path, st.Size(), st.ModTime().Unix())
@@ -78,7 +78,7 @@ func ThumbDataURL(path string, durationSec float64) (string, error) {
 		dlog.Printf("[media] exec ffmpeg %s", strings.Join(append([]string{bin}, args...), " "))
 		out, err := cmdutil.Command(bin, args...).CombinedOutput()
 		if err != nil {
-			return "", errors.New("não foi possível gerar a miniatura: " + string(out))
+			return "", errors.New("could not generate the thumbnail: " + string(out))
 		}
 	}
 

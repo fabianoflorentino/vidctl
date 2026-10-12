@@ -27,7 +27,7 @@ const (
 
 // ErrInvalidConfig is returned by Save when the config carries values the app
 // cannot use. The message names the offending field so the UI can show it.
-var ErrInvalidConfig = errors.New("configuração inválida")
+var ErrInvalidConfig = errors.New("invalid configuration")
 
 // Config holds every setting the app remembers between runs.
 //
@@ -68,7 +68,7 @@ func Defaults() Config {
 func Dir() (string, error) {
 	base, err := os.UserConfigDir()
 	if err != nil {
-		return "", fmt.Errorf("não foi possível localizar a pasta de configuração: %w", err)
+		return "", fmt.Errorf("could not locate the configuration folder: %w", err)
 	}
 	return filepath.Join(base, DirName), nil
 }
@@ -106,21 +106,21 @@ func (c Config) Normalize() Config {
 // silently clamping them.
 func (c Config) Validate() error {
 	if strings.TrimSpace(c.PresetID) == "" {
-		return fmt.Errorf("%w: presetId vazio", ErrInvalidConfig)
+		return fmt.Errorf("%w: empty presetId", ErrInvalidConfig)
 	}
 	if c.SizeMB < 0 || c.SizeMB > MaxSizeMB {
-		return fmt.Errorf("%w: sizeMB precisa estar entre 0 e %.0f", ErrInvalidConfig, MaxSizeMB)
+		return fmt.Errorf("%w: sizeMB must be between 0 and %.0f", ErrInvalidConfig, MaxSizeMB)
 	}
 	if c.CRF < MinCRF || c.CRF > MaxCRF {
-		return fmt.Errorf("%w: crf precisa estar entre %.0f e %.0f", ErrInvalidConfig, MinCRF, MaxCRF)
+		return fmt.Errorf("%w: crf must be between %.0f and %.0f", ErrInvalidConfig, MinCRF, MaxCRF)
 	}
 	if c.MaxParallel < 1 {
-		return fmt.Errorf("%w: maxParallel precisa ser no mínimo 1", ErrInvalidConfig)
+		return fmt.Errorf("%w: maxParallel must be at least 1", ErrInvalidConfig)
 	}
 	switch strings.ToLower(strings.TrimSpace(c.Language)) {
-	case "", "pt", "en":
+	case "", "pt", "en", "es", "zh":
 	default:
-		return fmt.Errorf("%w: language precisa ser pt ou en", ErrInvalidConfig)
+		return fmt.Errorf("%w: language must be pt, en, es or zh", ErrInvalidConfig)
 	}
 	return nil
 }
@@ -172,34 +172,34 @@ func (s *Store) Save(cfg Config) error {
 	}
 	data, err := json.MarshalIndent(cfg.Normalize(), "", "  ")
 	if err != nil {
-		return fmt.Errorf("não foi possível serializar a configuração: %w", err)
+		return fmt.Errorf("could not serialize the configuration: %w", err)
 	}
 	data = append(data, '\n')
 
 	dir := filepath.Dir(s.path)
 	if err := os.MkdirAll(dir, 0o700); err != nil {
-		return fmt.Errorf("não foi possível criar %s: %w", dir, err)
+		return fmt.Errorf("could not create %s: %w", dir, err)
 	}
 
 	tmp, err := os.CreateTemp(dir, FileName+".*.tmp")
 	if err != nil {
-		return fmt.Errorf("não foi possível criar o arquivo temporário: %w", err)
+		return fmt.Errorf("could not create the temporary file: %w", err)
 	}
 	tmpName := tmp.Name()
 	defer os.Remove(tmpName)
 
 	if _, err := tmp.Write(data); err != nil {
 		tmp.Close()
-		return fmt.Errorf("não foi possível escrever a configuração: %w", err)
+		return fmt.Errorf("could not write the configuration: %w", err)
 	}
 	if err := tmp.Close(); err != nil {
-		return fmt.Errorf("não foi possível gravar a configuração: %w", err)
+		return fmt.Errorf("could not write the configuration: %w", err)
 	}
 	if err := os.Chmod(tmpName, 0o600); err != nil {
-		return fmt.Errorf("não foi possível ajustar as permissões: %w", err)
+		return fmt.Errorf("could not set permissions: %w", err)
 	}
 	if err := os.Rename(tmpName, s.path); err != nil {
-		return fmt.Errorf("não foi possível salvar a configuração: %w", err)
+		return fmt.Errorf("could not save the configuration: %w", err)
 	}
 	return nil
 }

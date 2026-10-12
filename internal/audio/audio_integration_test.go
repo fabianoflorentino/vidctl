@@ -12,7 +12,7 @@ import (
 
 func skipOnWindows(t *testing.T) {
 	if runtime.GOOS == "windows" {
-		t.Skip("fake shell bins não executam no Windows")
+		t.Skip("fake shell bins do not run on Windows")
 	}
 }
 
@@ -60,7 +60,7 @@ func readArgv(t *testing.T, log string) []string {
 	t.Helper()
 	data, err := os.ReadFile(log)
 	if err != nil {
-		t.Fatalf("argv não capturado: %v", err)
+		t.Fatalf("argv not captured: %v", err)
 	}
 	var out []string
 	start := 0
@@ -97,10 +97,10 @@ func TestExtractSuccess(t *testing.T) {
 		t.Errorf("size = %d, esperava > 0", size)
 	}
 	if st, err := os.Stat(out); err != nil || st.Size() == 0 {
-		t.Errorf("arquivo de saída ausente: err=%v", err)
+		t.Errorf("output file missing: err=%v", err)
 	}
 	if len(dones) != 1 || dones[0].Kind != events.KindAudio || dones[0].OutputPath != out {
-		t.Errorf("dones = %+v; queria um DoneEvent de áudio para %q", dones, out)
+		t.Errorf("dones = %+v; want one audio DoneEvent for %q", dones, out)
 	}
 
 	argv := readArgv(t, log)
@@ -118,7 +118,7 @@ func TestExtractSuccess(t *testing.T) {
 		t.Errorf("entrada no argv = %q, want %q", got, input)
 	}
 	if !progress {
-		t.Errorf("argv %v não habilita o progresso via -progress pipe:1", argv)
+		t.Errorf("argv %v does not enable progress via -progress pipe:1", argv)
 	}
 }
 
@@ -145,7 +145,7 @@ func TestExtractEmitsProgress(t *testing.T) {
 	}
 	last := progresses[len(progresses)-1]
 	if last.Kind != events.KindAudio || last.Stage != "extracting" {
-		t.Errorf("último progresso = %+v", last)
+		t.Errorf("last progress = %+v", last)
 	}
 }
 
@@ -165,7 +165,7 @@ func TestExtractVideoWithoutAudio(t *testing.T) {
 	_, err := Extract(context.Background(), "job-noaud", "/videos/in.mp4",
 		Spec{InputPath: "/videos/in.mp4", Codec: "mp3", OutputPath: out})
 	if err == nil {
-		t.Fatal("esperava erro de vídeo sem áudio")
+		t.Fatal("expected an error for a video without audio")
 	}
 	if len(errors) != 1 {
 		t.Errorf("erro emitidos = %d, queria 1", len(errors))

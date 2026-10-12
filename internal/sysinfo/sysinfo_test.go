@@ -62,7 +62,7 @@ func TestIsFFmpeg(t *testing.T) {
 }
 
 func TestFFmpegCPUPercentNormalized(t *testing.T) {
-	// não há ffmpeg rodando neste teste: resultado deve ser 0 e dentro do intervalo
+	// no ffmpeg runs in this test: the result must be 0 and within range
 	got := ffmpegCPUPercent(t.Context())
 	if got < 0 || got > 100 {
 		t.Errorf("ffmpegCPUPercent = %v, fora de 0..100", got)
@@ -82,13 +82,13 @@ func TestSnapshotSmoke(t *testing.T) {
 		t.Errorf("GPU = %v, esperava -1 ou 0..100", s.GPU)
 	}
 	if runtime.NumCPU() < 1 {
-		t.Fatal("NumCPU inválido")
+		t.Fatal("invalid NumCPU")
 	}
 }
 
 func TestSnapshotWithFakeNvidia(t *testing.T) {
 	if runtime.GOOS == "windows" {
-		t.Skip("fake shell bin não executam no Windows")
+		t.Skip("fake shell bins do not run on Windows")
 	}
 	dir := t.TempDir()
 	bin := filepath.Join(dir, "nvidia-smi")
@@ -106,7 +106,7 @@ func TestSnapshotWithFakeNvidia(t *testing.T) {
 
 func TestSnapshotCountsEncoderUtilization(t *testing.T) {
 	if runtime.GOOS == "windows" {
-		t.Skip("fake shell bin não executam no Windows")
+		t.Skip("fake shell bins do not run on Windows")
 	}
 	dir := t.TempDir()
 	bin := filepath.Join(dir, "nvidia-smi")
@@ -136,7 +136,7 @@ func TestParseNvidiaMaxAcrossFields(t *testing.T) {
 
 func TestSnapshotNvidiaMissingCached(t *testing.T) {
 	if runtime.GOOS == "windows" {
-		t.Skip("LookPath no Windows exige .exe; PATH vazio não simula o caso")
+		t.Skip("LookPath on Windows requires .exe; an empty PATH does not simulate the case")
 	}
 	t.Setenv("PATH", t.TempDir())
 	c := NewCollector()
@@ -147,7 +147,7 @@ func TestSnapshotNvidiaMissingCached(t *testing.T) {
 	if !c.gpuProbed || c.gpuOK {
 		t.Errorf("esperava cache de indisponibilidade, got probed=%v ok=%v", c.gpuProbed, c.gpuOK)
 	}
-	// segundo Snapshot usa o cache e não retorna GPU
+	// second Snapshot uses the cache and returns no GPU
 	s2 := c.Snapshot()
 	if s2.GPU != -1 {
 		t.Errorf("GPU cacheado = %v, want -1", s2.GPU)

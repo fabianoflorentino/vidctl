@@ -21,7 +21,7 @@ import (
 
 func skipOnWindows(t *testing.T) {
 	if runtime.GOOS == "windows" {
-		t.Skip("fake shell bins não executam no Windows")
+		t.Skip("fake shell bins do not run on Windows")
 	}
 }
 
@@ -115,10 +115,10 @@ func TestFFmpegPathReportsBrokenOverride(t *testing.T) {
 
 	_, err := ffmpegPath()
 	if err == nil {
-		t.Fatal("ffmpegPath deveria falhar com override inválido")
+		t.Fatal("ffmpegPath should fail with an invalid override")
 	}
 	if !errors.Is(err, cmdutil.ErrNotConfigured) {
-		t.Errorf("erro %v não é ErrNotConfigured", err)
+		t.Errorf("error %v is not ErrNotConfigured", err)
 	}
 	if !strings.Contains(err.Error(), "nao-existe") {
 		t.Errorf("mensagem %q deveria citar o caminho configurado", err)
@@ -157,10 +157,10 @@ func TestRunUsesOverrideInsteadOfPath(t *testing.T) {
 	})
 
 	if msg := findErr(got); msg != "" {
-		t.Fatalf("job falhou apesar do override válido: %s", msg)
+		t.Fatalf("job failed despite a valid override: %s", msg)
 	}
 	if _, err := os.Stat(out); err != nil {
-		t.Errorf("saída não criada: %v", err)
+		t.Errorf("output not created: %v", err)
 	}
 }
 
@@ -169,7 +169,7 @@ func TestRunFailsWithBrokenOverride(t *testing.T) {
 	t.Cleanup(cmdutil.ClearOverrides)
 
 	// O ffmpeg do PATH funciona, mas o override aponta para arquivo nenhum:
-	// o app não pode cair silenciosamente no binário do PATH.
+	// the app must not silently fall back to the PATH binary.
 	pathDir := t.TempDir()
 	for name, script := range map[string]string{"ffmpeg": fakeFFmpegOK, "ffprobe": fakeFFprobe} {
 		if err := os.WriteFile(filepath.Join(pathDir, name), []byte(script), 0o755); err != nil {
@@ -188,7 +188,7 @@ func TestRunFailsWithBrokenOverride(t *testing.T) {
 	})
 
 	if msg := findErr(got); msg == "" {
-		t.Fatal("job deveria falhar com override inválido")
+		t.Fatal("job should fail with an invalid override")
 	} else if !strings.Contains(msg, "nao-existe") {
 		t.Errorf("mensagem %q deveria citar o caminho configurado", msg)
 	}
@@ -207,7 +207,7 @@ func TestPassLogManagement(t *testing.T) {
 	removePassLogs("job-x")
 	for _, f := range []string{base, base + "-0.log", base + "-0.log.mbtree"} {
 		if _, err := os.Stat(f); !os.IsNotExist(err) {
-			t.Errorf("esperava remoção de %s", f)
+			t.Errorf("expected removal of %s", f)
 		}
 	}
 }
@@ -231,7 +231,7 @@ func TestBuildSizePasses(t *testing.T) {
 
 	budget, err := estimate.BudgetFor(p, info, 80)
 	if err != nil {
-		t.Fatalf("erro de orçamento inesperado: %v", err)
+		t.Fatalf("unexpected budget error: %v", err)
 	}
 	if !containsStr(p2.Args, "-b:v", strconv.Itoa(budget.VideoBitrate)) {
 		t.Errorf("pass2 deve usar o bitrate do estimate (%d), args: %v", budget.VideoBitrate, p2.Args)
@@ -261,19 +261,19 @@ func TestBuildCrfPass(t *testing.T) {
 
 	withAudio := buildCrfPass(context.Background(), Job{InputPath: "in.mp4", OutputPath: "out.mp4"}, p, &media.Info{HasAudio: true}, split.Segment{})
 	if !containsStr(withAudio.Args, "-c:a", "aac") {
-		t.Errorf("com áudio deve incluir -c:a aac, args: %v", withAudio.Args)
+		t.Errorf("with audio should include -c:a aac, args: %v", withAudio.Args)
 	}
 
 	noAudio := buildCrfPass(context.Background(), Job{InputPath: "in.mp4", OutputPath: "out.mp4"}, p, &media.Info{HasAudio: false}, split.Segment{})
 	if containsStr(noAudio.Args, "-c:a", "aac") {
-		t.Errorf("sem áudio não deve incluir -c:a aac, args: %v", noAudio.Args)
+		t.Errorf("without audio should not include -c:a aac, args: %v", noAudio.Args)
 	}
 
 	t.Run("missing ffmpeg ignores error", func(t *testing.T) {
 		t.Setenv("PATH", t.TempDir())
 		cmd := buildCrfPass(context.Background(), Job{}, p, &media.Info{HasAudio: false}, split.Segment{})
 		if cmd.Args[0] != "" {
-			t.Errorf("binário deveria estar vazio, got %q", cmd.Args[0])
+			t.Errorf("binary should be empty, got %q", cmd.Args[0])
 		}
 	})
 }
@@ -324,7 +324,7 @@ func TestExecuteFails(t *testing.T) {
 func TestRunEmptyPaths(t *testing.T) {
 	got := captureCompressEvents(t)
 	Run(context.Background(), "j1", Job{})
-	if err := findErr(got); !strings.Contains(err, "pode ser vazio") {
+	if err := findErr(got); !strings.Contains(err, "cannot be empty") {
 		t.Errorf("erro inesperado: %q", err)
 	}
 }
@@ -332,7 +332,7 @@ func TestRunEmptyPaths(t *testing.T) {
 func TestRunSameInputOutput(t *testing.T) {
 	got := captureCompressEvents(t)
 	Run(context.Background(), "j2", Job{InputPath: "x.mp4", OutputPath: "x.mp4"})
-	if err := findErr(got); !strings.Contains(err, "igual ao de entrada") {
+	if err := findErr(got); !strings.Contains(err, "same as the input") {
 		t.Errorf("erro inesperado: %q", err)
 	}
 }
@@ -347,7 +347,7 @@ func TestRunFFprobeMissing(t *testing.T) {
 
 	got := captureCompressEvents(t)
 	Run(context.Background(), "j3", Job{InputPath: "in.mp4", OutputPath: "out.mp4", PresetID: "whatsapp-status"})
-	if err := findErr(got); !strings.Contains(err, "ffprobe não encontrado") {
+	if err := findErr(got); !strings.Contains(err, "ffprobe not found") {
 		t.Errorf("erro inesperado: %q", err)
 	}
 }
@@ -357,7 +357,7 @@ func TestRunUnknownPreset(t *testing.T) {
 	fakeToolchain(t)
 	got := captureCompressEvents(t)
 	Run(context.Background(), "j4", Job{InputPath: "in.mp4", OutputPath: "out.mp4", PresetID: "nope"})
-	if err := findErr(got); !strings.Contains(err, "preset desconhecido") {
+	if err := findErr(got); !strings.Contains(err, "unknown preset") {
 		t.Errorf("erro inesperado: %q", err)
 	}
 }
@@ -371,7 +371,7 @@ func TestRunMkdirFailure(t *testing.T) {
 	}
 	got := captureCompressEvents(t)
 	Run(context.Background(), "j5", Job{InputPath: "in.mp4", OutputPath: filepath.Join(blocker, "out.mp4"), PresetID: "whatsapp-status"})
-	if err := findErr(got); !strings.Contains(err, "falha ao criar pasta") {
+	if err := findErr(got); !strings.Contains(err, "could not create the output folder") {
 		t.Errorf("erro inesperado: %q", err)
 	}
 }
@@ -421,7 +421,7 @@ func TestRunSizePass1Failure(t *testing.T) {
 
 	got := captureCompressEvents(t)
 	Run(context.Background(), "j7", Job{InputPath: "in.mp4", OutputPath: filepath.Join(t.TempDir(), "out.mp4"), PresetID: "whatsapp-status"})
-	if err := findErr(got); !strings.Contains(err, "pass 1 falhou") {
+	if err := findErr(got); !strings.Contains(err, "pass 1 failed") {
 		t.Errorf("erro inesperado: %q", err)
 	}
 }
@@ -462,7 +462,7 @@ func TestRunCrfFailure(t *testing.T) {
 
 	got := captureCompressEvents(t)
 	Run(context.Background(), "j9", Job{InputPath: "in.mp4", OutputPath: filepath.Join(t.TempDir(), "out.mp4"), PresetID: "youtube"})
-	if err := findErr(got); !strings.Contains(err, "falha ao comprimir") {
+	if err := findErr(got); !strings.Contains(err, "failed to compress") {
 		t.Errorf("erro inesperado: %q", err)
 	}
 }
@@ -484,7 +484,7 @@ func TestRunCanceled(t *testing.T) {
 	}
 	for _, r := range *got {
 		if r.name == "compress:error" || r.name == "compress:done" {
-			t.Errorf("cancelamento não deve emitir error/done, got %+v", *got)
+			t.Errorf("cancel must not emit error/done, got %+v", *got)
 		}
 	}
 }
@@ -551,7 +551,7 @@ func TestRunSizeSplit(t *testing.T) {
 		t.Fatalf("dones = %v, want %v", donePaths, want)
 	}
 	if len(stages) == 0 || !strings.Contains(stages[len(stages)-1], "parte 3/3") {
-		t.Errorf("última stage deveria indicar parte 3/3, got %v", stages)
+		t.Errorf("last stage should indicate part 3/3, got %v", stages)
 	}
 
 	raw, err := os.ReadFile(argsLog)
@@ -574,7 +574,7 @@ func TestRunSizeSplit(t *testing.T) {
 	part1 := strings.TrimSuffix(output, ".mp4") + "-part1.mp4"
 	part2 := strings.TrimSuffix(output, ".mp4") + "-part2.mp4"
 	if !strings.HasSuffix(lines[1], part1) || !strings.HasSuffix(lines[3], part2) {
-		t.Errorf("saídas por parte ausentes: %q / %q", lines[1], lines[3])
+		t.Errorf("per-part outputs missing: %q / %q", lines[1], lines[3])
 	}
 }
 
@@ -598,8 +598,8 @@ func TestRunSplitInvalid(t *testing.T) {
 		PresetID:   "whatsapp-status",
 		Split:      &split.Spec{Parts: 300},
 	})
-	if e := findErr(got); !strings.Contains(e, "máximo") {
-		t.Errorf("esperava erro de máximo de partes, got %q", e)
+	if e := findErr(got); !strings.Contains(e, "maximum") {
+		t.Errorf("expected maximum-parts error, got %q", e)
 	}
 }
 
@@ -637,7 +637,7 @@ func TestRunNoSplitKeepsSingleDone(t *testing.T) {
 		t.Fatal(err)
 	}
 	if strings.Contains(string(raw), "-ss") {
-		t.Errorf("sem split não deve conter -ss: %q", string(raw))
+		t.Errorf("without split should not contain -ss: %q", string(raw))
 	}
 }
 
@@ -652,7 +652,7 @@ func TestEffectivePresetOverrides(t *testing.T) {
 
 	withOverrides, ok := EffectivePreset(Job{PresetID: "youtube", Codec: "h265", Hardware: "nvenc"})
 	if !ok || withOverrides.Codec != "h265" || withOverrides.Hardware != "nvenc" {
-		t.Errorf("overrides não aplicados: %+v", withOverrides)
+		t.Errorf("overrides not applied: %+v", withOverrides)
 	}
 }
 
@@ -691,7 +691,7 @@ func TestBuildSizePassesCodecHardware(t *testing.T) {
 				t.Errorf("esperava libx265, got %v", args)
 			}
 			if !containsStr(args, "-x265-params", "log-level=error") {
-				t.Errorf("esperava silenciar ruído do x265, got %v", args)
+				t.Errorf("expected x265 noise silenced, got %v", args)
 			}
 		}
 	})
@@ -706,7 +706,7 @@ func TestBuildSizePassesCodecHardware(t *testing.T) {
 			t.Errorf("esperava hevc_nvenc, got %v", p2.Args)
 		}
 		if containsStr(p2.Args, "-preset", "medium") {
-			t.Errorf("nvenc não deve usar preset x264, got %v", p2.Args)
+			t.Errorf("nvenc must not use the x264 preset, got %v", p2.Args)
 		}
 	})
 
@@ -717,7 +717,7 @@ func TestBuildSizePassesCodecHardware(t *testing.T) {
 			t.Fatalf("unexpected error: %v", err)
 		}
 		if containsStr(p1.Args, "-preset") {
-			t.Errorf("qsv pass1 não deve carregar preset x264, got %v", p1.Args)
+			t.Errorf("qsv pass1 must not load the x264 preset, got %v", p1.Args)
 		}
 	})
 }
@@ -738,7 +738,7 @@ func TestBuildSizeCmdSinglePass(t *testing.T) {
 		}
 	}
 	if containsStr(cmd.Args, "-pass") {
-		t.Errorf("single-pass não deve ter -pass: %v", cmd.Args)
+		t.Errorf("single-pass must not have -pass: %v", cmd.Args)
 	}
 }
 
@@ -778,10 +778,10 @@ func TestRunSizeHardwareSinglePass(t *testing.T) {
 		}
 	}
 	if len(stages) == 0 || stages[0] != "encoding" {
-		t.Errorf("hardware size deveria emitir stage 'encoding' único, got %v", stages)
+		t.Errorf("hardware size should emit a single 'encoding' stage, got %v", stages)
 	}
 	if containsStr(stages, "pass2/2") {
-		t.Errorf("não deve haver pass2/2 em backend de 1 pass, got %v", stages)
+		t.Errorf("must not have pass2/2 on a 1-pass backend, got %v", stages)
 	}
 	if done != 1 {
 		t.Errorf("esperava 1 done, got %d", done)

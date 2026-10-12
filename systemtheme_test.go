@@ -28,7 +28,7 @@ func TestThemeFromRegistry(t *testing.T) {
 	if got := themeFromRegistry(`0x0`); got != "dark" {
 		t.Errorf("themeFromRegistry(0x0) = %q, want dark", got)
 	}
-	// registro ilegível (sem binário "reg") assume dark, padrão comum.
+	// unreadable registry (no "reg" binary) assumes dark, the common default.
 	if got := themeFromRegistry(""); got != "dark" {
 		t.Errorf("themeFromRegistry(vazio) = %q, want dark", got)
 	}
@@ -39,10 +39,10 @@ func TestAppleStyleIsDark(t *testing.T) {
 		t.Error("AppleInterfaceStyle=Dark deveria ser dark")
 	}
 	if appleStyleIsDark("Light") {
-		t.Error("AppleInterfaceStyle=Light não deveria ser dark")
+		t.Error("AppleInterfaceStyle=Light should not be dark")
 	}
 	if appleStyleIsDark("") {
-		t.Error("sem saída não deveria ser dark")
+		t.Error("no output should not be dark")
 	}
 }
 
@@ -56,7 +56,7 @@ func TestGTKIniIsDark(t *testing.T) {
 		{"prefer dark desligado", "[Settings]\ngtk-application-prefer-dark-theme=0\n", false},
 		{"tema com nome Dark", "[Settings]\ngtk-theme-name=Adwaita-dark\n", true},
 		{"tema normal", "[Settings]\ngtk-theme-name=Adwaita\n", false},
-		{"sem configuração", "", false},
+		{"no configuration", "", false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -81,7 +81,7 @@ func TestSystemThemeBinding(t *testing.T) {
 }
 
 func TestThemeFromLinuxGsettingsLikes(t *testing.T) {
-	// O fluxo gsettings não é executável aqui; só garantimos os invariantes
+	// The gsettings flow does not run here; we only keep the invariants
 	// dos prefixos que o temaFromLinux consome.
 	for _, s := range []string{strings.ToLower("prefer-dark"), strings.ToLower("Adwaita-dark")} {
 		if !strings.Contains(s, "dark") {

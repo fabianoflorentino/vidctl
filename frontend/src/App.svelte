@@ -38,6 +38,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   import PreferencesModal from './lib/PreferencesModal.svelte'
   import AudioPanel from './lib/AudioPanel.svelte'
   import { stageLabel } from './lib/stages'
+  import { t, setLang, langId, type LangId } from './lib/i18n.svelte'
 
   type ProgressEv = { jobId: string; stage: string; percent: number }
   type DoneEv = { jobId: string; outputPath: string; sizeMB: number; sizeBytes: number }
@@ -71,8 +72,13 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   let ffmpegMsg = $state('')
 
   let theme = $state<ThemeChoice>('system')
+  let language = $state<LangId>('pt')
   let systemDark = $state(false)
   let systemResolved = $state(false)
+
+  $effect(() => {
+    setLang(language)
+  })
 
   try {
     const saved = localStorage.getItem('vidctl-theme')
@@ -80,12 +86,12 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
       theme = saved
     }
   } catch {
-    /* localStorage indisponível: segue o sistema */
+    /* localStorage unavailable: follow the system */
   }
 
   // O WebKitGTK (Linux) costuma reportar prefers-color-scheme: light mesmo com
   // o desktop escuro; o tema real vem do backend (gsettings/registry/defaults)
-  // e o matchMedia só acompanha mudanças ao vivo.
+  // and matchMedia only tracks live changes.
   $effect(() => {
     if (theme !== 'system') return
     if (!systemResolved) return
@@ -102,7 +108,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
     try {
       localStorage.setItem('vidctl-theme', next)
     } catch {
-      /* sem persistência disponível; tema vale para a sessão */
+      /* no persistence available; theme lasts for the session */
     }
   }
 
@@ -150,11 +156,12 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
       ffmpegPath,
       ffprobePath,
       audioSuffix,
+      language,
     })
   }
 
-  // Evita gravar de volta o que acabou de ser lido e writes em mudanças que não
-  // alteram nada (o Stepper emite o mesmo valor ao receber foco).
+  // Avoid saving back what was just read, and writes that change nothing (the
+  // Stepper emits the same value on focus).
   let lastSavedConfig = ''
 
   function scheduleSaveConfig() {
@@ -168,7 +175,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
         await SaveConfig(currentConfig())
         lastSavedConfig = snapshot
       } catch (err) {
-        error = 'falha ao salvar as preferências: ' + err
+        error = t('prefs.saveFail', { err: String(err) })
       }
     }, 500)
   }
@@ -182,8 +189,8 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
     return dir.includes('\\') && !dir.includes('/') ? '\\' : '/'
   }
 
-  // Pasta de destino: a preferência salva quando existe; senão, a pasta do
-  // arquivo de origem (nunca o diretório de trabalho do app).
+  // Target folder: the saved preference when it exists; otherwise the source
+  // file folder (never the app working directory).
   function targetDir(): string {
     if (outputDir) return outputDir.replace(/[\\/]+$/, '') + sepFor(outputDir)
     const last = Math.max(inputPath.lastIndexOf('/'), inputPath.lastIndexOf('\\'))
@@ -225,11 +232,11 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
 
   function applyPatch(item: QueueItem, p: EventPatch) {
     if (!p.allowed.includes(item.state)) {
-      dbg(`patch rejeitado job=${item.jobId} estado=${item.state} permitido=${p.allowed.join(',')}`)
+      dbg(`patch rejected job=${item.jobId} state=${item.state} allowed=${p.allowed.join(',')}`)
       return
     }
     p.fn(item)
-    dbg(`patch job=${item.jobId} estado=${item.state} percent=${item.percent} stage=${item.stage}`)
+    dbg(`patch job=${item.jobId} state=${item.state} percent=${item.percent} stage=${item.stage}`)
     renumber()
   }
 
@@ -239,7 +246,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
       applyPatch(item, { allowed, fn })
       return
     }
-    dbg(`patch aguardando item job=${jobId} permitido=${allowed.join(',')}`)
+    dbg(`patch waiting for item job=${jobId} allowed=${allowed.join(',')}`)
     const list = bufferedEvents.get(jobId) ?? []
     list.push({ allowed, fn })
     bufferedEvents.set(jobId, list)
@@ -299,6 +306,9 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   }
 
   function presetName(id: string): string {
+    const key = 'preset.' + id
+    const localized = t(key)
+    if (localized !== key) return localized
     return presetList.find((p) => p.id === id)?.name ?? id
   }
 
@@ -312,15 +322,17 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   function stateLabel(item: QueueItem): string {
     switch (item.state) {
       case 'queued':
-        return item.position > 1 ? `aguardando · ${item.position}º da fila` : 'aguardando'
-      case 'running':
-        return `processando · ${item.percent.toFixed(0)}%${item.startedAt ? ` · ${fmtDuration((Date.now() - item.startedAt) / 1000)}` : ''}`
+        return item.position > 1 ? t('queue.state.waitingPos', { pos: item.position }) : t('queue.state.waiting')
+      case 'running': {
+        const time = item.startedAt ? fmtDuration((Date.now() - item.startedAt) / 1000) : ''
+        return time ? t('queue.state.runningTime', { pct: item.percent.toFixed(0), t: time }) : t('queue.state.running', { pct: item.percent.toFixed(0) })
+      }
       case 'done':
-        return `concluído${item.elapsedSec ? ` · ${fmtDuration(item.elapsedSec)}` : ''}`
+        return item.elapsedSec ? t('queue.state.doneTime', { t: fmtDuration(item.elapsedSec) }) : t('queue.state.done')
       case 'error':
-        return 'erro'
+        return t('queue.state.error')
       case 'canceled':
-        return 'cancelado'
+        return t('queue.state.canceled')
     }
   }
 
@@ -355,13 +367,13 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
 
   async function adoptFile(path: string) {
     if (!isVideoPath(path)) {
-      const msg = `extensão não suportada: ${path.split('.').pop() || path}`
-      dbg(`adoptFile rejeitado path=${path}`)
+      const msg = `unsupported extension: ${path.split('.').pop() || path}`
+      dbg(`adoptFile rejected path=${path}`)
       error = msg
       return
     }
-    // Novo vídeo: descarta o ajuste do anterior e volta as opções por arquivo
-    // ao default (corte, split, escala, áudio, codec/hardware).
+    // New video: drops the previous adjustments and resets the per-file options
+    // to default (cut, split, scale, audio, codec/hardware).
     resetPerFileOptions()
     inputPath = path
     outputPath = ''
@@ -381,7 +393,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
           thumb = ''
         })
     } catch (err) {
-      dbg(`adoptFile erro path=${path} err=${String(err)}`)
+      dbg(`adoptFile error path=${path} err=${String(err)}`)
       info = null
       error = String(err)
     }
@@ -409,7 +421,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   }
 
   function handleDrop(paths: string[]) {
-    // Modelo de alvo único: soltar vídeo troca o atual, sem enfileirar lote.
+    // Single-target model: dropping a video replaces the current one, no batch.
     const first = paths.find(isVideoPath) ?? paths[0]
     if (first) adoptFile(first)
   }
@@ -437,8 +449,9 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   }
 
   // No Linux o drop nativo do Wails faz o WebKit navegar para o arquivo solto
-  // ("tocar" o vídeo e derrubar a UI). Lá, o front lê text/uri-list do próprio
-  // evento de drop, que entrega os caminhos sem navegação.
+  // ("plays" the video and tears down the UI). There, the frontend reads
+  // text/uri-list from the drop event itself, which delivers paths without
+  // navigation.
   function handleWindowDrop(e: DragEvent) {
     if (!e.dataTransfer || !isFileDrag(e.dataTransfer)) return
     e.preventDefault()
@@ -456,7 +469,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
       dbg(`drop uri=${JSON.stringify(uri)} paths=${JSON.stringify(dropped)}`)
       if (dropped.length) handleDrop(dropped)
     } catch (err) {
-      dbg(`drop erro ${String(err)}`)
+      dbg(`drop error ${String(err)}`)
     }
   }
 
@@ -507,6 +520,31 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
     }
   }
 
+  function fmtHumanSec(sec: number): string {
+    const m = Math.floor(sec / 60)
+    const s = Math.round(sec % 60)
+    return m === 0 ? `${s}s` : `${m}min${String(s).padStart(2, '0')}s`
+  }
+
+  // Monta a mensagem do conselho no idioma atual usando o payload estruturado
+  // from the backend; falls back to the legacy text (Message) when the code is
+  // unknown.
+  function adviceMessage(a: Awaited<ReturnType<typeof GetAdvice>>): string {
+    if (a.code !== 'low') return a.message
+    const p = a.params ?? {}
+    const scopeKey = a.scope === 'part' ? 'advice.scopePart' : 'advice.scopeFull'
+    let msg = t('advice.lowBase', {
+      kbps: Math.round(p.kbps ?? a.kbps),
+      minKbps: Math.round(p.minKbps ?? a.minKbps),
+      height: Math.round(p.height ?? 0),
+      scope: t(scopeKey, { sec: fmtHumanSec(p.sec ?? 0) }),
+    })
+    if (a.sug === 'size') msg += t('advice.raiseTarget', { mb: Math.round(p.mb ?? 0) })
+    else if (a.sug === 'split') msg += t('advice.splitParts', { min: Math.round(p.min ?? 0), parts: Math.round(p.parts ?? 0) })
+    else if (a.sug === 'crf') msg += t('advice.useCrf')
+    return msg
+  }
+
   $effect(() => {
     if (!anyBusy) {
       usage = null
@@ -518,7 +556,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
         const s = await GetUsage()
         if (!stopped) usage = s
       } catch {
-        /* collector indisponível: mantém último valor */
+        /* collector unavailable: keep the last value */
       }
     }
     poll()
@@ -543,15 +581,15 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   function planSplit(durationSec: number): SplitPlan | null {
     if (!splitOn || !durationSec || durationSec <= 0) return null
     if (durationSec < MIN_PART_SEC) {
-      return { count: 0, sliceSec: 0, error: 'vídeo tem menos de 1 min — impossível cortar' }
+      return { count: 0, sliceSec: 0, error: t('split.tooShort') }
     }
     if (splitAxis === 'parts') {
       const parts = Math.floor(splitParts)
-      if (parts < 2) return { count: 0, sliceSec: 0, error: 'mínimo de 2 partes' }
-      if (parts > MAX_PARTS) return { count: 0, sliceSec: 0, error: `máximo de ${MAX_PARTS} partes` }
+      if (parts < 2) return { count: 0, sliceSec: 0, error: t('split.minParts') }
+      if (parts > MAX_PARTS) return { count: 0, sliceSec: 0, error: t('split.maxParts', { n: MAX_PARTS }) }
       const slice = durationSec / parts
       if (slice < MIN_PART_SEC) {
-        return { count: 0, sliceSec: 0, error: 'cada parte teria menos de 1 min — use menos partes' }
+        return { count: 0, sliceSec: 0, error: t('split.partsShort') }
       }
       return { count: parts, sliceSec: slice, error: '' }
     }
@@ -560,8 +598,8 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
     const tail = durationSec - full * slice
     let count = full
     if (tail >= MIN_PART_SEC) count = full + 1
-    if (count < 2) return { count: 0, sliceSec: slice, error: 'o vídeo cabe em 1 parte; não há corte' }
-    if (count > MAX_PARTS) return { count: 0, sliceSec: slice, error: `corte geraria ${count} partes (máximo ${MAX_PARTS})` }
+    if (count < 2) return { count: 0, sliceSec: slice, error: t('split.tooFew') }
+    if (count > MAX_PARTS) return { count: 0, sliceSec: slice, error: t('split.maxPartsGen', { n: count, n2: MAX_PARTS }) }
     return { count, sliceSec: slice, error: '' }
   }
 
@@ -606,8 +644,8 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
     sectionState[key] = next
   }
 
-  // Scrollbar própria da sidebar: a scrollbar nativa (GTK/WebKit) vaza do
-  // painel e cresce demais no hover; aqui controlamos tamanho e posição.
+  // Sidebar-native scrollbar: the native one (GTK/WebKit) leaks out of the
+  // panel and grows too much on hover; here we control size and position.
   let sidebarEl = $state<HTMLElement | undefined>(undefined)
   let sbScrollTop = $state(0)
   let sbClientH = $state(0)
@@ -673,18 +711,18 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   let thumbnailOn = $state(false)
   let thumbnailPath = $state('')
 
-  const scaleOptions = [
-    { id: 'default' as ScaleMode, title: 'Padrão', description: 'limita a 1280px no lado maior' },
-    { id: 'original' as ScaleMode, title: 'Original', description: 'mantém a resolução da fonte' },
-    { id: 'custom' as ScaleMode, title: 'Personalizado', description: 'você define a resolução' },
-  ]
+  const scaleOptions = $derived([
+    { id: 'default' as ScaleMode, title: t('adjust.default'), description: t('adjust.defaultDesc') },
+    { id: 'original' as ScaleMode, title: t('adjust.original'), description: t('adjust.originalDesc') },
+    { id: 'custom' as ScaleMode, title: t('adjust.custom'), description: t('adjust.customDesc') },
+  ])
 
-  const rotateOptions = [
-    { id: '0', title: '0°', description: 'horizontal normal' },
-    { id: '90', title: '90°', description: 'girar para a direita' },
-    { id: '180', title: '180°', description: 'de cabeça para baixo' },
-    { id: '270', title: '270°', description: 'girar para a esquerda' },
-  ]
+  const rotateOptions = $derived([
+    { id: '0', title: t('adjust.deg0'), description: t('adjust.deg0Desc') },
+    { id: '90', title: t('adjust.deg90'), description: t('adjust.deg90Desc') },
+    { id: '180', title: t('adjust.deg180'), description: t('adjust.deg180Desc') },
+    { id: '270', title: t('adjust.deg270'), description: t('adjust.deg270Desc') },
+  ])
 
   function parseClock(input: string): number {
     const s = input.trim()
@@ -704,34 +742,34 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
 
   const adjustError = $derived.by<string>(() => {
     if (scaleMode === 'custom' && !/^\s*\d+x\d+\s*$/.test(scaleCustom)) {
-      return 'escala personalizada deve ser LARGURAxALTURA (ex.: 1280x720)'
+      return t('adjust.customScaleErr')
     }
     if (Number.isNaN(trimStartSec) || Number.isNaN(trimEndSec)) {
-      return 'tempo de corte inválido — use mm:ss (ex.: 1:30)'
+      return t('adjust.trimInvalid')
     }
     if (trimStartSec > 0 && trimEndSec > 0 && trimEndSec <= trimStartSec) {
-      return 'o fim do corte deve ser maior que o início'
+      return t('adjust.trimOrder')
     }
     if (trimming && splitOn) {
-      return 'corte manual e divisão em partes não podem ser combinados'
+      return t('adjust.trimSplit')
     }
     if (thumbnailOn && !thumbnailPath) {
-      return 'escolha o destino da thumbnail'
+      return t('adjust.thumbNeedPath')
     }
     return ''
   })
 
   const adjustSummary = $derived.by(() => {
     const parts: string[] = []
-    if (scaleMode === 'original') parts.push('resolução original')
+    if (scaleMode === 'original') parts.push(t('adjust.resOriginal'))
     else if (scaleMode === 'custom') parts.push(scaleCustom.trim())
     if (trimStartSec > 0 || trimEndSec > 0) {
-      parts.push(`corte ${trimStartSec > 0 ? fmtClock(trimStartSec) : '0:00'}–${trimEndSec > 0 ? fmtClock(trimEndSec) : 'fim'}`)
+      parts.push(t('adjust.trimRange', { start: trimStartSec > 0 ? fmtClock(trimStartSec) : '0:00', end: trimEndSec > 0 ? fmtClock(trimEndSec) : t('adjust.endPh') }))
     }
     if (fps > 0) parts.push(`${fps} fps`)
     if (rotate !== 0) parts.push(`${rotate}°`)
-    if (removeAudio) parts.push('sem áudio')
-    if (thumbnailOn) parts.push('thumbnail')
+    if (removeAudio) parts.push(t('adjust.noAudio'))
+    if (thumbnailOn) parts.push(t('adjust.thumbShort'))
     return parts.join(' · ')
   })
 
@@ -768,26 +806,33 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   const presetOptions = $derived(
     presetList.map((p) => ({
       id: p.id,
-      title: p.name,
-      description: `${p.description} · ${p.mode === 'size' ? `${Math.round(p.sizeMB)} MB` : `CRF ${p.crf}`}`,
+      title: presetName(p.id),
+      description: `${tPresetDesc(p.id)} · ${p.mode === 'size' ? t('preset.mb', { mb: Math.round(p.sizeMB) }) : t('preset.crf', { crf: p.crf })}`,
     })),
   )
+
+  function tPresetDesc(id: string): string {
+    const key = 'preset.' + id + '.desc'
+    const localized = t(key)
+    if (localized !== key) return localized
+    return presetList.find((p) => p.id === id)?.description ?? ''
+  }
 
   type HardwareOption = { id: string; title: string; description: string; disabled: boolean }
 
   const hardwareOptions = $derived.by<HardwareOption[]>(() => {
     const opts: HardwareOption[] = [
-      { id: '', title: 'Software (CPU)', description: 'libx264/libx265 · 2-pass no modo tamanho', disabled: false },
+      { id: '', title: t('adv.software'), description: t('adv.softwareDesc'), disabled: false },
     ]
-    opts.push({ id: 'auto', title: 'Automático', description: 'usa o primeiro backend de hardware detectado', disabled: false })
+    opts.push({ id: 'auto', title: t('adv.auto'), description: t('adv.autoDesc'), disabled: false })
     for (const info of encoders?.hardware ?? []) {
       const codecs = info.codecs ?? []
       const labels = codecs.map((c) => c.toUpperCase())
       const desc = labels.length
-        ? `suporta ${labels.join(' e ')}`
+        ? t('adv.gpuDesc', { codecs: labels.join(' / ') })
         : info.error
-          ? 'detectado, mas o teste de 1 frame falhou'
-          : 'sem codecs disponíveis'
+          ? t('adv.detectError')
+          : t('adv.noCodecs')
       opts.push({
         id: info.id,
         title: info.label,
@@ -812,20 +857,20 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
 
   const gpuActive = $derived(hardware !== '')
 
-  const codecOptions: { id: 'h264' | 'h265'; title: string; description: string }[] = [
-    { id: 'h264', title: 'H.264', description: 'Compatível com tudo (x264 / hardware)' },
-    { id: 'h265', title: 'H.265 / HEVC', description: 'Menor arquivo na mesma qualidade, menos compatível' },
-  ]
+  const codecOptions = $derived<{ id: "h264" | "h265"; title: string; description: string }[]>([
+    { id: 'h264', title: t('adv.h264'), description: t('adv.h264Desc') },
+    { id: 'h265', title: t('adv.h265'), description: t('adv.h265Desc') },
+  ])
 
-  const nvencPresetOptions = [
-    { id: 'p1', title: 'mais rápido' },
-    { id: 'p2', title: 'muito rápido' },
-    { id: 'p3', title: 'rápido' },
-    { id: 'p4', title: 'equilíbrio (padrão)' },
-    { id: 'p5', title: 'melhor qualidade' },
-    { id: 'p6', title: 'alta qualidade' },
-    { id: 'p7', title: 'máxima qualidade' },
-  ]
+  const nvencPresetOptions = $derived([
+    { id: 'p1', title: t('adv.nvencFastest') },
+    { id: 'p2', title: t('adv.nvencVeryFast') },
+    { id: 'p3', title: t('adv.nvencFast') },
+    { id: 'p4', title: t('adv.nvencBalanced') },
+    { id: 'p5', title: t('adv.nvencBetter') },
+    { id: 'p6', title: t('adv.nvencHigh') },
+    { id: 'p7', title: t('adv.nvencMax') },
+  ])
 
   const appView = $derived(info ? 'queue' : 'empty')
 
@@ -870,21 +915,21 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
       dbg(`ERRO JS: ${ev.message} em ${ev.filename}:${ev.lineno}:${ev.colno}`)
     })
     window.addEventListener('unhandledrejection', (ev) => {
-      dbg(`rejeição JS: ${String(ev.reason)}`)
+      dbg(`JS rejection: ${String(ev.reason)}`)
     })
     EventsOn('compress:queued', (e: QueuedEv) => {
-      dbg(`evento compress:queued job=${e.jobId} pos=${e.position}`)
+      dbg(`compress:queued event job=${e.jobId} pos=${e.position}`)
       patch(e.jobId, ['queued'], () => {})
     })
     EventsOn('compress:start', (e: StartEv) => {
-      dbg(`evento compress:start job=${e.jobId}`)
+      dbg(`compress:start event job=${e.jobId}`)
       patch(e.jobId, ['queued', 'running'], (i) => {
         i.state = 'running'
         i.startedAt = i.startedAt || Date.now()
       })
     })
     EventsOn('compress:progress', (e: ProgressEv) => {
-      dbg(`evento compress:progress job=${e.jobId} stage=${e.stage} percent=${e.percent}`)
+      dbg(`compress:progress event job=${e.jobId} stage=${e.stage} percent=${e.percent}`)
       patch(e.jobId, ['running'], (i) => {
         i.percent = e.percent
         i.stage = e.stage
@@ -893,7 +938,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
       })
     })
     EventsOn('compress:done', (e: DoneEv) => {
-      dbg(`evento compress:done job=${e.jobId} sizeBytes=${e.sizeBytes}`)
+      dbg(`compress:done event job=${e.jobId} sizeBytes=${e.sizeBytes}`)
       patch(e.jobId, ['running'], (i) => {
         i.outputPath = e.outputPath
         i.sizeBytes += e.sizeBytes
@@ -909,7 +954,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
       })
     })
     EventsOn('compress:error', (e: ErrorEv) => {
-      dbg(`evento compress:error job=${e.jobId} error=${e.error}`)
+      dbg(`compress:error event job=${e.jobId} error=${e.error}`)
       patch(e.jobId, ['queued', 'running'], (i) => {
         i.state = 'error'
         i.error = e.error
@@ -966,10 +1011,10 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   async function refreshQueue() {
     try {
       const tasks = await GetTasks()
-      dbg(`refreshQueue -> ${tasks.length} tarefas`)
+      dbg(`refreshQueue -> ${tasks.length} tasks`)
       if (tasks.length) queue = tasks.map(fromTask)
     } catch {
-      /* fila indisponível: a sessão segue com a fila vazia */
+      /* queue unavailable: the session continues with an empty queue */
     }
   }
 
@@ -980,7 +1025,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
       ffmpegMsg = st.message
     } catch {
       ffmpegOk = false
-      ffmpegMsg = 'não foi possível verificar o ffmpeg'
+      ffmpegMsg = t('banner.msgGeneric')
     }
   }
 
@@ -989,13 +1034,14 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
     try {
       saved = await GetConfig()
     } catch (err) {
-      error = 'falha ao carregar as preferências: ' + err
+      error = t('prefs.loadFail', { err: String(err) })
       configReady = true
       return
     }
     if (saved) {
-      // Só aceita o preset se ele ainda existir na lista; um preset removido
-      // numa versão futura não pode deixar a sidebar sem seleção.
+      language = langId((saved.language ?? 'pt') as string)
+      // Only accept the preset when it still exists in the list; a preset removed
+      // in a future version cannot leave the sidebar without a selection.
       if (presetList.some((p) => p.id === saved.presetId)) {
         selectedPresetId = saved.presetId
       }
@@ -1087,7 +1133,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
         partsTotal: jobParts(),
       })
     } catch (err) {
-      dbg(`compress() erro=${String(err)}`)
+      dbg(`compress() error=${String(err)}`)
       error = String(err)
     }
   }
@@ -1119,7 +1165,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
         outputPath: spec.outputPath,
       })
     } catch (err) {
-      dbg(`ExtractAudio erro=${String(err)}`)
+      dbg(`ExtractAudio error=${String(err)}`)
       error = String(err)
     }
   }
@@ -1130,8 +1176,8 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
     return !!ffmpegOk && !!info?.hasAudio && !!audioSpec && !audioInvalid && !!audioSpec.outputPath
   }
 
-  // Rótulo da caixa de áudio: usa o caminho sugerido pelo backend e, enquanto
-  // ele não chega, um placeholder com a mesma convenção (pasta + sufixo + ext).
+  // Audio box label: uses the backend-suggested path and, until it arrives, a
+  // placeholder with the same convention (folder + suffix + ext).
   function audioOutputLabel(): string {
     if (audioSpec?.outputPath) return audioSpec.outputPath
     const codec = audioSpec?.codec ?? 'mp3'
@@ -1160,7 +1206,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
       queue = remaining.map(fromTask)
     } catch (err) {
       queue = queue.filter((i) => i.state === 'queued' || i.state === 'running')
-      error = 'falha ao limpar a fila: ' + err
+      error = t('queue.clearFail', { err: String(err) })
     }
   }
 
@@ -1180,11 +1226,11 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
 <header class="topbar">
   <span class="ffmpeg-pill" class:bad={!ffmpegOk}>
     <span class="dot"></span>
-    {ffmpegOk ? 'ffmpeg OK' : 'ffmpeg ausente'}
+    {ffmpegOk ? t('topbar.ffmpegOk') : t('topbar.ffmpegMissing')}
   </span>
   <span class="topbar-title">vidctl</span>
   <div class="topbar-end">
-    <button class="icon-btn" onclick={() => (prefsOpen = true)} aria-label="Preferências" title="Preferências">
+    <button class="icon-btn" onclick={() => (prefsOpen = true)} aria-label={t('topbar.prefs')} title={t('topbar.prefs')}>
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
         <path d="M4 7h16M4 12h16M4 17h16" />
       </svg>
@@ -1194,16 +1240,16 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
 
 {#if !ffmpegOk}
   <div class="banner">
-    <p>{ffmpegMsg || 'ffmpeg não encontrado. Instale o ffmpeg e clique em verificar de novo.'}</p>
-    <button class="btn subtle small" onclick={() => load()}>verificar de novo</button>
+    <p>{ffmpegMsg || t('banner.msg')}</p>
+    <button class="btn subtle small" onclick={() => load()}>{t('banner.recheck')}</button>
   </div>
 {/if}
 
 {#if appView === 'empty'}
   <StatusPage
-    title="Comprimir Vídeos"
-    subtitle="Arraste e solte vídeos aqui"
-    actionLabel="Abrir…"
+    title={t('empty.title')}
+    subtitle={t('empty.subtitle')}
+    actionLabel={t('empty.open')}
     onAction={pickInput}
     hot={dragging}
   />
@@ -1217,48 +1263,48 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
       onmouseleave={() => (sbHover = false)}
     >
       {#if selectedPreset?.mode === 'size'}
-        <Section title="Tamanho" open={sectionState.config} onchange={() => toggleSection("config")} infoTip="Presets de tamanho fazem o ffmpeg calcular o bitrate pela duração para caber no alvo (encode 2-pass).">
+        <Section title={t('sec.size')} open={sectionState.config} onchange={() => toggleSection("config")} infoTip={t('sec.sizeTip')}>
           <div class="tune-row">
-            <span class="meta-k">megabytes</span>
-            <Stepper value={sizeMB} min={2} max={100} digits={1} ariaLabel="tamanho alvo" onchange={(v) => (sizeMB = v)} />
+            <span class="meta-k">{t('size.megabytes')}</span>
+            <Stepper value={sizeMB} min={2} max={100} digits={1} ariaLabel={t('size.target')} onchange={(v) => (sizeMB = v)} />
           </div>
             {#if sizeEstimate?.available}
               <span class="est-badge mono">
-                esperado ≈ {sizeEstimate.targetSizeMB.toFixed(1)} MB{#if sizeEstimate.audioKbps > 0} · áudio {sizeEstimate.audioKbps}k{/if}
-                {#if sizeEstimate.savedPct >= 0.5}· economia ~{Math.round(sizeEstimate.savedPct)}%{/if}
+                {t('size.expected', { mb: sizeEstimate.targetSizeMB.toFixed(1) })}{#if sizeEstimate.audioKbps > 0}{t('size.audioKbps', { kbps: sizeEstimate.audioKbps })}{/if}
+                {#if sizeEstimate.savedPct >= 0.5}{t('size.savedPct', { pct: Math.round(sizeEstimate.savedPct) })}{/if}
               </span>
             {/if}
             <div class="hint mono">
               {#if info}
                 {#if sizeEstimate?.available}
-                  ≈ video {sizeEstimate.videoKbps} kbps{#if sizeEstimate.audioKbps > 0} · áudio {sizeEstimate.audioKbps}k{/if}{#if splitOn} · por parte{/if}
+                  {t('size.hintBudget', { kbps: sizeEstimate.videoKbps })}{#if sizeEstimate.audioKbps > 0}{t('size.hintAudio', { kbps: sizeEstimate.audioKbps })}{/if}{#if splitOn}{t('size.hintPerPart')}{/if}
                 {:else if advice && advice.kbps > 0}
-                  ≈ video {advice.kbps} kbps · áudio 96k{#if splitOn} · por parte{/if}
+                  {t('size.hintFallback', { kbps: advice.kbps })}{#if splitOn}{t('size.hintPerPart')}{/if}
                 {:else}
-                  ≈ video {Math.max(1, Math.round(((sizeMB * 8 * 1024 * 1024 * 0.95) / info.durationSec - 96000) / 1000))} kbps · áudio 96k
+                  {t('size.hintFallback', { kbps: Math.max(1, Math.round(((sizeMB * 8 * 1024 * 1024 * 0.95) / info.durationSec - 96000) / 1000)) })}
                 {/if}
               {/if}
             </div>
             {#if advice && !advice.ok}
               <div class="advice">
-                <p class="advice-msg">{advice.message}</p>
+                <p class="advice-msg">{adviceMessage(advice)}</p>
                 {#if (advice.suggestion.sizeMB ?? 0) > 0 || (advice.suggestion.minutesEach ?? 0) > 0}
-                  <button class="btn small" onclick={applyAdvice}>aplicar sugestão</button>
+                  <button class="btn small" onclick={applyAdvice}>{t('advice.apply')}</button>
                 {/if}
               </div>
             {/if}
           </Section>
       {:else if selectedPreset}
-        <Section title="Qualidade" open={sectionState.config} onchange={() => toggleSection("config")} infoTip="Encode CRF: qualidade constante sem limite de tamanho. Quanto menor o CRF, melhor a imagem e maior o arquivo.">
+        <Section title={t('sec.quality')} open={sectionState.config} onchange={() => toggleSection("config")} infoTip={t('sec.qualityTip')}>
           <div class="tune-row">
-            <span class="meta-k">CRF — quanto menor, melhor</span>
+            <span class="meta-k">{t('quality.crfLabel')}</span>
             <Stepper value={crf} min={16} max={34} ariaLabel="CRF" onchange={(v) => (crf = v)} />
           </div>
           </Section>
       {/if}
 
-      <Section title="Avançado" open={sectionState.avancado} onchange={() => toggleSection("avancado")} infoTip="Altera o codec de vídeo e o codificador para este trabalho (não altera o preset salvo). Aceleração de hardware é mais rápida, mas costuma exigir um pouco mais de bitrate para a mesma qualidade; no modo tamanho o arquivo pode variar em ±5–10%.">
-          <div class="meta-k">codec de vídeo</div>
+      <Section title={t('sec.advanced')} open={sectionState.avancado} onchange={() => toggleSection("avancado")} infoTip={t('sec.advancedTip')}>
+          <div class="meta-k">{t('adv.codec')}</div>
           <div class="codec-row">
             {#each codecOptions as opt (opt.id)}
               <label class="codec-chip" class:selected={codec === opt.id}>
@@ -1269,21 +1315,18 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
             {/each}
           </div>
 
-          <div class="meta-k spacer">codificador</div>
-          <RadioCardGroup options={hardwareOptions} selected={hardware} name="hardware" onchange={(v) => (hardware = v)} />
+          <div class="meta-k spacer">{t('adv.encoder')}</div>
+          <RadioCardGroup options={hardwareOptions} selected={hardware} name={t('adv.encoder')} onchange={(v) => (hardware = v)} />
 
           {#if gpuActive}
             <div class="advice">
-              <p class="advice-msg">
-                Codificador de GPU ativo: mais rápido, porém qualidade e tamanho podem variar em relação ao software
-                (±5–10% no modo tamanho).
-              </p>
+              <p class="advice-msg">{t('adv.gpuActive')}</p>
             </div>
           {/if}
 
           {#if hardware === 'nvenc'}
-            <div class="meta-k spacer">preset NVENC</div>
-            <div class="preset-row" role="radiogroup" aria-label="preset NVENC">
+            <div class="meta-k spacer">{t('adv.nvencPreset')}</div>
+            <div class="preset-row" role="radiogroup" aria-label={t('adv.nvencPreset')}>
               {#each nvencPresetOptions as o (o.id)}
                 <label class="preset-chip" class:selected={nvencPreset === o.id}>
                   <input type="radio" name="nvencPreset" value={o.id} checked={nvencPreset === o.id} onchange={() => (nvencPreset = o.id)} />
@@ -1295,12 +1338,12 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
 
           {#if encodersError}
             <div class="hint">
-              falha ao detectar encoders: {encodersError}
-              <button class="btn subtle small" onclick={refreshEncoders}>verificar de novo</button>
+              {t('adv.detectFail', { err: encodersError })}
+              <button class="btn subtle small" onclick={refreshEncoders}>{t('banner.recheck')}</button>
             </div>
           {:else}
             <div class="hint">
-              {encoders ? `${encoders.hardware.length} backend(s) de hardware detectado(s)` : 'verificando encoders…'}
+              {encoders ? t('adv.backends', { n: encoders.hardware.length }) : t('adv.checking')}
             </div>
             {#if failingEncoders}
               <div class="enc-fail mono" title={failingEncoders}>{failingEncoders}</div>
@@ -1308,45 +1351,45 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
           {/if}
           </Section>
 
-      <Section title="Presets" open={sectionState.presets} onchange={() => toggleSection("presets")} infoTip="Escolha um preset de saída. Presets de tamanho calculam o bitrate pela duração para caber no alvo (2-pass); presets CRF priorizam qualidade.">
-          <RadioCardGroup options={presetOptions} selected={selectedPresetId} name="presets" onchange={selectPresetById} />
+      <Section title={t('sec.presets')} open={sectionState.presets} onchange={() => toggleSection("presets")} infoTip={t('sec.presetsTip')}>
+          <RadioCardGroup options={presetOptions} selected={selectedPresetId} name={t('sec.presets')} onchange={selectPresetById} />
           </Section>
 
-      <Section title="Cortar" open={sectionState.split} onchange={() => toggleSection("split")} infoTip="Divide o vídeo em partes sequenciais de duração fixa. Cada parte passa pela compressão escolhida. Mínimo de 1 minuto por parte; a última pode ficar menor ou levar a sobra. Ajuste um dos contadores para ativar o corte.">
+      <Section title={t('sec.split')} open={sectionState.split} onchange={() => toggleSection("split")} infoTip={t('sec.splitTip')}>
           <div class="split-head">
             <div class="split-toggle">
               <button class="btn small" class:solid={!splitOn} onclick={() => (splitOn = false)}>
-                sem corte
+                {t('split.off')}
               </button>
               <button class="btn small" class:solid={splitOn} onclick={() => (splitOn = true)}>
-                cortar
+                {t('split.on')}
               </button>
             </div>
             {#if splitOn && activeSplit && !splitBlocked}
-              <span class="split-tag mono">{activeSplit.count} × ~{fmtClock(activeSplit.sliceSec)}</span>
+              <span class="split-tag mono">{t('split.count', { n: activeSplit.count, slice: fmtClock(activeSplit.sliceSec) })}</span>
             {/if}
           </div>
 
           <div class="tune-row" class:active={splitOn && splitAxis === 'parts'} class:dim={!splitOn}>
-            <span class="meta-k">partes</span>
+            <span class="meta-k">{t('split.parts')}</span>
             <Stepper value={splitParts} min={2} max={60} ariaLabel="partes" onchange={setParts} />
           </div>
 
           <div class="tune-row" class:active={splitOn && splitAxis === 'minutes'} class:dim={!splitOn}>
-            <span class="meta-k">min/parte</span>
-            <Stepper value={splitMinutes} min={1} max={60} digits={1} ariaLabel="minutos por parte" onchange={setMinutes} />
+            <span class="meta-k">{t('split.minEach')}</span>
+            <Stepper value={splitMinutes} min={1} max={60} digits={1} ariaLabel={t('split.minEach')} onchange={setMinutes} />
           </div>
 
           {#if splitOn && !info}
-            <div class="hint">escolha o vídeo para calcular o corte</div>
+            <div class="hint">{t('split.needVideo')}</div>
           {:else if splitOn && activeSplit?.error}
             <div class="split-error mono">{activeSplit.error}</div>
           {/if}
           </Section>
 
-      <Section title="Extrair áudio" open={sectionState.audio} onchange={() => toggleSection("audio")} infoTip="Opções da extração de áudio (formato, qualidade, canais, normalização e janela). A extração é disparada pelo botão na caixa do vídeo, abaixo do destino.">
+      <Section title={t('sec.audio')} open={sectionState.audio} onchange={() => toggleSection("audio")} infoTip={t('sec.audioTip')}>
           {#if !info}
-            <div class="hint">escolha o vídeo para extrair o áudio</div>
+            <div class="hint">{t('audio.needVideo')}</div>
           {:else}
             {#key inputPath}
               <AudioPanel
@@ -1361,56 +1404,56 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
           {/if}
           </Section>
 
-      <Section title="Ajustes de vídeo" open={sectionState.ajustes} onchange={() => toggleSection("ajustes")} infoTip="Escala, corte por janela (mm:ss), remoção de áudio, FPS, rotação e geração de thumbnail — aplicados além do preset, por trabalho.">
-          <div class="meta-k">escala</div>
-            <RadioCardGroup options={scaleOptions} selected={scaleMode} name="scale" onchange={(v) => (scaleMode = v as ScaleMode)} />
+      <Section title={t('sec.adjust')} open={sectionState.ajustes} onchange={() => toggleSection("ajustes")} infoTip={t('sec.adjustTip')}>
+          <div class="meta-k">{t('adjust.scale')}</div>
+            <RadioCardGroup options={scaleOptions} selected={scaleMode} name={t('adjust.scale')} onchange={(v) => (scaleMode = v as ScaleMode)} />
             {#if scaleMode === 'custom'}
               <input
                 class="text-input mono"
                 value={scaleCustom}
-                aria-label="resolução personalizada"
-                placeholder="1280x720"
+                aria-label={t('adjust.custom')}
+                placeholder={t('adjust.customPlaceholder')}
                 oninput={(e) => (scaleCustom = e.currentTarget.value)}
               />
             {/if}
 
             <div class="trim-row">
               <div class="trim-field">
-                <span class="meta-k">início (mm:ss)</span>
+                <span class="meta-k">{t('adjust.start')}</span>
                 <input
                   class="text-input mono"
                   value={trimStart}
-                  aria-label="início do corte"
-                  placeholder="0:00"
+                  aria-label={t('adjust.start')}
+                  placeholder={t('adjust.startPh')}
                   oninput={(e) => (trimStart = e.currentTarget.value)}
                 />
               </div>
               <div class="trim-field">
-                <span class="meta-k">fim (mm:ss)</span>
+                <span class="meta-k">{t('adjust.end')}</span>
                 <input
                   class="text-input mono"
                   value={trimEnd}
-                  aria-label="fim do corte"
-                  placeholder="fim do vídeo"
+                  aria-label={t('adjust.end')}
+                  placeholder={t('adjust.endPh')}
                   oninput={(e) => (trimEnd = e.currentTarget.value)}
                 />
               </div>
             </div>
 
             <div class="tune-row">
-              <span class="meta-k">FPS (0 = original)</span>
-              <Stepper value={fps} min={0} max={120} digits={1} ariaLabel="frames por segundo" onchange={(v) => (fps = v)} />
+              <span class="meta-k">{t('adjust.fps')}</span>
+              <Stepper value={fps} min={0} max={120} digits={1} ariaLabel={t('adjust.fps')} onchange={(v) => (fps = v)} />
             </div>
 
-            <div class="meta-k spacer">orientação</div>
-            <RadioCardGroup options={rotateOptions} selected={String(rotate)} name="rotate" onchange={(v) => (rotate = Number(v))} />
+            <div class="meta-k spacer">{t('adjust.orientation')}</div>
+            <RadioCardGroup options={rotateOptions} selected={String(rotate)} name={t('adjust.orientation')} onchange={(v) => (rotate = Number(v))} />
 
-            <Toggle title="remover áudio" description="descarta a trilha de áudio da saída" checked={removeAudio} onchange={(v) => (removeAudio = v)} />
+            <Toggle title={t('adjust.removeAudio')} description={t('adjust.removeAudioDesc')} checked={removeAudio} onchange={(v) => (removeAudio = v)} />
 
-            <Toggle title="gerar thumbnail" description="extrai um quadro do vídeo ao terminar" checked={thumbnailOn} onchange={toggleThumbnail} />
+            <Toggle title={t('adjust.thumbnail')} description={t('adjust.thumbnailDesc')} checked={thumbnailOn} onchange={toggleThumbnail} />
             {#if thumbnailOn}
               <div class="thumb-actions">
-                <button class="btn subtle small" onclick={pickThumbnail} disabled={!inputPath}>escolher destino…</button>
+                <button class="btn subtle small" onclick={pickThumbnail} disabled={!inputPath}>{t('adjust.pickThumb')}</button>
                 {#if thumbnailPath}
                   <span class="thumb-path mono" title={thumbnailPath}>{thumbnailPath}</span>
                 {/if}
@@ -1437,9 +1480,9 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
 
     <main class="content dropzone" class:hot={dragging}>
       <div class="sources-head">
-        <span class="group-card-title">Fontes de vídeo</span>
+        <span class="group-card-title">{t('sources.title')}</span>
         {#if info}
-          <button class="btn subtle small" onclick={reset}>limpar</button>
+          <button class="btn subtle small" onclick={reset}>{t('sources.clear')}</button>
         {/if}
       </div>
 
@@ -1458,20 +1501,20 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
           <div class="group-card-body">
             <div class="out-row">
               <span class="out-path mono" class:empty={!outputPath}>
-                {outputPath || 'escolha o vídeo para gerar o caminho de saída'}
+                {outputPath || t('out.empty')}
               </span>
-              <button class="btn subtle small" onclick={pickOutput} disabled={!inputPath}>salvar como…</button>
+              <button class="btn subtle small" onclick={pickOutput} disabled={!inputPath}>{t('out.saveAs')}</button>
             </div>
           </div>
         </div>
         <div class="out-card group-card">
           <div class="group-card-body">
             <div class="out-row">
-              <button class="btn solid small" onclick={extractAudioNow} disabled={!canExtractAudio()}>extrair áudio</button>
+              <button class="btn solid small" onclick={extractAudioNow} disabled={!canExtractAudio()}>{t('out.extractAudio')}</button>
               <span class="out-path mono" class:empty={!audioSpec?.outputPath} title={audioOutputLabel()}>
                 {audioOutputLabel()}
               </span>
-              <button class="btn subtle small" onclick={pickAudioOutput} disabled={!info?.hasAudio}>salvar como…</button>
+              <button class="btn subtle small" onclick={pickAudioOutput} disabled={!info?.hasAudio}>{t('out.saveAs')}</button>
             </div>
           </div>
         </div>
@@ -1482,14 +1525,14 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
           <div class="progress-head">
             <span class="mono">
               {previewItem.state === 'queued' && previewItem.position > 1
-                ? `AGUARDANDO · ${previewItem.position}º DA FILA`
-                : stageLabel(previewItem.stage) || 'PROCESSANDO'}
+                ? t('prog.waiting', { pos: previewItem.position })
+                : stageLabel(previewItem.stage) || t('prog.processing')}
             </span>
             <span class="progress-pct mono">{previewItem.percent.toFixed(1)}%</span>
           </div>
           <div class="track"><div class="fill" style="width:{previewItem.percent}%"></div></div>
           <div class="progress-foot">
-            <button class="btn small" onclick={() => cancelItem(previewItem.jobId)}>cancelar</button>
+            <button class="btn small" onclick={() => cancelItem(previewItem.jobId)}>{t('prog.cancel')}</button>
             <span class="progress-time mono" aria-live="polite">
               {previewItem.startedAt ? `⏱ ${fmtDuration((now - previewItem.startedAt) / 1000)}` : ''}
             </span>
@@ -1499,7 +1542,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
                 {#if usage.ffmpegCpu > 0.5}· ffmpeg {Math.round(usage.ffmpegCpu)}%{/if}
                 {#if usage.gpu >= 0}· GPU {Math.round(usage.gpu)}%{/if}
               {:else}
-                medindo uso…
+                {t('prog.measuring')}
               {/if}
             </div>
           </div>
@@ -1509,14 +1552,14 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
           <div class="result-big">
             <span class="result-pct mono">{savedLabel}</span>
             <span class="result-size mono">
-              {(previewItem.sizeBytes / (1024 * 1024)).toFixed(1)} MB{#if previewItem.partsTotal > 1} · {previewItem.partsTotal} partes{/if}
+              {t('result.sizeMb', { mb: (previewItem.sizeBytes / (1024 * 1024)).toFixed(1) })}{#if previewItem.partsTotal > 1}{t('result.parts', { n: previewItem.partsTotal })}{/if}
             </span>
-            <span class="result-from mono">de {originalMB.toFixed(1)} MB</span>
-            <span class="result-time mono">tempo {fmtDuration(previewItem.elapsedSec)}</span>
+            <span class="result-from mono">{t('result.from', { mb: originalMB.toFixed(1) })}</span>
+            <span class="result-time mono">{t('result.duration', { t: fmtDuration(previewItem.elapsedSec) })}</span>
           </div>
           <div class="result-actions">
-            <button class="btn solid" onclick={() => OpenFolder(previewItem.outputPath)}>abrir pasta</button>
-            <button class="btn" onclick={reset}>novo vídeo</button>
+            <button class="btn solid" onclick={() => OpenFolder(previewItem.outputPath)}>{t('result.openFolder')}</button>
+            <button class="btn" onclick={reset}>{t('result.newVideo')}</button>
           </div>
         </div>
       {/if}
@@ -1524,10 +1567,10 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
       {#if queue.length > 0}
         <div class="queue-card">
           <div class="queue-head">
-            <span class="group-card-title">Fila de tarefas</span>
-            <span class="queue-count mono">{queue.length} {queue.length === 1 ? 'tarefa' : 'tarefas'}</span>
+            <span class="group-card-title">{t('queue.title')}</span>
+            <span class="queue-count mono">{queue.length} {queue.length === 1 ? t('queue.taskOne') : t('queue.taskMany')}</span>
             {#if hasFinished}
-              <button class="btn subtle small" onclick={clearFinished}>limpar fila</button>
+              <button class="btn subtle small" onclick={clearFinished}>{t('queue.clear')}</button>
             {/if}
           </div>
           <ul class="queue-list">
@@ -1537,7 +1580,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
                 <div class="qi-body">
                   <div class="qi-line">
                     <span class="qi-label" title={item.inputPath}>{item.label}</span>
-                    <span class="qi-preset mono">{item.kind === 'audio' ? (item.meta || 'áudio').toUpperCase() : presetName(item.presetId)}</span>
+                    <span class="qi-preset mono">{item.kind === 'audio' ? (item.meta || t('queue.audio')).toUpperCase() : presetName(item.presetId)}</span>
                     <span class="qi-state mono">{stateLabel(item)}</span>
                   </div>
                   {#if item.state === 'running' && item.jobId !== previewItem?.jobId}
@@ -1548,9 +1591,9 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
                   {/if}
                 </div>
                 {#if item.state === 'done' && item.kind === 'audio' && item.outputPath}
-                  <button class="btn subtle small" onclick={() => OpenFolder(item.outputPath)}>abrir pasta</button>
+                  <button class="btn subtle small" onclick={() => OpenFolder(item.outputPath)}>{t('queue.openFolder')}</button>
                 {:else if item.state === 'queued' || item.state === 'running'}
-                  <button class="btn subtle small" onclick={() => cancelItem(item.jobId)}>cancelar</button>
+                  <button class="btn subtle small" onclick={() => cancelItem(item.jobId)}>{t('queue.cancel')}</button>
                 {/if}
               </li>
             {/each}
@@ -1561,37 +1604,39 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
       {#if info && !previewBusy && !previewDone}
         <div class="summary-card">
           <div class="sum-row">
-            <span class="meta-k">configuração</span>
+            <span class="meta-k">{t('sum.config')}</span>
             <span class="sum-v">
               {#if selectedPreset}
-                {selectedPreset.name} · {selectedPreset.mode === 'size' ? `${sizeMB} MB${splitOn ? '/parte' : ''}` : `CRF ${crf}`}
+                {selectedPreset.mode === 'size'
+                  ? (splitOn ? t('sum.configSizePart', { name: presetName(selectedPreset.id), mb: sizeMB }) : t('sum.configSize', { name: presetName(selectedPreset.id), mb: sizeMB }))
+                  : t('sum.configCrf', { name: presetName(selectedPreset.id), crf })}
               {:else}
                 —
               {/if}
             </span>
           </div>
           <div class="sum-row">
-            <span class="meta-k">corte</span>
+            <span class="meta-k">{t('sum.split')}</span>
             <span class="sum-v">
               {#if splitOn && activeSplit && !splitBlocked}
-                {activeSplit.count} × ~{fmtClock(activeSplit.sliceSec)}
+                {t('sum.splitPlan', { n: activeSplit.count, slice: fmtClock(activeSplit.sliceSec) })}
               {:else if splitOn}
-                ajuste o corte
+                {t('sum.splitAdjust')}
               {:else}
-                sem corte
+                {t('sum.splitNone')}
               {/if}
             </span>
           </div>
           {#if adjustSummary}
             <div class="sum-row">
-              <span class="meta-k">ajustes</span>
+              <span class="meta-k">{t('sum.adjust')}</span>
               <span class="sum-v">{adjustSummary}</span>
             </div>
           {/if}
           {#if advice && advice.kbps > 0}
             <div class="sum-row">
-              <span class="meta-k">bitrate</span>
-              <span class="sum-v">≈{advice.kbps} kbps{#if splitOn} / parte{/if} · mín {advice.minKbps}</span>
+              <span class="meta-k">{t('sum.bitrate')}</span>
+              <span class="sum-v">{t('sum.bitrateVal', { kbps: advice.kbps })}{#if splitOn}{t('size.hintPerPart')}{/if}{t('sum.bitrateMin', { minKbps: advice.minKbps })}</span>
             </div>
           {/if}
         </div>
@@ -1604,20 +1649,21 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
       {/if}
 
       <div class="actionbar">
-        <button class="pill-btn" onclick={compress} disabled={!canRun()}>Comprimir…</button>
-        <button class="btn" onclick={pickInput} disabled={!ffmpegOk}>Trocar vídeo…</button>
+        <button class="pill-btn" onclick={compress} disabled={!canRun()}>{t('action.compress')}</button>
+        <button class="btn" onclick={pickInput} disabled={!ffmpegOk}>{t('action.switchVideo')}</button>
       </div>
     </main>
   </div>
 {/if}
 
 <footer class="foot mono">
-  h264 + aac · 2-pass quando há limite de tamanho
+  {t('footer.engine')}
 </footer>
 
 <PreferencesModal
   open={prefsOpen}
   {theme}
+  {language}
   {ffmpegOk}
   {ffmpegMsg}
   {outputDir}
@@ -1626,6 +1672,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   {audioSuffix}
   onclose={() => (prefsOpen = false)}
   ontheme={setTheme}
+  onlanguage={(l) => (language = l)}
   onRecheck={checkFFmpeg}
   onoutputdir={(v) => (outputDir = v)}
   onffmpegpath={(v) => (ffmpegPath = v)}

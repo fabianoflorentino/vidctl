@@ -1,5 +1,8 @@
 # Instalação
 
+**Português (Brasil) · [English](instalacao.en.md) · [Español](instalacao.es.md) ·
+[中文（简体）](instalacao.zh-CN.md)**
+
 O vidctl é publicado em **uma release por plataforma** — a mesma versão vira
 três tags, cada uma com apenas os pacotes do seu sistema:
 

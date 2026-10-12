@@ -13,7 +13,7 @@ import (
 func makeTestVideo(t *testing.T) string {
 	t.Helper()
 	if _, err := exec.LookPath("ffmpeg"); err != nil {
-		t.Skip("ffmpeg não está instalado")
+		t.Skip("ffmpeg is not installed")
 	}
 
 	out := filepath.Join(t.TempDir(), "input.mp4")
@@ -29,7 +29,7 @@ func makeTestVideo(t *testing.T) string {
 		out,
 	)
 	if outBytes, err := cmd.CombinedOutput(); err != nil {
-		t.Fatalf("falha ao gerar vídeo de teste: %v\n%s", err, outBytes)
+		t.Fatalf("failed to generate the test video: %v\n%s", err, outBytes)
 	}
 	return out
 }

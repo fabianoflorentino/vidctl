@@ -59,10 +59,10 @@ func TestEnqueueRunsInFIFOOrder(t *testing.T) {
 	id3, pos3 := m.Enqueue(Task{Job: Job{InputPath: "c.mp4"}})
 
 	if pos1 != 1 || pos2 != 2 || pos3 != 3 {
-		t.Errorf("posições do enqueue = %d,%d,%d; queria 1,2,3", pos1, pos2, pos3)
+		t.Errorf("enqueue positions = %d,%d,%d; want 1,2,3", pos1, pos2, pos3)
 	}
 	if id1 == id2 || id2 == id3 || id1 == id3 {
-		t.Errorf("IDs deveriam ser únicos: %q %q %q", id1, id2, id3)
+		t.Errorf("IDs should be unique: %q %q %q", id1, id2, id3)
 	}
 
 	select {
@@ -71,7 +71,7 @@ func TestEnqueueRunsInFIFOOrder(t *testing.T) {
 			t.Errorf("primeiro a rodar = %q; queria %q", got, id1)
 		}
 	case <-time.After(5 * time.Second):
-		t.Fatal("primeiro job não iniciou")
+		t.Fatal("first job did not start")
 	}
 
 	s2, _ := statusByID(m, id2)
@@ -80,7 +80,7 @@ func TestEnqueueRunsInFIFOOrder(t *testing.T) {
 		t.Errorf("estados = %q/%q; queria queued/queued", s2.State, s3.State)
 	}
 	if s2.Position != 2 || s3.Position != 3 {
-		t.Errorf("posições na lista = %d,%d; queria 2,3 (id1 conta como não finalizada)", s2.Position, s3.Position)
+		t.Errorf("list positions = %d,%d; want 2,3 (id1 counts as unfinished)", s2.Position, s3.Position)
 	}
 
 	close(release)
@@ -92,15 +92,15 @@ func TestEnqueueRunsInFIFOOrder(t *testing.T) {
 	got := append([]string(nil), order...)
 	mu.Unlock()
 	if len(got) != 3 || got[0] != id1 || got[1] != id2 || got[2] != id3 {
-		t.Errorf("ordem de execução = %v; queria [%s %s %s]", got, id1, id2, id3)
+		t.Errorf("execution order = %v; want [%s %s %s]", got, id1, id2, id3)
 	}
 
 	s1, _ := statusByID(m, id1)
 	if s1.Position != 0 {
-		t.Errorf("tarefa concluída com position %d; queria 0", s1.Position)
+		t.Errorf("finished task has position %d; want 0", s1.Position)
 	}
 	if s1.Percent != 100 || s1.Stage != "done" {
-		t.Errorf("tarefa concluída = {%%:%v stage:%q}; queria 100/done", s1.Percent, s1.Stage)
+		t.Errorf("finished task = {%%:%v stage:%q}; want 100/done", s1.Percent, s1.Stage)
 	}
 }
 
@@ -147,7 +147,7 @@ func TestCancelRunningTaskStopsRun(t *testing.T) {
 	select {
 	case <-started:
 	case <-time.After(5 * time.Second):
-		t.Fatal("job não iniciou")
+		t.Fatal("job did not start")
 	}
 
 	m.Cancel(id)
@@ -158,7 +158,7 @@ func TestManagerDispatchesAudioTasks(t *testing.T) {
 	m := NewManager()
 	var audioCalled bool
 	m.run = func(context.Context, string, Job) error {
-		t.Error("tarefa de áudio não deveria passar pelo runner de compressão")
+		t.Error("audio task should not go through the compression runner")
 		return nil
 	}
 	m.runAudio = func(_ context.Context, jobID string, task Task) error {
@@ -175,7 +175,7 @@ func TestManagerDispatchesAudioTasks(t *testing.T) {
 	id, _ := m.Enqueue(Task{Kind: events.KindAudio, InputPath: "/videos/a.mp4"})
 	s := waitState(t, m, id, StateDone)
 	if !audioCalled {
-		t.Error("runAudio não foi chamado para a tarefa de áudio")
+		t.Error("runAudio was not called for the audio task")
 	}
 	if s.Kind != events.KindAudio || s.InputPath != "/videos/a.mp4" {
 		t.Errorf("status = %+v; queria kind audio e o caminho de entrada", s)
@@ -198,7 +198,7 @@ func TestSetMaxParallel(t *testing.T) {
 	select {
 	case <-started:
 	case <-time.After(5 * time.Second):
-		t.Fatal("primeiro job não iniciou")
+		t.Fatal("first job did not start")
 	}
 	if s, _ := statusByID(m, id2); s.State != StateQueued {
 		t.Errorf("segundo job em %q; com maxParallel=1 deveria estar queued", s.State)
@@ -211,7 +211,7 @@ func TestSetMaxParallel(t *testing.T) {
 			t.Errorf("segundo a rodar = %q; queria %q", got, id2)
 		}
 	case <-time.After(5 * time.Second):
-		t.Fatal("segundo job não iniciou após SetMaxParallel(2)")
+		t.Fatal("second job did not start after SetMaxParallel(2)")
 	}
 
 	close(release)
@@ -318,7 +318,7 @@ func TestObserveRecordsErrorWhileRunning(t *testing.T) {
 			break
 		}
 		if time.Now().After(deadline) {
-			t.Fatalf("erro do evento não registrado: %+v", s)
+			t.Fatalf("event error not recorded: %+v", s)
 		}
 		time.Sleep(5 * time.Millisecond)
 	}
@@ -346,7 +346,7 @@ func TestObserveIgnoresUnknownAndForeignEvents(t *testing.T) {
 
 	m.Observe("compress:progress", events.ProgressEvent{JobID: "j1", Kind: events.KindCompress, Percent: 55})
 	if s, _ := statusByID(m, "j1"); s.Percent != 55 {
-		t.Errorf("evento próprio não enriqueceu a tarefa: %+v", s)
+		t.Errorf("own event did not enrich the task: %+v", s)
 	}
 }
 
@@ -372,7 +372,7 @@ func TestClearFinishedKeepsPending(t *testing.T) {
 		ids = append(ids, s.JobID)
 	}
 	if len(ids) != 2 || ids[0] != id1 || ids[1] != id3 {
-		t.Errorf("após limpar = %v; queria [%s %s]", ids, id1, id3)
+		t.Errorf("after clear = %v; want [%s %s]", ids, id1, id3)
 	}
 
 	close(release)

@@ -19,7 +19,7 @@ var presets = []Preset{
 	{
 		ID:           "whatsapp-status",
 		Name:         "WhatsApp Status",
-		Description:  "Até 10MB — ideal para status e conversas",
+		Description:  "Up to 10MB — ideal for status and chats",
 		Mode:         "size",
 		SizeMB:       10,
 		CRF:          23,
@@ -27,8 +27,8 @@ var presets = []Preset{
 	},
 	{
 		ID:           "whatsapp-16",
-		Name:         "WhatsApp (até 16MB)",
-		Description:  "Tamanho maior para vídeos mais longos",
+		Name:         "WhatsApp (up to 16MB)",
+		Description:  "Bigger size for longer videos",
 		Mode:         "size",
 		SizeMB:       16,
 		CRF:          23,
@@ -37,7 +37,7 @@ var presets = []Preset{
 	{
 		ID:           "instagram",
 		Name:         "Instagram Reels / Stories",
-		Description:  "Até 16MB — qualidade preservada para vertical",
+		Description:  "Up to 16MB — quality preserved for vertical",
 		Mode:         "size",
 		SizeMB:       16,
 		CRF:          23,
@@ -46,7 +46,7 @@ var presets = []Preset{
 	{
 		ID:           "shorts",
 		Name:         "YouTube Shorts",
-		Description:  "Até 30MB — vertical 9:16",
+		Description:  "Up to 30MB — vertical 9:16",
 		Mode:         "size",
 		SizeMB:       30,
 		CRF:          23,
@@ -54,7 +54,7 @@ var presets = []Preset{
 	},
 	{
 		ID:           "youtube",
-		Name:         "YouTube (vídeo normal)",
+		Name:         "YouTube (regular video)",
 		Description:  "Qualidade em primeiro lugar, sem limite de tamanho",
 		Mode:         "crf",
 		SizeMB:       0,
@@ -64,7 +64,7 @@ var presets = []Preset{
 	{
 		ID:           "custom",
 		Name:         "Tamanho personalizado",
-		Description:  "Você define o tamanho máximo em MB",
+		Description:  "You define the max size in MB",
 		Mode:         "size",
 		SizeMB:       10,
 		CRF:          23,

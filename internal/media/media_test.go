@@ -14,7 +14,7 @@ import (
 
 func skipOnWindows(t *testing.T) {
 	if runtime.GOOS == "windows" {
-		t.Skip("fake shell bins não executam no Windows")
+		t.Skip("fake shell bins do not run on Windows")
 	}
 }
 
@@ -22,7 +22,7 @@ func skipOnWindows(t *testing.T) {
 func makeTestVideo(t *testing.T) string {
 	t.Helper()
 	if _, err := exec.LookPath("ffmpeg"); err != nil {
-		t.Skip("ffmpeg não está instalado")
+		t.Skip("ffmpeg is not installed")
 	}
 
 	out := filepath.Join(t.TempDir(), "input.mp4")
@@ -38,7 +38,7 @@ func makeTestVideo(t *testing.T) string {
 		out,
 	)
 	if outBytes, err := cmd.CombinedOutput(); err != nil {
-		t.Fatalf("falha ao gerar vídeo de teste: %v\n%s", err, outBytes)
+		t.Fatalf("failed to generate the test video: %v\n%s", err, outBytes)
 	}
 	return out
 }
@@ -104,7 +104,7 @@ func TestProbeUsesConfiguredFFprobe(t *testing.T) {
 	skipOnWindows(t)
 	t.Cleanup(cmdutil.ClearOverrides)
 
-	// ffprobe não está no PATH; só o caminho configurado responde.
+	// ffprobe is not on the PATH; only the configured path answers.
 	t.Setenv("PATH", t.TempDir())
 	custom := filepath.Join(t.TempDir(), "ffprobe")
 	script := probeScript(
@@ -136,10 +136,10 @@ func TestProbeRejectsBrokenFFprobePath(t *testing.T) {
 
 	_, err := Probe(probeInput(t))
 	if err == nil {
-		t.Fatal("Probe deveria falhar com ffprobe configurado inválido")
+		t.Fatal("Probe should fail with an invalid configured ffprobe")
 	}
 	if !errors.Is(err, cmdutil.ErrNotConfigured) {
-		t.Errorf("erro %v não é ErrNotConfigured", err)
+		t.Errorf("error %v is not ErrNotConfigured", err)
 	}
 	if !strings.Contains(err.Error(), "nao-existe") {
 		t.Errorf("mensagem %q deveria citar o caminho configurado", err)
@@ -192,7 +192,7 @@ func TestProbeRotationSwapsDimensions(t *testing.T) {
 		t.Fatalf("Probe failed: %v", err)
 	}
 	if info.Width != 240 || info.Height != 320 {
-		t.Errorf("rotação 90 deve trocar dimensões, got %dx%d", info.Width, info.Height)
+		t.Errorf("rotation 90 should swap dimensions, got %dx%d", info.Width, info.Height)
 	}
 }
 
@@ -222,8 +222,8 @@ func TestProbeNoVideoStream(t *testing.T) {
 	t.Setenv("PATH", dir)
 
 	_, err := Probe(in)
-	if err == nil || !strings.Contains(err.Error(), "não contém um stream de vídeo") {
-		t.Fatalf("esperava erro de stream de vídeo, got %v", err)
+	if err == nil || !strings.Contains(err.Error(), "has no video stream") {
+		t.Fatalf("expected a video-stream error, got %v", err)
 	}
 }
 
@@ -235,8 +235,8 @@ func TestProbeZeroDuration(t *testing.T) {
 	t.Setenv("PATH", dir)
 
 	_, err := Probe(in)
-	if err == nil || !strings.Contains(err.Error(), "duração") {
-		t.Fatalf("esperava erro de duração, got %v", err)
+	if err == nil || !strings.Contains(err.Error(), "duration") {
+		t.Fatalf("expected a duration error, got %v", err)
 	}
 }
 

@@ -1,5 +1,8 @@
 # vidctl
 
+**Português (Brasil) · [English](README.en.md) · [Español](README.es.md) ·
+[中文（简体）](README.zh-CN.md)**
+
 Compressor de vídeo desktop com backend Go (Wails + ffmpeg). Escolha o destino
 (WhatsApp, Instagram, Shorts, YouTube) e o app calcula automaticamente o
 bitrate para caber no tamanho alvo — preservando a duração e o formato, sem

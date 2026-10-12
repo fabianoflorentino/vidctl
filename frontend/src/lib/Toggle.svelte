@@ -15,7 +15,7 @@
     description = '',
     rowClass = 'tune-row',
     disabled = false,
-    ariaLabel = 'Alternar',
+    ariaLabel = 'Toggle',
     onchange,
   }: Props = $props()
 

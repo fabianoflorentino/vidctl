@@ -60,7 +60,7 @@ func ffprobePath() (string, error) {
 		return "", err
 	}
 	if err != nil {
-		return "", errors.New("ffprobe não encontrado. Instale o ffmpeg para usar o vidctl.")
+		return "", errors.New("ffprobe not found. Install ffmpeg to use vidctl.")
 	}
 	return p, nil
 }
@@ -82,7 +82,7 @@ func Probe(path string) (*Info, error) {
 	dlog.Printf("[media] exec ffprobe %s", strings.Join(append([]string{bin}, args...), " "))
 	out, err := cmdutil.Command(bin, args...).Output()
 	if err != nil {
-		return nil, errors.New("não foi possível ler o arquivo de vídeo: " + path)
+		return nil, errors.New("could not read the video file: " + path)
 	}
 
 	var probe ffprobeOutput
@@ -136,10 +136,10 @@ func Probe(path string) (*Info, error) {
 	}
 
 	if !info.HasVideo {
-		return nil, errors.New("o arquivo não contém um stream de vídeo")
+		return nil, errors.New("the file has no video stream")
 	}
 	if info.DurationSec <= 0 {
-		return nil, errors.New("não foi possível determinar a duração do vídeo")
+		return nil, errors.New("could not determine the video duration")
 	}
 
 	return info, nil

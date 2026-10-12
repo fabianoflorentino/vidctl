@@ -1,5 +1,8 @@
 # Changelog
 
+**Português (Brasil) · [English](CHANGELOG.en.md) · [Español](CHANGELOG.es.md) ·
+[中文（简体）](CHANGELOG.zh-CN.md)**
+
 Todas as mudanças relevantes do vidctl, no formato
 [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/), com
 versionamento [SemVer](https://semver.org/lang/pt-BR/) e o release por
@@ -11,7 +14,10 @@ operacional dos pacotes.
 
 ## [Unreleased]
 
-Nada ainda — em desenvolvimento.
+- **i18n (pt-BR/en/es/zh)**: a interface ganhou dicionários em português
+  (Brasil, padrão), inglês, espanhol e chinês simplificado (mandarim). O idioma
+  é escolhido nas Preferências e fica salvo entre execuções (`config.Language`).
+  A base de código/documentação começa a ser anglicizada nesta leva.
 
 ## [2.3.0] — 2026-10-11
 

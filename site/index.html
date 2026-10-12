@@ -18,23 +18,30 @@
         vid<span>ctl</span>
       </a>
       <nav class="nav-links">
-        <a href="#recursos">recursos</a>
-        <a href="#corte">corte</a>
-        <a href="#presets">presets</a>
-        <a href="#como-funciona">como funciona</a>
-        <a class="nav-gh" href="https://github.com/fabianoflorentino/vidctl" target="_blank" rel="noopener">github ↗</a>
+        <a href="#recursos" data-i18n="nav.features">recursos</a>
+        <a href="#corte" data-i18n="nav.cut">corte</a>
+        <a href="#presets" data-i18n="nav.destinations">presets</a>
+        <a href="#como-funciona" data-i18n="nav.how">como funciona</a>
+        <label class="lang-switch mono" aria-hidden="true">
+          <select id="lang" aria-label="Idioma / Language / Idioma / 语言">
+            <option value="pt">PT</option>
+            <option value="en">EN</option>
+            <option value="es">ES</option>
+            <option value="zh">中文</option>
+          </select>
+        </label>
+        <a class="nav-gh" href="https://github.com/fabianoflorentino/vidctl" target="_blank" rel="noopener" data-i18n="nav.github">github ↗</a>
       </nav>
     </header>
 
     <main>
       <section class="hero">
-        <p class="kicker">ffmpeg 2-pass &middot; H.265 + GPU &middot; corte em partes &middot; extrair áudio &middot; desktop &middot; open-source</p>
+        <p class="kicker" data-i18n="hero.kicker">ffmpeg 2-pass &middot; H.265 + GPU &middot; corte em partes &middot; extrair áudio &middot; desktop &middot; open-source</p>
         <h1>
-          Vídeo leve,<br />
-          <em>história completa.</em>
+          <span data-i18n="hero.h1a">Vídeo leve,</span><br />
+          <em data-i18n="hero.h1b">história completa.</em>
         </h1>
-        <p class="lede">
-          Escolha o destino — WhatsApp, Instagram, Shorts, YouTube. O vidctl calcula o bitrate pra caber
+        <p class="lede" data-i18n="hero.lede">Escolha o destino — WhatsApp, Instagram, Shorts, YouTube. O vidctl calcula o bitrate pra caber
           no tamanho alvo <strong>sem cortar a duração nem o formato</strong>. Ganhe velocidade com
           <strong>H.265 e aceleração de GPU</strong> (NVENC/QSV/AMF/VideoToolbox), aplique <strong>ajustes por arquivo</strong>
           (escala, corte em <code>mm:ss</code>, remover áudio, FPS, rotação, thumbnail) e, se quiser,
@@ -44,93 +51,93 @@
 
         <div class="cta-row">
           <a class="btn btn-acid btn-sm" href="https://github.com/fabianoflorentino/vidctl/releases" target="_blank" rel="noopener">
-            baixar
-            <span class="btn-sub">última release · linux / windows / macos</span>
+            <span data-i18n="hero.download">baixar</span>
+            <span class="btn-sub" data-i18n="hero.downloadSub">última release · linux / windows / macos</span>
           </a>
-          <a class="btn btn-ghost" href="https://github.com/fabianoflorentino/vidctl" target="_blank" rel="noopener">código no github ↗</a>
+          <a class="btn btn-ghost" href="https://github.com/fabianoflorentino/vidctl" target="_blank" rel="noopener" data-i18n="hero.code">código no github ↗</a>
         </div>
 
         <div
           class="demo st-pick"
           id="demo"
           role="img"
-          aria-label="Demonstração animada do vidctl: barra lateral em acordeão (Avançado aberto com H.265, NVENC e preset p4; Presets, Cortar, Extrair áudio, Ajustes de vídeo e Tamanho colapsados), cartão de saída ao lado do vídeo, compressão no preset WhatsApp Status com corte em 6 partes de 5 minutos, métricas de CPU/RAM/ffmpeg/GPU e tempo em tempo real, extração de áudio em MP3 rodando na fila de tarefas e, no fim, a tela inicial em tema claro."
+          data-i18n-attr="aria-label" data-i18n="demo.aria" aria-label="..."
         >
           <div class="wbar">
             <i></i><i></i><i></i>
-            <b>vidctl · desktop</b>
-            <em>demonstração</em>
+            <b data-i18n="demo.wbar">vidctl · desktop</b>
+            <em data-i18n="demo.demonstration">demonstração</em>
           </div>
           <div class="wapp" id="wapp">
             <header class="atb">
-              <span class="abrand"><b>VIDCTL</b><small>compressor de vídeo</small></span>
+              <span class="abrand"><b>VIDCTL</b><small data-i18n="demo.subtitle">compressor de vídeo</small></span>
               <span class="aend">
                 <span class="atheme" id="theme-pill">☀</span>
-                <span class="affmpeg"><i></i>ffmpeg OK</span>
+                <span class="affmpeg"><i></i><span data-i18n="topbar.ffmpegOk">ffmpeg OK</span></span>
               </span>
             </header>
             <div class="abody">
               <aside class="aside">
                 <div class="grp sect" data-grp="avancado">
-                  <div class="sect-head"><span>Avançado</span><b class="chev"></b></div>
+                  <div class="sect-head"><span data-i18n="demo.adv">Avançado</span><b class="chev"></b></div>
                   <div class="sect-body">
-                    <div class="meta">codec de vídeo</div>
+                    <div class="meta" data-i18n="demo.codec">codec de vídeo</div>
                     <div class="chips">
                       <span class="chip">H.264</span><span class="chip picked">H.265 / HEVC</span>
                     </div>
-                    <div class="meta">codificador</div>
+                    <div class="meta" data-i18n="demo.encoder">codificador</div>
                     <div class="chips">
                       <span class="chip picked">NVENC</span><span class="chip dim">QSV</span><span class="chip dim">AMF</span>
                     </div>
-                    <div class="meta">preset NVENC</div>
+                    <div class="meta" data-i18n="demo.nvenc">preset NVENC</div>
                     <div class="chips">
-                      <span class="chip">mais rápido</span><span class="chip picked">equilíbrio p4</span><span class="chip">máx. qualidade</span>
+                      <span class="chip" data-i18n="demo.nvencFastest">mais rápido</span><span class="chip picked" data-i18n="demo.nvencBalanced">equilíbrio p4</span><span class="chip" data-i18n="demo.nvencMax">máx. qualidade</span>
                     </div>
-                    <div class="hint">2 backend(s) de hardware · GPU no painel</div>
+                    <div class="hint" data-i18n="demo.backends">2 backend(s) de hardware · GPU no painel</div>
                   </div>
                 </div>
                 <div class="grp sect" data-grp="presets">
-                  <div class="sect-head"><span>Presets</span><span class="sect-val">WhatsApp Status</span><b class="chev"></b></div>
+                  <div class="sect-head"><span data-i18n="demo.presets">Presets</span><span class="sect-val">WhatsApp Status</span><b class="chev"></b></div>
                   <div class="sect-body">
-                    <div class="prow picked"><span class="pn">WhatsApp Status<small>status e conversas</small></span><span class="pv">10 MB</span></div>
-                    <div class="prow"><span class="pn">Instagram<small>reels &amp; stories</small></span><span class="pv">16 MB</span></div>
+                    <div class="prow picked"><span class="pn">WhatsApp Status<small data-i18n="demo.wsDesc">status e conversas</small></span><span class="pv">10 MB</span></div>
+                    <div class="prow"><span class="pn">Instagram<small data-i18n="demo.igDesc">reels &amp; stories</small></span><span class="pv">16 MB</span></div>
                   </div>
                 </div>
                 <div class="grp sect" data-grp="split">
-                  <div class="sect-head"><span>Cortar</span><span class="sect-val">6 × ~5:00</span><b class="chev"></b></div>
+                  <div class="sect-head"><span data-i18n="demo.cut">Cortar</span><span class="sect-val">6 × ~5:00</span><b class="chev"></b></div>
                   <div class="sect-body">
-                    <div class="trow on"><span>partes</span><span class="sl"><span class="th" style="left:22%"></span></span><span class="num">6</span></div>
-                    <div class="trow"><span>min/parte</span><span class="sl"><span class="th" style="left:10%"></span></span><span class="num">5</span></div>
+                    <div class="trow on"><span data-i18n="demo.parts">partes</span><span class="sl"><span class="th" style="left:22%"></span></span><span class="num">6</span></div>
+                    <div class="trow"><span data-i18n="demo.minEach">min/parte</span><span class="sl"><span class="th" style="left:10%"></span></span><span class="num">5</span></div>
                   </div>
                 </div>
                 <div class="grp sect" data-grp="audio">
-                  <div class="sect-head"><span>Extrair áudio</span><span class="sect-val">MP3 · 192k</span><b class="chev"></b></div>
+                  <div class="sect-head"><span data-i18n="sec.audio">Extrair áudio</span><span class="sect-val">MP3 · 192k</span><b class="chev"></b></div>
                   <div class="sect-body">
-                    <div class="meta">formato</div>
+                    <div class="meta" data-i18n="demo.format">formato</div>
                     <div class="chips">
                       <span class="chip picked">MP3</span><span class="chip">Opus</span><span class="chip">AAC</span><span class="chip dim">FLAC</span><span class="chip dim">WAV</span><span class="chip dim">copiar</span>
                     </div>
-                    <div class="trow on"><span>qualidade</span><span class="sl"><span class="th" style="left:60%"></span></span><span class="num">192</span><span class="unit">kbps</span></div>
-                    <div class="meta">canais</div>
+                    <div class="trow on"><span data-i18n="demo.quality">qualidade</span><span class="sl"><span class="th" style="left:60%"></span></span><span class="num">192</span><span class="unit">kbps</span></div>
+                    <div class="meta" data-i18n="demo.channels">canais</div>
                     <div class="chips">
                       <span class="chip picked">Estéreo</span><span class="chip">Mono</span><span class="chip">Manter</span>
                     </div>
-                    <div class="trow"><span>normalizar (EBU R128)</span><span class="sect-val">off</span></div>
+                    <div class="trow"><span data-i18n="demo.normalize">normalizar (EBU R128)</span><span class="sect-val">off</span></div>
                   </div>
                 </div>
                 <div class="grp sect" data-grp="ajustes">
-                  <div class="sect-head"><span>Ajustes de vídeo</span><span class="sect-val">corte 1:00–3:30</span><b class="chev"></b></div>
+                  <div class="sect-head"><span data-i18n="sec.adjust">Ajustes de vídeo</span><span class="sect-val">corte 1:00–3:30</span><b class="chev"></b></div>
                   <div class="sect-body">
-                    <div class="trow"><span>escala</span><span class="sect-val">Original</span></div>
-                    <div class="trow"><span>remover áudio</span><span class="sect-val">off</span></div>
-                    <div class="trow"><span>thumbnail</span><span class="sect-val">on</span></div>
+                    <div class="trow"><span data-i18n="demo.scale">escala</span><span class="sect-val">Original</span></div>
+                    <div class="trow"><span data-i18n="demo.removeAudio">remover áudio</span><span class="sect-val">off</span></div>
+                    <div class="trow"><span data-i18n="demo.thumbnail">thumbnail</span><span class="sect-val">on</span></div>
                   </div>
                 </div>
                 <div class="grp sect" data-grp="tamanho">
-                  <div class="sect-head"><span>Tamanho</span><span class="sect-val">10 megabytes</span><b class="chev"></b></div>
+                  <div class="sect-head"><span data-i18n="sec.size">Tamanho</span><span class="sect-val">10 megabytes</span><b class="chev"></b></div>
                   <div class="sect-body">
-                    <div class="trow"><span>tamanho</span><span class="sl"><span class="th" style="left:34%"></span></span><span class="num">10</span><span class="unit">megabytes</span></div>
-                    <div class="hint">≈ vídeo 169 kbps · áudio 96k por parte</div>
+                    <div class="trow"><span data-i18n="demo.sizeMB">tamanho</span><span class="sl"><span class="th" style="left:34%"></span></span><span class="num">10</span><span class="unit">megabytes</span></div>
+                    <div class="hint" data-i18n="demo.bitrate">≈ vídeo 169 kbps · áudio 96k por parte</div>
                   </div>
                 </div>
               </aside>
@@ -139,15 +146,15 @@
                   <svg viewBox="0 0 24 24" aria-hidden="true">
                     <path d="M4 6.5 h11 a2.5 2.5 0 0 1 2.5 2.5 v6 a2.5 2.5 0 0 1 -2.5 2.5 H4 a2.5 2.5 0 0 1 -2.5 -2.5 V9 a2.5 2.5 0 0 1 2.5 -2.5 z M18.5 10.8 L23 8.2 v7.6 l-4.5 -2.6 z" />
                   </svg>
-                  <b>Comprimir Vídeos</b>
-                  <small>arraste um arquivo aqui ou use “escolher vídeo…”</small>
+                  <b data-i18n="env.empty.title">Comprimir Vídeos</b>
+                  <small data-i18n="env.empty.sub">arraste um arquivo aqui ou use “escolher vídeo…”</small>
                 </div>
                 <div class="aout">
                   <span class="opath">…/palestra-compressed-part1.mp4</span>
-                  <span class="obtn">salvar como…</span>
+                  <span class="obtn" data-i18n="out.saveAs">salvar como…</span>
                 </div>
                 <div class="aaudio">
-                  <span class="obtn solid">extrair áudio</span>
+                  <span class="obtn solid" data-i18n="out.extractAudio">extrair áudio</span>
                   <span class="opath">…/palestra-open-source-audio.mp3</span>
                   <span class="obtn">salvar como…</span>
                 </div>
@@ -162,32 +169,32 @@
                   <div class="trow"><span>encode</span><span class="sect-val">H.265 · NVENC · p4</span></div>
                 </div>
                 <div class="aq">
-                  <div class="aqhead"><span>Fila de tarefas</span><span class="aqcount">1 tarefa</span></div>
+                  <div class="aqhead"><span data-i18n="queue.title">Fila de tarefas</span><span class="aqcount" data-i18n="demo.queueCount">1 tarefa</span></div>
                   <div class="aq-run">
                     <div class="aqrow">
                       <span class="aqdot"></span>
                       <span class="aqname">palestra-open-source.mp3</span>
                       <span class="aqtag">MP3 · 192k</span>
                     </div>
-                    <div class="aqstate">EXTRAINDO ÁUDIO · <b id="aq-pct">0%</b></div>
+                    <div class="aqstate"><span data-i18n="env.extracting">EXTRAINDO ÁUDIO</span> · <b id="aq-pct">0%</b></div>
                     <div class="atrack"><div class="afill" id="aq-fill"></div></div>
                   </div>
                   <div class="aq-done">
                     <span class="aqres">palestra-open-source.mp3 · <b>33.8 MB</b> · ⏱ 12s</span>
-                    <span class="abtn solid">abrir pasta</span>
+                    <span class="abtn solid" data-i18n="result.openFolder">abrir pasta</span>
                   </div>
                 </div>
                 <div class="aprog">
                   <div class="aphead"><span id="stage-label">H.265 · NVENC p4 · parte 1/6</span><span id="demo-pct">0%</span></div>
                   <div class="atrack"><div class="afill" id="demo-fill"></div></div>
                   <div class="afoot">
-                    <span class="acancel">cancelar</span>
+                    <span class="acancel" data-i18n="prog.cancel">cancelar</span>
                     <span class="ametrics" id="demo-metrics">CPU <b>—</b> · RAM <b>—</b> · ffmpeg <b>—</b> · GPU <b>—</b> · ⏱ <b>0s</b></span>
                   </div>
                 </div>
                 <div class="ares">
                   <div class="abig"><b>−86%</b><span>59.4 MB · 6 partes</span><small>de 420.0 MB</small></div>
-                  <div class="aacts"><span class="abtn solid">abrir pasta</span><span class="abtn">novo vídeo</span></div>
+                  <div class="aacts"><span class="abtn solid">abrir pasta</span><span class="abtn" data-i18n="result.newVideo">novo vídeo</span></div>
                 </div>
                 <div class="abar">
                   <span class="grow"></span>
@@ -199,61 +206,61 @@
           </div>
         </div>
 
-        <p class="note">30:00 · 1080p · 420 MB → 6 partes de ~5 min somando 59,4 MB (−86%) no preset WhatsApp Status (10 MB por parte), com H.265 + NVENC (preset p4). Depois, o botão <b>extrair áudio</b> (no cartão do vídeo, abaixo do destino) vira MP3 · 192k · <b>33,8 MB</b> e a extração roda como tarefa na fila — e, no fim, a tela inicial aparece em tema claro (botão sol/lua do app)</p>
+        <p class="note" data-i18n="demo.note">30:00 · 1080p · 420 MB → 6 partes de ~5 min somando 59,4 MB (−86%) no preset WhatsApp Status (10 MB por parte), com H.265 + NVENC (preset p4). Depois, o botão <b>extrair áudio</b> (no cartão do vídeo, abaixo do destino) vira MP3 · 192k · <b>33,8 MB</b> e a extração roda como tarefa na fila — e, no fim, a tela inicial aparece em tema claro (botão sol/lua do app)</p>
       </section>
 
       <section id="recursos" class="section">
         <div class="section-head">
           <span class="step-num">01</span>
-          <h2>Recursos</h2>
+          <h2 data-i18n="sec.features">Recursos</h2>
         </div>
         <div class="grid">
           <article class="card">
-            <span class="tag">novo</span>
-            <h3>Codec H.265 + GPU</h3>
-            <p>HEVC encolhe mais pelo mesmo visual. Com NVENC, QSV, AMF ou VideoToolbox o encode vira dezenas de vezes mais rápido — e você escolhe o preset NVENC (p1–p7) para calibrar velocidade × qualidade.</p>
+            <span class="tag" data-i18n="tag.new">novo</span>
+            <h3 data-i18n="card.h265">Codec H.265 + GPU</h3>
+            <p data-i18n="card.h265Desc">HEVC encolhe mais pelo mesmo visual. Com NVENC, QSV, AMF ou VideoToolbox o encode vira dezenas de vezes mais rápido — e você escolhe o preset NVENC (p1–p7) para calibrar velocidade × qualidade.</p>
           </article>
           <article class="card">
             <span class="tag">novo</span>
-            <h3>Ajustes de vídeo</h3>
-            <p>Escala (padrão/original/custom), corte por janela em <code>mm:ss</code>, remover áudio, FPS, rotação e geração de thumbnail — aplicados por trabalho, além do preset.</p>
+            <h3 data-i18n="card.adjust">Ajustes de vídeo</h3>
+            <p data-i18n="card.adjustDesc">Escala (padrão/original/custom), corte por janela em <code>mm:ss</code>, remover áudio, FPS, rotação e geração de thumbnail — aplicados por trabalho, além do preset.</p>
           </article>
           <article class="card">
             <span class="tag">novo</span>
-            <h3>Extrair áudio</h3>
-            <p>Pegue só a trilha de áudio sem reencodar o vídeo: mp3, opus, aac, flac, wav ou copiar (remux). Com qualidade em kbps, canais, normalização EBU R128 e janela <code>mm:ss</code> — na mesma fila de tarefas, com progresso e abrir pasta.</p>
+            <h3 data-i18n="card.audio">Extrair áudio</h3>
+            <p data-i18n="card.audioDesc">Pegue só a trilha de áudio sem reencodar o vídeo: mp3, opus, aac, flac, wav ou copiar (remux). Com qualidade em kbps, canais, normalização EBU R128 e janela <code>mm:ss</code> — na mesma fila de tarefas, com progresso e abrir pasta.</p>
           </article>
           <article class="card">
             <span class="tag">novo</span>
-            <h3>Sidebar colapsável + tempo</h3>
-            <p>Os grupos de configuração colapsam e expandem (um por vez), a janela inteira aceita arrastar e soltar vídeo, e cada conversão mostra o tempo que levou — fácil comparar encoders e presets.</p>
+            <h3 data-i18n="card.sidebar">Sidebar colapsável + tempo</h3>
+            <p data-i18n="card.sidebarDesc">Os grupos de configuração colapsam e expandem (um por vez), a janela inteira aceita arrastar e soltar vídeo, e cada conversão mostra o tempo que levou — fácil comparar encoders e presets.</p>
           </article>
           <article class="card">
             <span class="tag">novo</span>
-            <h3>Cortar</h3>
-            <p>Divida o vídeo por tempo: N partes iguais ou X minutos por parte (30 min → 6 × 5 min). Mínimo de 1 min por parte, cada uma comprimida de verdade e salva como <code>nome-part1.mp4</code>.</p>
+            <h3 data-i18n="card.cut">Cortar</h3>
+            <p data-i18n="card.cutDesc">Divida o vídeo por tempo: N partes iguais ou X minutos por parte (30 min → 6 × 5 min). Mínimo de 1 min por parte, cada uma comprimida de verdade e salva como <code>nome-part1.mp4</code>.</p>
           </article>
           <article class="card">
-            <h3>2-pass para tamanho exato</h3>
-            <p>Primeiro passe analisa a cena, segundo aplica o bitrate. O arquivo sai no tamanho alvo — não em cima, não quase.</p>
+            <h3 data-i18n="card.twopass">2-pass para tamanho exato</h3>
+            <p data-i18n="card.twopassDesc">Primeiro passe analisa a cena, segundo aplica o bitrate. O arquivo sai no tamanho alvo — não em cima, não quase.</p>
           </article>
           <article class="card">
-            <h3>Presets por plataforma</h3>
-            <p>WhatsApp Status (10 MB), WhatsApp 16 MB, Instagram Reels, Shorts 30 MB, YouTube em CRF e tamanho personalizado.</p>
-          </article>
-          <article class="card">
-            <span class="tag">novo</span>
-            <h3>Métricas ao vivo</h3>
-            <p>Durante a conversão o painel mostra CPU, memória, carga do ffmpeg e GPU (engine de vídeo) — pra você saber que a máquina está trabalhando sem travar a interface.</p>
+            <h3 data-i18n="card.presets">Presets por plataforma</h3>
+            <p data-i18n="card.presetsDesc">WhatsApp Status (10 MB), WhatsApp 16 MB, Instagram Reels, Shorts 30 MB, YouTube em CRF e tamanho personalizado.</p>
           </article>
           <article class="card">
             <span class="tag">novo</span>
-            <h3>Tema claro e escuro</h3>
-            <p>Segue o sistema e pode ser fixado no botão sol/lua. A escolha persiste entre aberturas do app.</p>
+            <h3 data-i18n="card.metrics">Métricas ao vivo</h3>
+            <p data-i18n="card.metricsDesc">Durante a conversão o painel mostra CPU, memória, carga do ffmpeg e GPU (engine de vídeo) — pra você saber que a máquina está trabalhando sem travar a interface.</p>
           </article>
           <article class="card">
-            <h3>100% offline</h3>
-            <p>Encode local com ffmpeg nativo. Seu vídeo não sai da sua máquina — ideal pra material sensível.</p>
+            <span class="tag">novo</span>
+            <h3 data-i18n="card.theme">Tema claro e escuro</h3>
+            <p data-i18n="card.themeDesc">Segue o sistema e pode ser fixado no botão sol/lua. A escolha persiste entre aberturas do app.</p>
+          </article>
+          <article class="card">
+            <h3 data-i18n="card.offline">100% offline</h3>
+            <p data-i18n="card.offlineDesc">Encode local com ffmpeg nativo. Seu vídeo não sai da sua máquina — ideal pra material sensível.</p>
           </article>
         </div>
       </section>
@@ -261,7 +268,7 @@
       <section id="corte" class="section">
         <div class="section-head">
           <span class="step-num">02</span>
-          <h2>Corte por tempo</h2>
+          <h2 data-i18n="sec.cut">Corte por tempo</h2>
         </div>
         <div class="corte">
           <div class="corte-demo" aria-hidden="true">
@@ -277,11 +284,11 @@
             </div>
           </div>
           <ul class="regras">
-            <li><b>Escolha uma barra:</b> número de partes ou minutos por parte — a outra opção fica desligada.</li>
-            <li><b>Mínimo de 1 min</b> por parte. O app bloqueia cortes que gerem partes menores.</li>
-            <li><b>Sobra honesta:</b> se o vídeo não divide exato, a sobra vira uma parte final menor ou é juntada na última — nada se perde.</li>
-            <li><b>Compressão por parte:</b> cada trecho passa pelo preset escolhido; em modo tamanho, o alvo vale para cada parte.</li>
-            <li><b>Nomes previsíveis:</b> <code>video-part1.mp4</code>, <code>video-part2.mp4</code>… com zero à esquerda a partir de 10 partes.</li>
+            <li data-i18n="cut.r1"><b>Escolha uma barra:</b> número de partes ou minutos por parte — a outra opção fica desligada.</li>
+            <li data-i18n="cut.r2"><b>Mínimo de 1 min</b> por parte. O app bloqueia cortes que gerem partes menores.</li>
+            <li data-i18n="cut.r3"><b>Sobra honesta:</b> se o vídeo não divide exato, a sobra vira uma parte final menor ou é juntada na última — nada se perde.</li>
+            <li data-i18n="cut.r4"><b>Compressão por parte:</b> cada trecho passa pelo preset escolhido; em modo tamanho, o alvo vale para cada parte.</li>
+            <li data-i18n="cut.r5"><b>Nomes previsíveis:</b> <code>video-part1.mp4</code>, <code>video-part2.mp4</code>… com zero à esquerda a partir de 10 partes.</li>
           </ul>
         </div>
       </section>
@@ -289,38 +296,38 @@
       <section id="presets" class="section">
         <div class="section-head">
           <span class="step-num">03</span>
-          <h2>Destinos</h2>
+          <h2 data-i18n="sec.destinations">Destinos</h2>
         </div>
         <div class="presets">
           <article class="preset">
-            <span class="preset-name">WhatsApp Status</span>
-            <span class="preset-desc">status e conversas</span>
-            <span class="preset-target">2-pass · 10 MB</span>
+            <span class="preset-name" data-i18n="preset.ws">WhatsApp Status</span>
+            <span class="preset-desc" data-i18n="preset.wsDesc">status e conversas</span>
+            <span class="preset-target" data-i18n="preset.wsMet">2-pass · 10 MB</span>
           </article>
           <article class="preset">
-            <span class="preset-name">WhatsApp</span>
-            <span class="preset-desc">vídeos mais longos</span>
-            <span class="preset-target">2-pass · 16 MB</span>
+            <span class="preset-name" data-i18n="preset.wa">WhatsApp</span>
+            <span class="preset-desc" data-i18n="preset.waDesc">vídeos mais longos</span>
+            <span class="preset-target" data-i18n="preset.waMet">2-pass · 16 MB</span>
           </article>
           <article class="preset">
-            <span class="preset-name">Instagram</span>
-            <span class="preset-desc">reels &amp; stories</span>
-            <span class="preset-target">2-pass · 16 MB</span>
+            <span class="preset-name" data-i18n="preset.ig">Instagram</span>
+            <span class="preset-desc" data-i18n="preset.igDesc">reels &amp; stories</span>
+            <span class="preset-target" data-i18n="preset.igMet">2-pass · 16 MB</span>
           </article>
           <article class="preset">
-            <span class="preset-name">YouTube Shorts</span>
-            <span class="preset-desc">vertical 9:16</span>
-            <span class="preset-target">2-pass · 30 MB</span>
+            <span class="preset-name" data-i18n="preset.shorts">YouTube Shorts</span>
+            <span class="preset-desc" data-i18n="preset.shortsDesc">vertical 9:16</span>
+            <span class="preset-target" data-i18n="preset.shortsMet">2-pass · 30 MB</span>
           </article>
           <article class="preset">
-            <span class="preset-name">YouTube</span>
-            <span class="preset-desc">qualidade primeiro</span>
-            <span class="preset-target">CRF 23 · sem limite</span>
+            <span class="preset-name" data-i18n="preset.yt">YouTube</span>
+            <span class="preset-desc" data-i18n="preset.ytDesc">qualidade primeiro</span>
+            <span class="preset-target" data-i18n="preset.ytMet">CRF 23 · sem limite</span>
           </article>
           <article class="preset">
-            <span class="preset-name">Custom</span>
-            <span class="preset-desc">você define o MB</span>
-            <span class="preset-target">2-pass · variável</span>
+            <span class="preset-name" data-i18n="preset.custom">Custom</span>
+            <span class="preset-desc" data-i18n="preset.customDesc">você define o MB</span>
+            <span class="preset-target" data-i18n="preset.customMet">2-pass · variável</span>
           </article>
         </div>
       </section>
@@ -328,20 +335,20 @@
       <section id="como-funciona" class="section">
         <div class="section-head">
           <span class="step-num">04</span>
-          <h2>Como funciona</h2>
+          <h2 data-i18n="sec.how">Como funciona</h2>
         </div>
         <ol class="steps">
-          <li><span class="step-num">01</span><h3>Escolher</h3><p>Selecione o vídeo. O app lê duração, resolução e codecs na hora.</p></li>
-          <li><span class="step-num">02</span><h3>Destino</h3><p>Defina a plataforma — ou um tamanho customizado em MB.</p></li>
-          <li><span class="step-num">03</span><h3>Cortar (opcional)</h3><p>Ative o corte em partes e veja o plano na hora: 30:00 → 6 × ~5:00.</p></li>
-          <li><span class="step-num">04</span><h3>Executar</h3><p>2-pass com orçamento por parte, barra agregada e métricas de CPU/RAM/GPU ao vivo.</p></li>
-          <li><span class="step-num">05</span><h3>Enviar</h3><p>Pronto. Toca em “abrir pasta” e manda pra plataforma.</p></li>
-          <li><span class="step-num">06</span><h3>Extrair áudio (opcional)</h3><p>Precisa da trilha? Escolha formato (mp3/opus/aac/flac/wav/copiar), qualidade, canais e janela — sai sem reencodar o vídeo, na mesma fila de tarefas.</p></li>
+          <li><span class="step-num">01</span><h3 data-i18n="step.pick">Escolher</h3><p data-i18n="step.pickDesc">Selecione o vídeo. O app lê duração, resolução e codecs na hora.</p></li>
+          <li><span class="step-num">02</span><h3 data-i18n="step.dest">Destino</h3><p data-i18n="step.destDesc">Defina a plataforma — ou um tamanho customizado em MB.</p></li>
+          <li><span class="step-num">03</span><h3 data-i18n="step.cut">Cortar (opcional)</h3><p data-i18n="step.cutDesc">Ative o corte em partes e veja o plano na hora: 30:00 → 6 × ~5:00.</p></li>
+          <li><span class="step-num">04</span><h3 data-i18n="step.run">Executar</h3><p data-i18n="step.runDesc">2-pass com orçamento por parte, barra agregada e métricas de CPU/RAM/GPU ao vivo.</p></li>
+          <li><span class="step-num">05</span><h3 data-i18n="step.send">Enviar</h3><p data-i18n="step.sendDesc">Pronto. Toca em “abrir pasta” e manda pra plataforma.</p></li>
+          <li><span class="step-num">06</span><h3 data-i18n="step.audio">Extrair áudio (opcional)</h3><p data-i18n="step.audioDesc">Precisa da trilha? Escolha formato (mp3/opus/aac/flac/wav/copiar), qualidade, canais e janela — sai sem reencodar o vídeo, na mesma fila de tarefas.</p></li>
         </ol>
       </section>
 
       <section class="section tech">
-        <p>construído com</p>
+        <p data-i18n="tech">construído com</p>
         <div class="tech-list">
           <span>Go</span><span>Wails</span><span>ffmpeg</span><span>Svelte</span>
         </div>
@@ -349,7 +356,7 @@
     </main>
 
     <footer class="foot">
-      <p><span class="brand-mark" aria-hidden="true"></span> vid<span>ctl</span> — código aberto sob MIT</p>
+      <p data-i18n="foot.mit"><span class="brand-mark" aria-hidden="true"></span> vid<span>ctl</span> — código aberto sob MIT</p>
       <p class="dim">
         <a href="https://github.com/fabianoflorentino/vidctl" target="_blank" rel="noopener">github</a> ·
         <a href="https://github.com/fabianoflorentino" target="_blank" rel="noopener">@fabianoflorentino</a> ·
@@ -456,6 +463,255 @@
 
         enter(0);
         requestAnimationFrame(frame);
+      })();
+    </script>
+  <script>
+      (function () {
+        var I18N = {
+          pt: {
+            'nav.features': 'recursos', 'nav.cut': 'corte', 'nav.destinations': 'presets', 'nav.how': 'como funciona', 'nav.github': 'github ↗',
+            'hero.kicker': 'ffmpeg 2-pass &middot; H.265 + GPU &middot; corte em partes &middot; extrair áudio &middot; desktop &middot; open-source',
+            'hero.h1a': 'Vídeo leve,', 'hero.h1b': 'história completa.',
+            'hero.lede': 'Escolha o destino — WhatsApp, Instagram, Shorts, YouTube. O vidctl calcula o bitrate pra caber no tamanho alvo <strong>sem cortar a duração nem o formato</strong>. Ganhe velocidade com <strong>H.265 e aceleração de GPU</strong> (NVENC/QSV/AMF/VideoToolbox), aplique <strong>ajustes por arquivo</strong> (escala, corte em <code>mm:ss</code>, remover áudio, FPS, rotação, thumbnail) e, se quiser, <strong>divida em partes</strong> — 30 min viram 6 × 5 min, prontos pra publicar. Precisa só do áudio? <strong>Extraia a trilha</strong> em mp3, opus, aac, flac ou wav (ou copie sem recodificar) — tudo local, nada de nuvem.',
+            'hero.download': 'baixar', 'hero.downloadSub': 'última release · linux / windows / macos',
+            'hero.code': 'código no github ↗',
+            'demo.aria': 'Demonstração animada do vidctl: barra lateral em acordeão (Avançado aberto com H.265, NVENC e preset p4; Presets, Cortar, Extrair áudio, Ajustes de vídeo e Tamanho colapsados), cartão de saída ao lado do vídeo, compressão no preset WhatsApp Status com corte em 6 partes de 5 minutos, métricas de CPU/RAM/ffmpeg/GPU e tempo em tempo real, extração de áudio em MP3 rodando na fila de tarefas e, no fim, a tela inicial em tema claro.',
+            'demo.wbar': 'vidctl · desktop', 'demo.demonstration': 'demonstração', 'demo.subtitle': 'compressor de vídeo',
+            'topbar.ffmpegOk': 'ffmpeg OK',
+            'demo.adv': 'Avançado', 'demo.codec': 'codec de vídeo', 'demo.encoder': 'codificador', 'demo.nvenc': 'preset NVENC',
+            'demo.nvencFastest': 'mais rápido', 'demo.nvencBalanced': 'equilíbrio p4', 'demo.nvencMax': 'máx. qualidade',
+            'demo.backends': '2 backend(s) de hardware · GPU no painel',
+            'demo.presets': 'Presets', 'demo.wsDesc': 'status e conversas', 'demo.igDesc': 'reels &amp; stories',
+            'demo.cut': 'Cortar', 'demo.parts': 'partes', 'demo.minEach': 'min/parte',
+            'sec.audio': 'Extrair áudio', 'demo.format': 'formato', 'demo.quality': 'qualidade', 'demo.channels': 'canais', 'demo.normalize': 'normalizar (EBU R128)',
+            'sec.adjust': 'Ajustes de vídeo', 'demo.scale': 'escala', 'demo.removeAudio': 'remover áudio', 'demo.thumbnail': 'thumbnail',
+            'sec.size': 'Tamanho', 'demo.sizeMB': 'tamanho', 'demo.bitrate': '≈ vídeo 169 kbps · áudio 96k por parte',
+            'env.empty.title': 'Comprimir Vídeos', 'env.empty.sub': 'arraste um arquivo aqui ou use “escolher vídeo…”',
+            'out.saveAs': 'salvar como…', 'out.extractAudio': 'extrair áudio',
+            'demo.queueCount': '1 tarefa', 'queue.title': 'Fila de tarefas', 'env.extracting': 'EXTRAINDO ÁUDIO',
+            'result.openFolder': 'abrir pasta', 'prog.cancel': 'cancelar', 'result.newVideo': 'novo vídeo',
+            'demo.note': '30:00 · 1080p · 420 MB → 6 partes de ~5 min somando 59,4 MB (−86%) no preset WhatsApp Status (10 MB por parte), com H.265 + NVENC (preset p4). Depois, o botão <b>extrair áudio</b> (no cartão do vídeo, abaixo do destino) vira MP3 · 192k · <b>33,8 MB</b> e a extração roda como tarefa na fila — e, no fim, a tela inicial aparece em tema claro (botão sol/lua do app)',
+            'tag.new': 'novo', 'sec.features': 'Recursos',
+            'card.h265': 'Codec H.265 + GPU', 'card.h265Desc': 'HEVC encolhe mais pelo mesmo visual. Com NVENC, QSV, AMF ou VideoToolbox o encode vira dezenas de vezes mais rápido — e você escolhe o preset NVENC (p1–p7) para calibrar velocidade × qualidade.',
+            'card.adjust': 'Ajustes de vídeo', 'card.adjustDesc': 'Escala (padrão/original/custom), corte por janela em <code>mm:ss</code>, remover áudio, FPS, rotação e geração de thumbnail — aplicados por trabalho, além do preset.',
+            'card.audio': 'Extrair áudio', 'card.audioDesc': 'Pegue só a trilha de áudio sem reencodar o vídeo: mp3, opus, aac, flac, wav ou copiar (remux). Com qualidade em kbps, canais, normalização EBU R128 e janela <code>mm:ss</code> — na mesma fila de tarefas, com progresso e abrir pasta.',
+            'card.sidebar': 'Sidebar colapsável + tempo', 'card.sidebarDesc': 'Os grupos de configuração colapsam e expandem (um por vez), a janela inteira aceita arrastar e soltar vídeo, e cada conversão mostra o tempo que levou — fácil comparar encoders e presets.',
+            'card.cut': 'Cortar', 'card.cutDesc': 'Divida o vídeo por tempo: N partes iguais ou X minutos por parte (30 min → 6 × 5 min). Mínimo de 1 min por parte, cada uma comprimida de verdade e salva como <code>nome-part1.mp4</code>.',
+            'card.twopass': '2-pass para tamanho exato', 'card.twopassDesc': 'Primeiro passe analisa a cena, segundo aplica o bitrate. O arquivo sai no tamanho alvo — não em cima, não quase.',
+            'card.presets': 'Presets por plataforma', 'card.presetsDesc': 'WhatsApp Status (10 MB), WhatsApp 16 MB, Instagram Reels, Shorts 30 MB, YouTube em CRF e tamanho personalizado.',
+            'card.metrics': 'Métricas ao vivo', 'card.metricsDesc': 'Durante a conversão o painel mostra CPU, memória, carga do ffmpeg e GPU (engine de vídeo) — pra você saber que a máquina está trabalhando sem travar a interface.',
+            'card.theme': 'Tema claro e escuro', 'card.themeDesc': 'Segue o sistema e pode ser fixado no botão sol/lua. A escolha persiste entre aberturas do app.',
+            'card.offline': '100% offline', 'card.offlineDesc': 'Encode local com ffmpeg nativo. Seu vídeo não sai da sua máquina — ideal pra material sensível.',
+            'sec.cut': 'Corte por tempo',
+            'cut.r1': '<b>Escolha uma barra:</b> número de partes ou minutos por parte — a outra opção fica desligada.',
+            'cut.r2': '<b>Mínimo de 1 min</b> por parte. O app bloqueia cortes que gerem partes menores.',
+            'cut.r3': '<b>Sobra honesta:</b> se o vídeo não divide exato, a sobra vira uma parte final menor ou é juntada na última — nada se perde.',
+            'cut.r4': '<b>Compressão por parte:</b> cada trecho passa pelo preset escolhido; em modo tamanho, o alvo vale para cada parte.',
+            'cut.r5': '<b>Nomes previsíveis:</b> <code>video-part1.mp4</code>, <code>video-part2.mp4</code>… com zero à esquerda a partir de 10 partes.',
+            'preset.ws': 'WhatsApp Status', 'preset.wsDesc': 'status e conversas', 'preset.wsMet': '2-pass · 10 MB',
+            'preset.wa': 'WhatsApp', 'preset.waDesc': 'vídeos mais longos', 'preset.waMet': '2-pass · 16 MB',
+            'preset.ig': 'Instagram', 'preset.igDesc': 'reels &amp; stories', 'preset.igMet': '2-pass · 16 MB',
+            'preset.shorts': 'YouTube Shorts', 'preset.shortsDesc': 'vertical 9:16', 'preset.shortsMet': '2-pass · 30 MB',
+            'preset.yt': 'YouTube', 'preset.ytDesc': 'qualidade primeiro', 'preset.ytMet': 'CRF 23 · sem limite',
+            'preset.custom': 'Custom', 'preset.customDesc': 'você define o MB', 'preset.customMet': '2-pass · variável',
+            'sec.destinations': 'Destinos', 'sec.how': 'Como funciona',
+            'step.pick': 'Escolher', 'step.pickDesc': 'Selecione o vídeo. O app lê duração, resolução e codecs na hora.',
+            'step.dest': 'Destino', 'step.destDesc': 'Defina a plataforma — ou um tamanho customizado em MB.',
+            'step.cut': 'Cortar (opcional)', 'step.cutDesc': 'Ative o corte em partes e veja o plano na hora: 30:00 → 6 × ~5:00.',
+            'step.run': 'Executar', 'step.runDesc': '2-pass com orçamento por parte, barra agregada e métricas de CPU/RAM/GPU ao vivo.',
+            'step.send': 'Enviar', 'step.sendDesc': 'Pronto. Toca em “abrir pasta” e manda pra plataforma.',
+            'step.audio': 'Extrair áudio (opcional)', 'step.audioDesc': 'Precisa da trilha? Escolha formato (mp3/opus/aac/flac/wav/copiar), qualidade, canais e janela — sai sem reencodar o vídeo, na mesma fila de tarefas.',
+            'tech': 'construído com', 'foot.mit': '<span class="brand-mark" aria-hidden="true"></span> vid<span>ctl</span> — código aberto sob MIT'
+          },
+          en: {
+            'nav.features': 'features', 'nav.cut': 'cut', 'nav.destinations': 'presets', 'nav.how': 'how it works', 'nav.github': 'github ↗',
+            'hero.kicker': 'ffmpeg 2-pass &middot; H.265 + GPU &middot; cut into parts &middot; extract audio &middot; desktop &middot; open-source',
+            'hero.h1a': 'Lite video,', 'hero.h1b': 'full story.',
+            'hero.lede': 'Pick a destination — WhatsApp, Instagram, Shorts, YouTube. vidctl derives the bitrate to hit the target size <strong>without cutting duration or format</strong>. Speed things up with <strong>H.265 and GPU acceleration</strong> (NVENC/QSV/AMF/VideoToolbox), apply <strong>per-file adjustments</strong> (scale, <code>mm:ss</code> cut, remove audio, FPS, rotation, thumbnail) and, if you want, <strong>split into parts</strong> — 30 min become 6 × 5 min, ready to publish. Only need the audio? <strong>Extract the track</strong> as mp3, opus, aac, flac or wav (or remux without re-encoding) — all local, no cloud.',
+            'hero.download': 'download', 'hero.downloadSub': 'latest release · linux / windows / macos',
+            'hero.code': 'source on github ↗',
+            'demo.aria': 'Animated vidctl demo: accordion sidebar (Advanced open with H.265, NVENC and p4 preset; Presets, Cut, Extract audio, Video adjustments and Size collapsed), output card next to the video, WhatsApp Status compression cut into 6 parts of 5 minutes, live CPU/RAM/ffmpeg/GPU metrics and time, MP3 audio extraction running in the task queue and, at the end, the empty screen in light theme.',
+            'demo.wbar': 'vidctl · desktop', 'demo.demonstration': 'demo', 'demo.subtitle': 'video compressor',
+            'topbar.ffmpegOk': 'ffmpeg OK',
+            'demo.adv': 'Advanced', 'demo.codec': 'video codec', 'demo.encoder': 'encoder', 'demo.nvenc': 'NVENC preset',
+            'demo.nvencFastest': 'fastest', 'demo.nvencBalanced': 'balanced p4', 'demo.nvencMax': 'max quality',
+            'demo.backends': '2 hardware backend(s) · GPU in the panel',
+            'demo.presets': 'Presets', 'demo.wsDesc': 'status and chats', 'demo.igDesc': 'reels &amp; stories',
+            'demo.cut': 'Cut', 'demo.parts': 'parts', 'demo.minEach': 'min/part',
+            'sec.audio': 'Extract audio', 'demo.format': 'format', 'demo.quality': 'quality', 'demo.channels': 'channels', 'demo.normalize': 'normalize (EBU R128)',
+            'sec.adjust': 'Video adjustments', 'demo.scale': 'scale', 'demo.removeAudio': 'remove audio', 'demo.thumbnail': 'thumbnail',
+            'sec.size': 'Size', 'demo.sizeMB': 'size', 'demo.bitrate': '≈ video 169 kbps · audio 96k per part',
+            'env.empty.title': 'Compress Videos', 'env.empty.sub': 'drag a file here or use “choose video…”',
+            'out.saveAs': 'Save as…', 'out.extractAudio': 'extract audio',
+            'demo.queueCount': '1 task', 'queue.title': 'Task queue', 'env.extracting': 'EXTRACTING AUDIO',
+            'result.openFolder': 'open folder', 'prog.cancel': 'cancel', 'result.newVideo': 'new video',
+            'demo.note': '30:00 · 1080p · 420 MB → 6 parts of ~5 min totaling 59.4 MB (−86%) on the WhatsApp Status preset (10 MB per part), with H.265 + NVENC (p4 preset). Then the <b>extract audio</b> button (on the video card, below the destination) makes MP3 · 192k · <b>33.8 MB</b>, running as a task in the queue — and at the end the empty screen appears in light theme (sun/moon button)',
+            'tag.new': 'new', 'sec.features': 'Features',
+            'card.h265': 'H.265 codec + GPU', 'card.h265Desc': 'HEVC shrinks more for the same look. With NVENC, QSV, AMF or VideoToolbox encoding gets tens of times faster — and you pick the NVENC preset (p1–p7) to tune speed × quality.',
+            'card.adjust': 'Video adjustments', 'card.adjustDesc': 'Scale (default/original/custom), window cut in <code>mm:ss</code>, remove audio, FPS, rotation and thumbnail generation — applied per job, on top of the preset.',
+            'card.audio': 'Extract audio', 'card.audioDesc': 'Grab just the audio track without re-encoding the video: mp3, opus, aac, flac, wav or copy (remux). With kbps quality, channels, EBU R128 normalization and an <code>mm:ss</code> window — in the same task queue, with progress and open folder.',
+            'card.sidebar': 'Collapsible sidebar + time', 'card.sidebarDesc': 'Configuration groups collapse and expand (one at a time), the whole window accepts drag and drop, and every conversion shows how long it took — easy to compare encoders and presets.',
+            'card.cut': 'Cut', 'card.cutDesc': 'Split the video by time: N equal parts or X minutes per part (30 min → 6 × 5 min). At least 1 min per part, each one really compressed and saved as <code>name-part1.mp4</code>.',
+            'card.twopass': '2-pass for an exact size', 'card.twopassDesc': 'First pass analyzes the scene, second applies the bitrate. The file hits the target size — not over, not close.',
+            'card.presets': 'Presets per platform', 'card.presetsDesc': 'WhatsApp Status (10 MB), WhatsApp 16 MB, Instagram Reels, Shorts 30 MB, YouTube in CRF and custom size.',
+            'card.metrics': 'Live metrics', 'card.metricsDesc': 'During conversion the panel shows CPU, memory, ffmpeg load and GPU (video engine) — so you know the machine is working without freezing the UI.',
+            'card.theme': 'Light and dark theme', 'card.themeDesc': 'Follows the system and can be pinned with the sun/moon button. The choice persists between app launches.',
+            'card.offline': '100% offline', 'card.offlineDesc': 'Local encode with native ffmpeg. Your video never leaves your machine — ideal for sensitive material.',
+            'sec.cut': 'Cut by time',
+            'cut.r1': '<b>Pick one bar:</b> number of parts or minutes per part — the other option turns off.',
+            'cut.r2': '<b>At least 1 min</b> per part. The app blocks cuts that make smaller parts.',
+            'cut.r3': '<b>Honest remainder:</b> if the video does not divide evenly, the remainder becomes a shorter final part or is added to the last one — nothing is lost.',
+            'cut.r4': '<b>Compression per part:</b> each segment goes through the chosen preset; in size mode, the target applies to every part.',
+            'cut.r5': '<b>Predictable names:</b> <code>video-part1.mp4</code>, <code>video-part2.mp4</code>… with leading zeros from 10 parts on.',
+            'preset.ws': 'WhatsApp Status', 'preset.wsDesc': 'status and chats', 'preset.wsMet': '2-pass · 10 MB',
+            'preset.wa': 'WhatsApp', 'preset.waDesc': 'longer videos', 'preset.waMet': '2-pass · 16 MB',
+            'preset.ig': 'Instagram', 'preset.igDesc': 'reels &amp; stories', 'preset.igMet': '2-pass · 16 MB',
+            'preset.shorts': 'YouTube Shorts', 'preset.shortsDesc': 'vertical 9:16', 'preset.shortsMet': '2-pass · 30 MB',
+            'preset.yt': 'YouTube', 'preset.ytDesc': 'quality first', 'preset.ytMet': 'CRF 23 · no limit',
+            'preset.custom': 'Custom', 'preset.customDesc': 'you set the MB', 'preset.customMet': '2-pass · variable',
+            'sec.destinations': 'Destinations', 'sec.how': 'How it works',
+            'step.pick': 'Pick', 'step.pickDesc': 'Select the video. The app reads duration, resolution and codecs on the spot.',
+            'step.dest': 'Destination', 'step.destDesc': 'Set the platform — or a custom size in MB.',
+            'step.cut': 'Cut (optional)', 'step.cutDesc': 'Enable the part cut and see the plan right away: 30:00 → 6 × ~5:00.',
+            'step.run': 'Run', 'step.runDesc': '2-pass with per-part budget, aggregated bar and live CPU/RAM/GPU metrics.',
+            'step.send': 'Send', 'step.sendDesc': 'Done. Tap “open folder” and ship it to the platform.',
+            'step.audio': 'Extract audio (optional)', 'step.audioDesc': 'Need the track? Pick format (mp3/opus/aac/flac/wav/copy), quality, channels and window — it comes out without re-encoding the video, in the same task queue.',
+            'tech': 'built with', 'foot.mit': '<span class="brand-mark" aria-hidden="true"></span> vid<span>ctl</span> — open source under MIT'
+          },
+          es: {
+            'nav.features': 'funciones', 'nav.cut': 'corte', 'nav.destinations': 'presets', 'nav.how': 'cómo funciona', 'nav.github': 'github ↗',
+            'hero.kicker': 'ffmpeg 2-pass &middot; H.265 + GPU &middot; cortar en partes &middot; extraer audio &middot; escritorio &middot; open-source',
+            'hero.h1a': 'Vídeo ligero,', 'hero.h1b': 'historia completa.',
+            'hero.lede': 'Elige el destino — WhatsApp, Instagram, Shorts, YouTube. vidctl calcula el bitrate para caber en el tamaño objetivo <strong>sin cortar duración ni formato</strong>. Gana velocidad con <strong>H.265 y aceleración por GPU</strong> (NVENC/QSV/AMF/VideoToolbox), aplica <strong>ajustes por archivo</strong> (escala, corte en <code>mm:ss</code>, quitar audio, FPS, rotación, thumbnail) y, si quieres, <strong>divide en partes</strong> — 30 min se vuelven 6 × 5 min, listos para publicar. ¿Solo necesitas el audio? <strong>Extrae la pista</strong> en mp3, opus, aac, flac o wav (o copia sin recodificar) — todo local, nada de nube.',
+            'hero.download': 'descargar', 'hero.downloadSub': 'última release · linux / windows / macos',
+            'hero.code': 'código en github ↗',
+            'demo.aria': 'Demo animada de vidctl: barra lateral en acordeón (Avanzado abierto con H.265, NVENC y preset p4; Presets, Cortar, Extraer audio, Ajustes de vídeo y Tamaño colapsados), tarjeta de salida junto al vídeo, compresión en el preset WhatsApp Status con corte en 6 partes de 5 minutos, métricas de CPU/RAM/ffmpeg/GPU y tiempo en tiempo real, extracción de audio en MP3 en la cola de tareas y, al final, la pantalla inicial en tema claro.',
+            'demo.wbar': 'vidctl · escritorio', 'demo.demonstration': 'demo', 'demo.subtitle': 'compresor de vídeo',
+            'topbar.ffmpegOk': 'ffmpeg OK',
+            'demo.adv': 'Avanzado', 'demo.codec': 'códec de vídeo', 'demo.encoder': 'codificador', 'demo.nvenc': 'preset NVENC',
+            'demo.nvencFastest': 'más rápido', 'demo.nvencBalanced': 'equilibrado p4', 'demo.nvencMax': 'calidad máx.',
+            'demo.backends': '2 backend(s) de hardware · GPU en el panel',
+            'demo.presets': 'Presets', 'demo.wsDesc': 'estados y chats', 'demo.igDesc': 'reels &amp; stories',
+            'demo.cut': 'Cortar', 'demo.parts': 'partes', 'demo.minEach': 'min/parte',
+            'sec.audio': 'Extraer audio', 'demo.format': 'formato', 'demo.quality': 'calidad', 'demo.channels': 'canales', 'demo.normalize': 'normalizar (EBU R128)',
+            'sec.adjust': 'Ajustes de vídeo', 'demo.scale': 'escala', 'demo.removeAudio': 'quitar audio', 'demo.thumbnail': 'thumbnail',
+            'sec.size': 'Tamaño', 'demo.sizeMB': 'tamaño', 'demo.bitrate': '≈ vídeo 169 kbps · audio 96k por parte',
+            'env.empty.title': 'Comprimir Vídeos', 'env.empty.sub': 'arrastra un archivo aquí o usa “elegir vídeo…”',
+            'out.saveAs': 'Guardar como…', 'out.extractAudio': 'extraer audio',
+            'demo.queueCount': '1 tarea', 'queue.title': 'Cola de tareas', 'env.extracting': 'EXTRAYENDO AUDIO',
+            'result.openFolder': 'abrir carpeta', 'prog.cancel': 'cancelar', 'result.newVideo': 'nuevo vídeo',
+            'demo.note': '30:00 · 1080p · 420 MB → 6 partes de ~5 min sumando 59,4 MB (−86%) en el preset WhatsApp Status (10 MB por parte), con H.265 + NVENC (preset p4). Luego, el botón <b>extraer audio</b> (en la tarjeta del vídeo, bajo el destino) hace MP3 · 192k · <b>33,8 MB</b>, y corre como tarea en la cola — y al final la pantalla inicial aparece en tema claro (botón sol/luna)',
+            'tag.new': 'nuevo', 'sec.features': 'Funciones',
+            'card.h265': 'Códec H.265 + GPU', 'card.h265Desc': 'HEVC comprime más por el mismo aspecto. Con NVENC, QSV, AMF o VideoToolbox el encode se vuelve decenas de veces más rápido — y eliges el preset NVENC (p1–p7) para calibrar velocidad × calidad.',
+            'card.adjust': 'Ajustes de vídeo', 'card.adjustDesc': 'Escala (predeterminado/original/custom), corte por ventana en <code>mm:ss</code>, quitar audio, FPS, rotación y generación de thumbnail — aplicados por trabajo, además del preset.',
+            'card.audio': 'Extraer audio', 'card.audioDesc': 'Toma solo la pista de audio sin recodificar el vídeo: mp3, opus, aac, flac, wav o copiar (remux). Con calidad en kbps, canales, normalización EBU R128 y ventana <code>mm:ss</code> — en la misma cola de tareas, con progreso y abrir carpeta.',
+            'card.sidebar': 'Sidebar colapsable + tiempo', 'card.sidebarDesc': 'Los grupos de configuración colapsan y expanden (uno a la vez), la ventana entera acepta arrastrar y soltar, y cada conversión muestra cuánto tardó — fácil comparar codificadores y presets.',
+            'card.cut': 'Cortar', 'card.cutDesc': 'Divide el vídeo por tiempo: N partes iguales o X minutos por parte (30 min → 6 × 5 min). Mínimo 1 min por parte, cada una comprimida de verdad y guardada como <code>nombre-part1.mp4</code>.',
+            'card.twopass': '2-pass para tamaño exacto', 'card.twopassDesc': 'El primer pase analiza la escena, el segundo aplica el bitrate. El archivo sale en el tamaño objetivo — ni más, ni casi.',
+            'card.presets': 'Presets por plataforma', 'card.presetsDesc': 'WhatsApp Status (10 MB), WhatsApp 16 MB, Instagram Reels, Shorts 30 MB, YouTube en CRF y tamaño personalizado.',
+            'card.metrics': 'Métricas en vivo', 'card.metricsDesc': 'Durante la conversión el panel muestra CPU, memoria, carga del ffmpeg y GPU (engine de vídeo) — para que sepas que la máquina trabaja sin congelar la interfaz.',
+            'card.theme': 'Tema claro y oscuro', 'card.themeDesc': 'Sigue el sistema y se puede fijar con el botón sol/luna. La elección persiste entre ejecuciones.',
+            'card.offline': '100% offline', 'card.offlineDesc': 'Encode local con ffmpeg nativo. Tu vídeo no sale de tu máquina — ideal para material sensible.',
+            'sec.cut': 'Corte por tiempo',
+            'cut.r1': '<b>Elige una barra:</b> número de partes o minutos por parte — la otra opción se apaga.',
+            'cut.r2': '<b>Mínimo de 1 min</b> por parte. La app bloquea cortes que generen partes menores.',
+            'cut.r3': '<b>Sobra honesta:</b> si el vídeo no divide exacto, la sobra se vuelve una parte final menor o se une a la última — nada se pierde.',
+            'cut.r4': '<b>Compresión por parte:</b> cada tramo pasa por el preset elegido; en modo tamaño, el objetivo vale por parte.',
+            'cut.r5': '<b>Nombres predecibles:</b> <code>video-part1.mp4</code>, <code>video-part2.mp4</code>… con cero a la izquierda desde 10 partes.',
+            'preset.ws': 'WhatsApp Status', 'preset.wsDesc': 'estados y chats', 'preset.wsMet': '2-pass · 10 MB',
+            'preset.wa': 'WhatsApp', 'preset.waDesc': 'vídeos más largos', 'preset.waMet': '2-pass · 16 MB',
+            'preset.ig': 'Instagram', 'preset.igDesc': 'reels &amp; stories', 'preset.igMet': '2-pass · 16 MB',
+            'preset.shorts': 'YouTube Shorts', 'preset.shortsDesc': 'vertical 9:16', 'preset.shortsMet': '2-pass · 30 MB',
+            'preset.yt': 'YouTube', 'preset.ytDesc': 'calidad primero', 'preset.ytMet': 'CRF 23 · sin límite',
+            'preset.custom': 'Custom', 'preset.customDesc': 'tú defines el MB', 'preset.customMet': '2-pass · variable',
+            'sec.destinations': 'Destinos', 'sec.how': 'Cómo funciona',
+            'step.pick': 'Elegir', 'step.pickDesc': 'Selecciona el vídeo. La app lee duración, resolución y códecs al instante.',
+            'step.dest': 'Destino', 'step.destDesc': 'Define la plataforma — o un tamaño personalizado en MB.',
+            'step.cut': 'Cortar (opcional)', 'step.cutDesc': 'Activa el corte en partes y mira el plan al momento: 30:00 → 6 × ~5:00.',
+            'step.run': 'Ejecutar', 'step.runDesc': '2-pass con presupuesto por parte, barra agregada y métricas de CPU/RAM/GPU en vivo.',
+            'step.send': 'Enviar', 'step.sendDesc': 'Listo. Toca “abrir carpeta” y mándalo a la plataforma.',
+            'step.audio': 'Extraer audio (opcional)', 'step.audioDesc': '¿Necesitas la pista? Elige formato (mp3/opus/aac/flac/wav/copiar), calidad, canales y ventana — sale sin recodificar el vídeo, en la misma cola de tareas.',
+            'tech': 'construido con', 'foot.mit': '<span class="brand-mark" aria-hidden="true"></span> vid<span>ctl</span> — open source bajo MIT'
+          },
+          zh: {
+            'nav.features': '功能', 'nav.cut': '切割', 'nav.destinations': '预设', 'nav.how': '工作原理', 'nav.github': 'github ↗',
+            'hero.kicker': 'ffmpeg 2-pass &middot; H.265 + GPU &middot; 分段切割 &middot; 提取音频 &middot; 桌面 &middot; 开源',
+            'hero.h1a': '轻量视频，', 'hero.h1b': '故事完整。',
+            'hero.lede': '选择目标 — WhatsApp、Instagram、Shorts、YouTube。vidctl 推导码率以命中目标大小，<strong>不裁剪时长也不改格式</strong>。用 <strong>H.265 和 GPU 加速</strong>（NVENC/QSV/AMF/VideoToolbox）获得更快速度，应用 <strong>按文件调整</strong>（缩放、<code>mm:ss</code> 裁剪、移除音频、FPS、旋转、缩略图），还可以 <strong>分段切割</strong> — 30 分钟变成 6 × 5 分钟，随时可发布。只需要音频？<strong>提取音轨</strong>为 mp3、opus、aac、flac 或 wav（或直接重新封装）— 全部本地处理，不上云。',
+            'hero.download': '下载', 'hero.downloadSub': '最新版本 · linux / windows / macos',
+            'hero.code': 'GitHub 源码 ↗',
+            'demo.aria': 'vidctl 动画面板：手风琴侧栏（高级展开显示 H.265、NVENC 和 p4 预设；预设、切割、提取音频、视频调整和大小折叠），视频旁的输出卡片，WhatsApp Status 预设压缩并切割为 6 段 5 分钟，实时 CPU/RAM/ffmpeg/GPU 指标与时间，任务队列中运行 MP3 音频提取，结尾为浅色主题的空状态页面。',
+            'demo.wbar': 'vidctl · 桌面', 'demo.demonstration': '演示', 'demo.subtitle': '视频压缩工具',
+            'topbar.ffmpegOk': 'ffmpeg 正常',
+            'demo.adv': '高级', 'demo.codec': '视频编解码器', 'demo.encoder': '编码器', 'demo.nvenc': 'NVENC 预设',
+            'demo.nvencFastest': '最快', 'demo.nvencBalanced': '均衡 p4', 'demo.nvencMax': '最高质量',
+            'demo.backends': '已检测到 2 个硬件后端 · 面板显示 GPU',
+            'demo.presets': '预设', 'demo.wsDesc': '状态和聊天', 'demo.igDesc': 'reels &amp; stories',
+            'demo.cut': '切割', 'demo.parts': '段数', 'demo.minEach': '每段分钟',
+            'sec.audio': '提取音频', 'demo.format': '格式', 'demo.quality': '质量', 'demo.channels': '声道', 'demo.normalize': '标准化（EBU R128）',
+            'sec.adjust': '视频调整', 'demo.scale': '缩放', 'demo.removeAudio': '移除音频', 'demo.thumbnail': '缩略图',
+            'sec.size': '大小', 'demo.sizeMB': '大小', 'demo.bitrate': '≈ 视频 169 kbps · 每段音频 96k',
+            'env.empty.title': '压缩视频', 'env.empty.sub': '将文件拖到这里，或使用“选择视频…”',
+            'out.saveAs': '另存为…', 'out.extractAudio': '提取音频',
+            'demo.queueCount': '1 个任务', 'queue.title': '任务队列', 'env.extracting': '提取音频中',
+            'result.openFolder': '打开文件夹', 'prog.cancel': '取消', 'result.newVideo': '新视频',
+            'demo.note': '30:00 · 1080p · 420 MB → 6 段约 5 分钟，合计 59.4 MB（−86%），使用 WhatsApp Status 预设（每段 10 MB），H.265 + NVENC（p4 预设）。随后，视频卡片目标下方的 <b>提取音频</b> 按钮生成 MP3 · 192k · <b>33.8 MB</b>，作为任务在队列中运行 — 结尾空状态页面以浅色主题显示（日/月按钮）',
+            'tag.new': '新', 'sec.features': '功能',
+            'card.h265': 'H.265 编解码 + GPU', 'card.h265Desc': 'HEVC 同视觉效果下体积更小。借助 NVENC、QSV、AMF 或 VideoToolbox，编码速度快数十倍 — 你还可以选择 NVENC 预设（p1–p7）来平衡速度与质量。',
+            'card.adjust': '视频调整', 'card.adjustDesc': '缩放（默认/原始/自定义）、<code>mm:ss</code> 窗口裁剪、移除音频、FPS、旋转和生成缩略图 — 在预设基础上按任务应用。',
+            'card.audio': '提取音频', 'card.audioDesc': '无需重新编码即可提取音轨：mp3、opus、aac、flac、wav 或复制（重新封装）。支持 kbps 质量、声道、EBU R128 标准化和 <code>mm:ss</code> 窗口 — 在同一个任务队列中，带进度并打开文件夹。',
+            'card.sidebar': '可折叠侧栏 + 用时', 'card.sidebarDesc': '配置分组可折叠与展开（每次一个），整个窗口支持拖放，每次转换都会显示耗时 — 方便对比编码器和预设。',
+            'card.cut': '切割', 'card.cutDesc': '按时间分割视频：N 等分或每段 X 分钟（30 分钟 → 6 × 5 分钟）。每段至少 1 分钟，每段真实压缩并保存为 <code>名称-part1.mp4</code>。',
+            'card.twopass': '2-pass 精确控制大小', 'card.twopassDesc': '第一次编码分析画面，第二次应用码率。文件恰好达到目标大小 — 不多不少。',
+            'card.presets': '按平台预设', 'card.presetsDesc': 'WhatsApp Status（10 MB）、WhatsApp 16 MB、Instagram Reels、Shorts 30 MB、YouTube 使用 CRF 以及自定义大小。',
+            'card.metrics': '实时指标', 'card.metricsDesc': '转换期间面板显示 CPU、内存、ffmpeg 负载和 GPU（视频引擎）— 让你知道机器正在工作，界面不卡顿。',
+            'card.theme': '浅色与深色主题', 'card.themeDesc': '跟随系统，也可以通过日/月按钮固定。选择在应用重启后保持不变。',
+            'card.offline': '100% 离线', 'card.offlineDesc': '使用原生 ffmpeg 本地编码。你的视频不会离开你的电脑 — 适合敏感素材。',
+            'sec.cut': '按时长切割',
+            'cut.r1': '<b>选择一种方式：</b>段数或每段分钟数 — 另一个选项会关闭。',
+            'cut.r2': '每段<b>至少 1 分钟</b>。应用会阻止产生过短片段的切割。',
+            'cut.r3': '<b>余数诚实：</b>若视频无法等分，余数变为较短的末段或并入最后一段 — 不丢失任何内容。',
+            'cut.r4': '<b>按段压缩：</b>每个片段都经过所选预设；大小模式下目标按每段生效。',
+            'cut.r5': '<b>可预测的文件名：</b><code>video-part1.mp4</code>、<code>video-part2.mp4</code>… 从 10 段起补零。',
+            'preset.ws': 'WhatsApp 状态', 'preset.wsDesc': '状态和聊天', 'preset.wsMet': '2-pass · 10 MB',
+            'preset.wa': 'WhatsApp', 'preset.waDesc': '更长的视频', 'preset.waMet': '2-pass · 16 MB',
+            'preset.ig': 'Instagram', 'preset.igDesc': 'reels &amp; stories', 'preset.igMet': '2-pass · 16 MB',
+            'preset.shorts': 'YouTube Shorts', 'preset.shortsDesc': '竖屏 9:16', 'preset.shortsMet': '2-pass · 30 MB',
+            'preset.yt': 'YouTube', 'preset.ytDesc': '质量优先', 'preset.ytMet': 'CRF 23 · 无限制',
+            'preset.custom': '自定义', 'preset.customDesc': '由你设定 MB', 'preset.customMet': '2-pass · 可变',
+            'sec.destinations': '目标', 'sec.how': '工作原理',
+            'step.pick': '选择', 'step.pickDesc': '选择视频。应用立即读取时长、分辨率和编解码器。',
+            'step.dest': '目标', 'step.destDesc': '设置平台 — 或自定义大小（MB）。',
+            'step.cut': '切割（可选）', 'step.cutDesc': '开启分段切割，立即看到计划：30:00 → 6 × ~5:00。',
+            'step.run': '执行', 'step.runDesc': '2-pass 按段预算、汇总进度条和实时 CPU/RAM/GPU 指标。',
+            'step.send': '发送', 'step.sendDesc': '完成。点击“打开文件夹”并上传到平台。',
+            'step.audio': '提取音频（可选）', 'step.audioDesc': '需要音轨？选择格式（mp3/opus/aac/flac/wav/复制）、质量、声道和窗口 — 无需重新编码即可提取，并进入同一个任务队列。',
+            'tech': '使用以下技术构建', 'foot.mit': '<span class="brand-mark" aria-hidden="true"></span> vid<span>ctl</span> — MIT 许可的开源项目'
+          }
+        };
+        var LS = 'vidctl-site-lang';
+        function applyLang(l) {
+          var d = I18N[l] || I18N.pt;
+          document.documentElement.lang = l === 'zh' ? 'zh-CN' : l === 'pt' ? 'pt-BR' : l === 'es' ? 'es' : 'en';
+          document.querySelectorAll('[data-i18n]').forEach(function (el) {
+            var k = el.getAttribute('data-i18n');
+            if (!d[k]) return;
+            el.innerHTML = d[k];
+          });
+          document.querySelectorAll('[data-i18n-attr]').forEach(function (el) {
+            var k = el.getAttribute('data-i18n');
+            el.setAttribute(el.getAttribute('data-i18n-attr'), d[k] || '');
+          });
+        }
+        var sel = document.getElementById('lang');
+        var saved = null;
+        try { saved = localStorage.getItem(LS); } catch (e) { /* sem persistência */ }
+        if (saved && I18N[saved]) { sel.value = saved; applyLang(saved); }
+        else { applyLang('pt'); }
+        sel.addEventListener('change', function () {
+          applyLang(sel.value);
+          try { localStorage.setItem(LS, sel.value); } catch (e) { /* sem persistência */ }
+        });
       })();
     </script>
   </body>

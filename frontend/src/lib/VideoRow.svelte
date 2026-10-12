@@ -3,6 +3,7 @@
   import KebabMenu from './KebabMenu.svelte'
   import type { KebabItem } from './KebabMenu.svelte'
   import { stageLabel } from './stages'
+  import { t } from './i18n.svelte'
   import type { media } from '../../wailsjs/go/models'
 
   type RowStatus = 'idle' | 'progress' | 'done' | 'error'
@@ -32,8 +33,8 @@
   const orientation = $derived(info.width > info.height ? '16:9' : '9:16')
 
   const kebabItems = $derived<KebabItem[]>([
-    { id: 'switch', label: 'trocar arquivo' },
-    { id: 'clear', label: 'limpar' },
+    { id: 'switch', label: t('video.row.switch') },
+    { id: 'clear', label: t('video.row.clear') },
   ])
 
   function onKebab(id: string) {
@@ -78,11 +79,11 @@
       <span class="status-txt">{[stageLabel(stage), percent.toFixed(0) + '%'].join(' · ')}</span>
       <ProgressPie value={percent} />
     {:else if status === 'done'}
-      <span class="icon-check" aria-label="concluído">
+      <span class="icon-check" aria-label={t("video.row.concluded")}>
         <svg width="22" height="22" viewBox="0 0 24 24"><path d="M4 12 l5 5 l11 -11" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" /></svg>
       </span>
     {:else if status === 'error'}
-      <span class="icon-err" aria-label="erro">
+      <span class="icon-err" aria-label={t("queue.state.error")}>
         <svg width="22" height="22" viewBox="0 0 24 24"><path d="M12 4 l8 14 h-16 z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" /><circle cx="12" cy="14" r="1" fill="currentColor" /><path d="M12 9 v3" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
       </span>
     {/if}

@@ -117,7 +117,7 @@ func (m *Manager) Enqueue(task Task) (string, int) {
 	}
 	m.mu.Unlock()
 
-	dlog.Printf("[fila] enfileirado job=%s pos=%d input=%q", e.task.JobID, position, task.Job.InputPath)
+	dlog.Printf("[queue] enqueued job=%s pos=%d input=%q", e.task.JobID, position, task.Job.InputPath)
 	events.EmitQueued(e.task.JobID, position)
 	m.pump()
 	return e.task.JobID, position
@@ -126,7 +126,7 @@ func (m *Manager) Enqueue(task Task) (string, int) {
 // Cancel aborts a task: queued tasks leave the execution line, running tasks
 // have their context canceled. Finished tasks are left untouched.
 func (m *Manager) Cancel(id string) {
-	dlog.Printf("[fila] cancelar pedido job=%s", id)
+	dlog.Printf("[queue] cancel requested job=%s", id)
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	e := m.find(id)
@@ -210,7 +210,7 @@ func (m *Manager) SetMaxParallel(n int) {
 	if n < 1 {
 		n = 1
 	}
-	dlog.Printf("[fila] maxParallel=%d", n)
+	dlog.Printf("[queue] maxParallel=%d", n)
 	m.mu.Lock()
 	m.maxParallel = n
 	m.mu.Unlock()
@@ -285,7 +285,7 @@ func (m *Manager) pump() {
 	m.mu.Unlock()
 
 	for _, s := range starts {
-		dlog.Printf("[fila] iniciando job=%s", s.entry.task.JobID)
+		dlog.Printf("[queue] starting job=%s", s.entry.task.JobID)
 		events.EmitStart(s.entry.task.JobID)
 		go m.worker(s.ctx, s.entry)
 	}
@@ -321,7 +321,7 @@ func (m *Manager) worker(ctx context.Context, e *taskEntry) {
 	final := e.state
 	m.mu.Unlock()
 
-	dlog.Printf("[fila] worker fim job=%s estado=%s err=%v", e.task.JobID, final, err)
+	dlog.Printf("[queue] worker finished job=%s state=%s err=%v", e.task.JobID, final, err)
 	m.pump()
 }
 

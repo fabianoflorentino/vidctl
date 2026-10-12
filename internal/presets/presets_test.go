@@ -49,7 +49,7 @@ func TestByIDDefaultsToSoftwareH264(t *testing.T) {
 			t.Fatalf("preset %q should exist", id)
 		}
 		if p.Codec != "" || p.Hardware != "" {
-			t.Errorf("preset %q deveria ser software h264 por padrão, got codec=%q hardware=%q", id, p.Codec, p.Hardware)
+			t.Errorf("preset %q should default to software h264, got codec=%q hardware=%q", id, p.Codec, p.Hardware)
 		}
 	}
 }
