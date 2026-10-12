@@ -852,11 +852,11 @@ func TestExtractAudioValidation(t *testing.T) {
 		t.Errorf("spec vazio deveria falhar citando o vídeo, got %v", err)
 	}
 	spec := audio.Spec{InputPath: "in.mp4", Codec: "ogg", OutputPath: "out.mp3"}
-	if _, err := a.ExtractAudio(spec); err == nil || !strings.Contains(err.Error(), "formato") {
+	if _, err := a.ExtractAudio(spec); err == nil || !strings.Contains(err.Error(), "format") {
 		t.Errorf("formato inválido deveria falhar, got %v", err)
 	}
 	spec = audio.Spec{InputPath: "in.mp4", Codec: "mp3", OutputPath: ""}
-	if _, err := a.ExtractAudio(spec); err == nil || !strings.Contains(err.Error(), "destino") {
+	if _, err := a.ExtractAudio(spec); err == nil || !strings.Contains(err.Error(), "destination") {
 		t.Errorf("sem destino deveria falhar, got %v", err)
 	}
 }
@@ -939,7 +939,7 @@ printf '%s\n' '{"streams":[
 		t.Fatalf("ExtractAudio: %v", err)
 	}
 	s := waitTaskTerminal(t, a, jobID)
-	if s.State != compress.StateError || !strings.Contains(s.Error, "não tem faixa de áudio") {
+	if s.State != compress.StateError || !strings.Contains(s.Error, "has no audio track") {
 		t.Errorf("estado final = %+v; queria erro de faixa ausente", s)
 	}
 }

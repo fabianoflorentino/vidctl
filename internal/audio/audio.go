@@ -67,7 +67,7 @@ func ValidCodecs() []string {
 func Extension(codec string) (string, error) {
 	cs, ok := codecs[normalizeCodec(codec)]
 	if !ok {
-		return "", fmt.Errorf("%w: formato %q desconhecido (use %s)", ErrInvalidSpec, codec, strings.Join(ValidCodecs(), ", "))
+		return "", fmt.Errorf("%w: unknown format %q (use %s)", ErrInvalidSpec, codec, strings.Join(ValidCodecs(), ", "))
 	}
 	return cs.extension, nil
 }
@@ -84,7 +84,7 @@ func SuggestOutput(inputPath, codec, suffix string) (string, error) {
 	}
 	base := filepath.Base(strings.TrimSpace(inputPath))
 	if base == "" || base == "." || base == string(filepath.Separator) {
-		return "", fmt.Errorf("%w: informe o vídeo de origem", ErrInvalidSpec)
+		return "", fmt.Errorf("%w: provide the source video", ErrInvalidSpec)
 	}
 	base = strings.TrimSuffix(base, filepath.Ext(base))
 	return base + suffix + "." + ext, nil
@@ -94,36 +94,36 @@ func SuggestOutput(inputPath, codec, suffix string) (string, error) {
 // messages name the offending option so the UI can show the exact problem.
 func (s Spec) Validate() error {
 	if strings.TrimSpace(s.InputPath) == "" {
-		return fmt.Errorf("%w: escolha um vídeo para extrair o áudio", ErrInvalidSpec)
+		return fmt.Errorf("%w: pick a video to extract audio", ErrInvalidSpec)
 	}
 	codec := normalizeCodec(s.Codec)
 	cs, ok := codecs[codec]
 	if !ok {
-		return fmt.Errorf("%w: formato %q desconhecido (use %s)", ErrInvalidSpec, s.Codec, strings.Join(ValidCodecs(), ", "))
+		return fmt.Errorf("%w: unknown format %q (use %s)", ErrInvalidSpec, s.Codec, strings.Join(ValidCodecs(), ", "))
 	}
 	if s.BitrateKbps > 0 && cs.lossless {
-		return fmt.Errorf("%w: bitrate não se aplica a %s (perda nenhuma)", ErrInvalidSpec, codec)
+		return fmt.Errorf("%w: bitrate does not apply to %s (lossless)", ErrInvalidSpec, codec)
 	}
 	if s.BitrateKbps < 0 || (s.BitrateKbps > 0 && (s.BitrateKbps < 32 || s.BitrateKbps > 320)) {
-		return fmt.Errorf("%w: bitrate precisa estar entre 32 e 320 kbps (ou 0 para o padrão)", ErrInvalidSpec)
+		return fmt.Errorf("%w: bitrate must be between 32 and 320 kbps (or 0 for the default)", ErrInvalidSpec)
 	}
 	if s.SampleRate < 0 {
-		return fmt.Errorf("%w: taxa de amostragem inválida", ErrInvalidSpec)
+		return fmt.Errorf("%w: invalid sample rate", ErrInvalidSpec)
 	}
 	if s.Channels < 0 || s.Channels > 2 {
-		return fmt.Errorf("%w: canais precisam ser 0 (manter), 1 (mono) ou 2 (estéreo)", ErrInvalidSpec)
+		return fmt.Errorf("%w: channels must be 0 (keep), 1 (mono) or 2 (stereo)", ErrInvalidSpec)
 	}
 	if s.TrimStartSec < 0 || s.TrimEndSec < 0 {
-		return fmt.Errorf("%w: os tempos de extração não podem ser negativos", ErrInvalidSpec)
+		return fmt.Errorf("%w: extraction times cannot be negative", ErrInvalidSpec)
 	}
 	if s.TrimEndSec > 0 && s.TrimEndSec <= s.TrimStartSec {
-		return fmt.Errorf("%w: o fim da extração deve ser maior que o início", ErrInvalidSpec)
+		return fmt.Errorf("%w: the end of the extraction must be greater than the start", ErrInvalidSpec)
 	}
 	if s.Normalize && codec == "copy" {
-		return fmt.Errorf("%w: normalizar exige reencodar e não pode ser combinado com copy", ErrInvalidSpec)
+		return fmt.Errorf("%w: normalizing requires re-encoding and cannot be combined with copy", ErrInvalidSpec)
 	}
 	if strings.TrimSpace(s.OutputPath) == "" {
-		return fmt.Errorf("%w: escolha o destino do áudio", ErrInvalidSpec)
+		return fmt.Errorf("%w: choose the audio destination", ErrInvalidSpec)
 	}
 	return nil
 }
@@ -139,7 +139,7 @@ func ffmpegPath() (string, error) {
 		return "", err
 	}
 	if err != nil {
-		return "", errors.New("ffmpeg não encontrado. Instale o ffmpeg para usar o vidctl.")
+		return "", errors.New("ffmpeg not found. Install ffmpeg to use vidctl.")
 	}
 	return p, nil
 }
@@ -230,10 +230,10 @@ func Extract(ctx context.Context, jobID, inputPath string, spec Spec) (int64, er
 		return fail(err)
 	}
 	if !info.HasAudio {
-		return fail(errors.New("o vídeo não tem faixa de áudio"))
+		return fail(errors.New("the video has no audio track"))
 	}
 	if inputPath == spec.OutputPath {
-		return fail(errors.New("o arquivo de saída não pode ser igual ao de entrada"))
+		return fail(errors.New("output file cannot be the same as the input"))
 	}
 
 	bin, err := ffmpegPath()
@@ -241,7 +241,7 @@ func Extract(ctx context.Context, jobID, inputPath string, spec Spec) (int64, er
 		return fail(err)
 	}
 	if err := os.MkdirAll(filepath.Dir(spec.OutputPath), 0o755); err != nil {
-		return fail(fmt.Errorf("falha ao criar pasta de saída: %w", err))
+		return fail(fmt.Errorf("could not create the output folder: %w", err))
 	}
 
 	end := spec.TrimEndSec
