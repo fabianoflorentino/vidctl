@@ -1206,3 +1206,94 @@ func TestCheckUpdateSilentOnFailure(t *testing.T) {
 		t.Errorf("CheckUpdate = %+v; want silent no-update", got)
 	}
 }
+
+func withPresetStore(t *testing.T, a *App) *presets.Store {
+	t.Helper()
+	s, err := presets.NewStore(t.TempDir())
+	if err != nil {
+		t.Fatalf("presets.NewStore: %v", err)
+	}
+	a.presetStore = s
+	presets.SetCustomSource(s.LoadAll)
+	t.Cleanup(func() { presets.SetCustomSource(nil) })
+	return s
+}
+
+func TestAddCustomPresetBinding(t *testing.T) {
+	a := newTestApp(t)
+	withPresetStore(t, a)
+
+	all, err := a.AddCustomPreset(presets.Preset{Name: "Lecture HD", Mode: "size", SizeMB: 25, AudioBitrate: "128k", Codec: "h265"})
+	if err != nil {
+		t.Fatalf("AddCustomPreset: %v", err)
+	}
+	var added *presets.Preset
+	for i := range all {
+		if all[i].Name == "Lecture HD" {
+			added = &all[i]
+		}
+	}
+	if added == nil || !strings.HasPrefix(added.ID, presets.CustomIDPrefix) {
+		t.Fatalf("added preset not in merged list: %+v", all)
+	}
+	if _, ok := presets.ByID(added.ID); !ok {
+		t.Error("custom preset should resolve via ByID")
+	}
+	if p, ok := compress.EffectivePreset(compress.Job{PresetID: added.ID}); !ok || p.SizeMB != 25 || p.Codec != "h265" {
+		t.Errorf("EffectivePreset(custom) = %+v, ok=%v; want the custom preset", p, ok)
+	}
+}
+
+func TestUpdateCustomPresetBinding(t *testing.T) {
+	a := newTestApp(t)
+	withPresetStore(t, a)
+	all, err := a.AddCustomPreset(presets.Preset{Name: "A", Mode: "crf", CRF: 20, AudioBitrate: "96k"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	id := all[len(all)-1].ID
+
+	updated, err := a.UpdateCustomPreset(id, presets.Preset{Name: "B", Mode: "crf", CRF: 28, AudioBitrate: "128k"})
+	if err != nil {
+		t.Fatalf("UpdateCustomPreset: %v", err)
+	}
+	found := false
+	for _, p := range updated {
+		if p.ID == id && p.Name == "B" && p.CRF == 28 {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("updated preset not found: %+v", updated)
+	}
+}
+
+func TestDeleteCustomPresetBinding(t *testing.T) {
+	a := newTestApp(t)
+	withPresetStore(t, a)
+	all, err := a.AddCustomPreset(presets.Preset{Name: "Temp", Mode: "size", SizeMB: 5})
+	if err != nil {
+		t.Fatal(err)
+	}
+	id := all[len(all)-1].ID
+	left, err := a.DeleteCustomPreset(id)
+	if err != nil {
+		t.Fatalf("DeleteCustomPreset: %v", err)
+	}
+	for _, p := range left {
+		if p.ID == id {
+			t.Errorf("deleted preset still present: %+v", left)
+		}
+	}
+}
+
+func TestCustomPresetBindingsWithoutStore(t *testing.T) {
+	a := newTestApp(t)
+	a.presetStore = nil
+	if _, err := a.AddCustomPreset(presets.Preset{Name: "X", Mode: "size", SizeMB: 1}); err == nil {
+		t.Error("Add without a store should fail")
+	}
+	if got := a.GetCustomPresets(); got != nil {
+		t.Errorf("GetCustomPresets without store = %+v; want nil", got)
+	}
+}

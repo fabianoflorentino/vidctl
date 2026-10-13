@@ -36,12 +36,13 @@ type updateChecker interface {
 // App exposes the application operations to the frontend through Wails
 // bindings: dialogs, media probing, compression queue and settings.
 type App struct {
-	ctx     context.Context
-	jobs    *compress.Manager
-	sys     *sysinfo.Collector
-	store   *config.Store
-	enc     *encode.Detector
-	updates updateChecker
+	ctx         context.Context
+	jobs        *compress.Manager
+	sys         *sysinfo.Collector
+	store       *config.Store
+	enc         *encode.Detector
+	updates     updateChecker
+	presetStore *presets.Store
 }
 
 const videoFilterPattern = "*.mp4;*.mkv;*.mov;*.avi;*.webm;*.m4v;*.ts;*.flv"
@@ -61,14 +62,28 @@ func NewApp() *App {
 // persistence. Tests pass a store rooted in a temporary directory.
 func newApp(store *config.Store) *App {
 	a := &App{
-		jobs:    compress.NewManager(),
-		sys:     sysinfo.NewCollector(),
-		store:   store,
-		enc:     &encode.Detector{},
-		updates: update.New(runtime.GOOS),
+		jobs:        compress.NewManager(),
+		sys:         sysinfo.NewCollector(),
+		store:       store,
+		enc:         &encode.Detector{},
+		updates:     update.New(runtime.GOOS),
+		presetStore: newPresetStore(),
 	}
 	a.jobs.SetOnFinish(a.notifyFinish)
+	if a.presetStore != nil {
+		presets.SetCustomSource(a.presetStore.LoadAll)
+	}
 	return a
+}
+
+// newPresetStore builds the custom-preset store rooted in the app config dir,
+// or nil when no writable configuration folder exists.
+func newPresetStore() *presets.Store {
+	s, err := presets.NewStore("")
+	if err != nil {
+		return nil
+	}
+	return s
 }
 
 // notifyFinish applies the notification preferences when a task reaches a
@@ -554,4 +569,46 @@ func (a *App) OpenRelease(url string) {
 		return
 	}
 	wailsruntime.BrowserOpenURL(a.ctx, url)
+}
+
+// GetCustomPresets returns the saved user presets (built-ins are not included).
+func (a *App) GetCustomPresets() []presets.Preset {
+	if a.presetStore == nil {
+		return nil
+	}
+	return a.presetStore.LoadAll()
+}
+
+// AddCustomPreset validates and saves a new user preset, returning the full
+// preset list (built-ins + custom) so the frontend can repaint.
+func (a *App) AddCustomPreset(p presets.Preset) ([]presets.Preset, error) {
+	if a.presetStore == nil {
+		return nil, presets.ErrNoStore
+	}
+	if _, err := a.presetStore.Add(p); err != nil {
+		return nil, err
+	}
+	return presets.List(), nil
+}
+
+// UpdateCustomPreset replaces a saved preset. It returns the full preset list.
+func (a *App) UpdateCustomPreset(id string, p presets.Preset) ([]presets.Preset, error) {
+	if a.presetStore == nil {
+		return nil, presets.ErrNoStore
+	}
+	if _, err := a.presetStore.Update(id, p); err != nil {
+		return nil, err
+	}
+	return presets.List(), nil
+}
+
+// DeleteCustomPreset removes a saved preset. It returns the full preset list.
+func (a *App) DeleteCustomPreset(id string) ([]presets.Preset, error) {
+	if a.presetStore == nil {
+		return nil, presets.ErrNoStore
+	}
+	if _, err := a.presetStore.Delete(id); err != nil {
+		return nil, err
+	}
+	return presets.List(), nil
 }
