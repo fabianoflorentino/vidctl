@@ -364,9 +364,12 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   async function checkUpdate() {
     if (checkingUpdate) return
     checkingUpdate = true
+    dbg('update: check started')
     try {
       updateInfo = await CheckUpdate()
-    } catch {
+      dbg(`update: result ok=${updateInfo.ok} hasUpdate=${updateInfo.hasUpdate} current=${updateInfo.current} latest=${updateInfo.latest} url=${updateInfo.url}`)
+    } catch (err) {
+      dbg(`update: CheckUpdate() rejected: ${String(err)}`)
       updateInfo = { ok: false, hasUpdate: false, current: '', latest: '', url: '', assetURL: '' }
     } finally {
       checkingUpdate = false

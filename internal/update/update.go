@@ -15,6 +15,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/fabianoflorentino/vidctl/internal/dlog"
 )
 
 const (
@@ -73,16 +75,20 @@ func (c *Checker) Check(current string) (Info, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if c.cached != nil {
+		dlog.Printf("[update] check current=%q platform=%q → cache hit latest=%q hasUpdate=%v", current, c.platform, c.cached.Latest, c.cached.HasUpdate)
 		return *c.cached, nil
 	}
 
+	dlog.Printf("[update] check current=%q platform=%q endpoint=%s", current, c.platform, c.endpoint)
 	latest, err := c.fetch()
 	if err != nil {
+		dlog.Printf("[update] check failed (silent): %v", err)
 		return Info{Ok: false}, nil
 	}
 	info := evaluate(latest, current, c.platform)
 	info.Ok = true
 
+	dlog.Printf("[update] check ok latest_tag=%q base=%q hasUpdate=%v url=%s asset=%q", latest.TagName, info.Latest, info.HasUpdate, info.URL, info.AssetURL)
 	c.cached = &info
 	return info, nil
 }
@@ -113,6 +119,7 @@ func (c *Checker) fetch() (release, error) {
 		return release{}, err
 	}
 	defer resp.Body.Close()
+	dlog.Printf("[update] GET %s → %d", c.endpoint, resp.StatusCode)
 	if resp.StatusCode != http.StatusOK {
 		return release{}, fmt.Errorf("releases API replied with status %d", resp.StatusCode)
 	}
