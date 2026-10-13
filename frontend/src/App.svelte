@@ -366,8 +366,9 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
     checkingUpdate = true
     dbg('update: check started')
     try {
-      updateInfo = await CheckUpdate()
-      dbg(`update: result ok=${updateInfo.ok} hasUpdate=${updateInfo.hasUpdate} current=${updateInfo.current} latest=${updateInfo.latest} url=${updateInfo.url}`)
+      const info = await CheckUpdate()
+      updateInfo = info
+      dbg(`update: result ok=${info.ok} hasUpdate=${info.hasUpdate} current=${info.current} latest=${info.latest} url=${info.url}`)
     } catch (err) {
       dbg(`update: CheckUpdate() rejected: ${String(err)}`)
       updateInfo = { ok: false, hasUpdate: false, current: '', latest: '', url: '', assetURL: '' }
