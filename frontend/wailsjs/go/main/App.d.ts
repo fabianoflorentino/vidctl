@@ -67,3 +67,11 @@ export function SystemTheme():Promise<string>;
 export function CheckUpdate():Promise<update.Info>;
 
 export function OpenRelease(arg1:string):Promise<void>;
+
+export function AddCustomPreset(arg1:presets.Preset):Promise<Array<presets.Preset>>;
+
+export function DeleteCustomPreset(arg1:string):Promise<Array<presets.Preset>>;
+
+export function GetCustomPresets():Promise<Array<presets.Preset>>;
+
+export function UpdateCustomPreset(arg1:string,arg2:presets.Preset):Promise<Array<presets.Preset>>;

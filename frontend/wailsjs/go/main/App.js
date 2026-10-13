@@ -117,3 +117,19 @@ export function CheckUpdate() {
 export function OpenRelease(arg1) {
   return window['go']['main']['App']['OpenRelease'](arg1);
 }
+
+export function AddCustomPreset(arg1) {
+  return window['go']['main']['App']['AddCustomPreset'](arg1);
+}
+
+export function DeleteCustomPreset(arg1) {
+  return window['go']['main']['App']['DeleteCustomPreset'](arg1);
+}
+
+export function GetCustomPresets() {
+  return window['go']['main']['App']['GetCustomPresets']();
+}
+
+export function UpdateCustomPreset(arg1, arg2) {
+  return window['go']['main']['App']['UpdateCustomPreset'](arg1, arg2);
+}
