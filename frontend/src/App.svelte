@@ -359,15 +359,29 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   let prefsOpen = $state(false)
 
   let updateInfo = $state<update.Info | null>(null)
-  let checkingUpdate = false
+  let checkingUpdate = $state(false)
+  let updateNote = $state('')
+  let updateNoteTimer: ReturnType<typeof setTimeout> | undefined
+
+  function flashUpdateNote(note: string) {
+    updateNote = note
+    if (updateNoteTimer) clearTimeout(updateNoteTimer)
+    updateNoteTimer = setTimeout(() => {
+      updateNote = ''
+    }, 3500)
+  }
 
   async function checkUpdate() {
     if (checkingUpdate) return
     checkingUpdate = true
+    updateNote = ''
     try {
       updateInfo = await CheckUpdate()
+      if (updateInfo.ok && !updateInfo.hasUpdate) flashUpdateNote(t('update.upToDate'))
+      else if (!updateInfo.ok) flashUpdateNote(t('update.offline'))
     } catch {
       updateInfo = { ok: false, hasUpdate: false, current: '', latest: '', url: '', assetURL: '' }
+      flashUpdateNote(t('update.offline'))
     } finally {
       checkingUpdate = false
     }
@@ -1266,12 +1280,21 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
         {t('update.available')}
       </button>
     {/if}
-    <button class="icon-btn" onclick={checkUpdate} aria-label={t('update.check')} title={t('update.check')}>
+    <button
+      class="icon-btn"
+      class:spin={checkingUpdate}
+      onclick={checkUpdate}
+      aria-label={t('update.check')}
+      title={t('update.check')}
+    >
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M21 12a9 9 0 1 1-2.64-6.36" />
         <path d="M21 3v6h-6" />
       </svg>
     </button>
+    {#if updateNote}
+      <span class="update-note" role="status">{updateNote}</span>
+    {/if}
     <button class="icon-btn" onclick={() => (prefsOpen = true)} aria-label={t('topbar.prefs')} title={t('topbar.prefs')}>
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
         <path d="M4 7h16M4 12h16M4 17h16" />

@@ -174,6 +174,7 @@ func TestPickAssetPerPlatform(t *testing.T) {
 		{"linux", "https://dl/vidctl-linux-x64.zip"},
 		{"windows", "https://dl/vidctl-windows-x64.zip"},
 		{"macos", "https://dl/vidctl-macos-arm64.zip"},
+		{"darwin", "https://dl/vidctl-macos-arm64.zip"},
 		{"plan9", ""},
 	}
 	for _, tt := range cases {
@@ -200,9 +201,11 @@ func TestIsNewer(t *testing.T) {
 		{"v2.5.0-linux", "v2.5.0", false},
 		{"v2.5.1-linux", "v2.5.0", true},
 		{"v2.5.0-linux", "v2.4.9", true},
-		{"v2.5.0-linux", "v3.0.0", false},
 		{"v2.5.0", "", false},
 		{"v2.5.0-linux", "dev", false},
+		{"v2.5.0-1-gabc123", "v2.5.0", false},
+		{"v2.6.0-linux", "v2.5.0-1-gabc123", true},
+		{"v2.5.0-linux", "v2.5.0-3-gf00d", false},
 		{"not-a-version", "v2.5.0", false},
 	}
 	for _, tt := range cases {

@@ -301,6 +301,22 @@ button {
   background: var(--accent);
 }
 
+.update-note {
+  font-size: 12px;
+  color: var(--fg-dim);
+  white-space: nowrap;
+}
+
+.icon-btn.spin svg {
+  animation: icon-spin 0.9s linear infinite;
+}
+
+@keyframes icon-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* banner + alert */
 .banner {
   display: flex;

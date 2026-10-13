@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -139,11 +140,13 @@ func evaluate(rel release, current, platform string) Info {
 }
 
 // pickAsset returns the download URL of the zip for the given platform, or ""
-// when the release has no matching asset.
+// when the release has no matching asset. runtime.GOOS uses "darwin" on macOS
+// while the published assets are named "macos", so the platform is normalized.
 func pickAsset(assets []struct {
 	Name string `json:"name"`
 	URL  string `json:"browser_download_url"`
 }, platform string) string {
+	platform = normalizePlatform(platform)
 	prefix := "vidctl-" + platform + "-"
 	for _, a := range assets {
 		if strings.HasPrefix(a.Name, prefix) && strings.HasSuffix(a.Name, ".zip") {
@@ -151,6 +154,13 @@ func pickAsset(assets []struct {
 		}
 	}
 	return ""
+}
+
+func normalizePlatform(platform string) string {
+	if platform == "darwin" {
+		return "macos"
+	}
+	return platform
 }
 
 // baseTag strips the platform suffix of a per-OS tag (v2.5.0-linux → v2.5.0).
@@ -183,12 +193,16 @@ func isNewer(tag, current string) bool {
 	return false
 }
 
+// semverRE matches the leading x.y.z of a version string. It tolerates the
+// suffixes git describe appends (v2.5.0-1-gabc123, -dirty) and "v" prefixes.
+var semverRE = regexp.MustCompile(`[0-9]+\.[0-9]+\.[0-9]+`)
+
 func semverParts(v string) ([3]int, bool) {
-	v = strings.TrimPrefix(strings.TrimSpace(v), "v")
-	parts := strings.SplitN(v, ".", 3)
-	if len(parts) != 3 {
+	m := semverRE.FindString(v)
+	if m == "" {
 		return [3]int{}, false
 	}
+	parts := strings.SplitN(m, ".", 3)
 	var out [3]int
 	for i, p := range parts {
 		n, err := strconv.Atoi(p)
