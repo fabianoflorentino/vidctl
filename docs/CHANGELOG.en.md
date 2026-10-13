@@ -14,6 +14,10 @@ system of the packages.
 
 ## [Unreleased]
 
+Nothing yet — in development.
+
+## [2.6.0] — 2026-10-13
+
 - **Update check** (phase 8): on launch the app queries the latest GitHub
   release (`internal/update`, 5 s timeout and per-session cache) and shows the
   badge "vX.Y.Z available" in the top bar when a newer version exists —

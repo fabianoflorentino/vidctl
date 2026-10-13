@@ -14,6 +14,10 @@ operacional dos pacotes.
 
 ## [Unreleased]
 
+Nada ainda — em desenvolvimento.
+
+## [2.6.0] — 2026-10-13
+
 - **Verificação de atualização** (fase 8): ao abrir, o app consulta a release
   mais recente do GitHub (`internal/update`, timeout de 5 s e cache por sessão)
   e mostra o badge "vX.Y.Z disponível" na barra de cima quando há versão nova —

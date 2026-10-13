@@ -14,6 +14,10 @@ solo el sistema operativo de los paquetes.
 
 ## [Unreleased]
 
+Nada aún — en desarrollo.
+
+## [2.6.0] — 2026-10-13
+
 - **Verificación de actualización** (fase 8): al abrir, la app consulta la
   release más reciente de GitHub (`internal/update`, timeout de 5 s y caché por
   sesión) y muestra la badge "vX.Y.Z disponible" en la barra superior cuando
