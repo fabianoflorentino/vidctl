@@ -274,70 +274,6 @@ button {
   color: var(--fg);
 }
 
-.update-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 6px 12px;
-  border-radius: 999px;
-  border: 1px solid var(--accent);
-  background: var(--inset);
-  color: var(--accent);
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 1;
-  cursor: pointer;
-  transition: filter 0.15s ease;
-}
-
-.update-badge:hover {
-  filter: brightness(1.1);
-}
-
-.update-badge .update-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--accent);
-}
-
-.update-toast {
-  position: fixed;
-  top: 56px;
-  right: 16px;
-  z-index: 999;
-  max-width: 320px;
-  padding: 10px 14px;
-  border-radius: 10px;
-  border: 1px solid var(--line);
-  background: var(--surface);
-  color: var(--fg);
-  font-size: 13px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
-  animation: toast-in 0.18s ease-out;
-}
-
-@keyframes toast-in {
-  from {
-    opacity: 0;
-    transform: translateY(-6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.icon-btn.spin svg {
-  animation: icon-spin 0.9s linear infinite;
-}
-
-@keyframes icon-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 /* banner + alert */
 .banner {
   display: flex;
@@ -1686,6 +1622,13 @@ input[type="number"].num {
   background: var(--inset);
   border-radius: var(--radius-sm);
   padding: 10px 12px;
+}
+
+.row-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .modal-section h2 .help {

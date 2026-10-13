@@ -360,28 +360,14 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
 
   let updateInfo = $state<update.Info | null>(null)
   let checkingUpdate = $state(false)
-  let updateToast = $state('')
-  let updateToastTimer: ReturnType<typeof setTimeout> | undefined
-
-  function flashUpdateToast(note: string) {
-    updateToast = note
-    if (updateToastTimer) clearTimeout(updateToastTimer)
-    updateToastTimer = setTimeout(() => {
-      updateToast = ''
-    }, 3500)
-  }
 
   async function checkUpdate() {
     if (checkingUpdate) return
     checkingUpdate = true
-    updateToast = ''
     try {
       updateInfo = await CheckUpdate()
-      if (updateInfo.ok && !updateInfo.hasUpdate) flashUpdateToast(t('update.upToDate'))
-      else if (!updateInfo.ok) flashUpdateToast(t('update.offline'))
     } catch {
       updateInfo = { ok: false, hasUpdate: false, current: '', latest: '', url: '', assetURL: '' }
-      flashUpdateToast(t('update.offline'))
     } finally {
       checkingUpdate = false
     }
@@ -1268,30 +1254,6 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   </span>
   <span class="topbar-title">vidctl</span>
   <div class="topbar-end">
-    {#if updateInfo?.ok && updateInfo.hasUpdate && updateInfo.latest}
-      <button
-        class="update-badge"
-        onclick={() => OpenRelease(updateInfo!.url)}
-        title={t('update.title')}
-        aria-label={t('update.title')}
-      >
-        <span class="update-dot" aria-hidden="true"></span>
-        {updateInfo.latest}
-        {t('update.available')}
-      </button>
-    {/if}
-    <button
-      class="icon-btn"
-      class:spin={checkingUpdate}
-      onclick={checkUpdate}
-      aria-label={t('update.check')}
-      title={t('update.check')}
-    >
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M21 12a9 9 0 1 1-2.64-6.36" />
-        <path d="M21 3v6h-6" />
-      </svg>
-    </button>
     <button class="icon-btn" onclick={() => (prefsOpen = true)} aria-label={t('topbar.prefs')} title={t('topbar.prefs')}>
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
         <path d="M4 7h16M4 12h16M4 17h16" />
@@ -1722,10 +1684,6 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   {t('footer.engine')}
 </footer>
 
-{#if updateToast}
-  <div class="update-toast" role="status">{updateToast}</div>
-{/if}
-
 <PreferencesModal
   open={prefsOpen}
   {theme}
@@ -1738,6 +1696,8 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   {audioSuffix}
   {notifyOnDone}
   {openFolderOnDone}
+  {updateInfo}
+  {checkingUpdate}
   onclose={() => (prefsOpen = false)}
   ontheme={setTheme}
   onlanguage={(l) => (language = l)}
@@ -1748,4 +1708,6 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   onaudiosuffix={(v) => (audioSuffix = v)}
   onnotifydone={(v) => (notifyOnDone = v)}
   onopenfolder={(v) => (openFolderOnDone = v)}
+  onCheckUpdate={checkUpdate}
+  onOpenRelease={(url) => OpenRelease(url)}
 />
