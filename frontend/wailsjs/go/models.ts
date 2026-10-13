@@ -1,3 +1,38 @@
+export namespace app {
+	
+	export class JobAck {
+	    jobId: string;
+	    position: number;
+	    error: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new JobAck(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.jobId = source["jobId"];
+	        this.position = source["position"];
+	        this.error = source["error"];
+	    }
+	}
+	export class SystemStatus {
+	    ffmpegOK: boolean;
+	    message: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new SystemStatus(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.ffmpegOK = source["ffmpegOK"];
+	        this.message = source["message"];
+	    }
+	}
+
+}
+
 export namespace audio {
 	
 	export class Spec {
@@ -316,41 +351,6 @@ export namespace estimate {
 
 }
 
-export namespace main {
-	
-	export class JobAck {
-	    jobId: string;
-	    position: number;
-	    error: string;
-	
-	    static createFrom(source: any = {}) {
-	        return new JobAck(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.jobId = source["jobId"];
-	        this.position = source["position"];
-	        this.error = source["error"];
-	    }
-	}
-	export class SystemStatus {
-	    ffmpegOK: boolean;
-	    message: string;
-	
-	    static createFrom(source: any = {}) {
-	        return new SystemStatus(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.ffmpegOK = source["ffmpegOK"];
-	        this.message = source["message"];
-	    }
-	}
-
-}
-
 export namespace media {
 	
 	export class Info {
@@ -461,3 +461,30 @@ export namespace sysinfo {
 
 }
 
+
+export namespace update {
+	
+	export class Info {
+	    ok: boolean;
+	    hasUpdate: boolean;
+	    current: string;
+	    latest: string;
+	    url: string;
+	    assetURL: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new Info(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.ok = source["ok"];
+	        this.hasUpdate = source["hasUpdate"];
+	        this.current = source["current"];
+	        this.latest = source["latest"];
+	        this.url = source["url"];
+	        this.assetURL = source["assetURL"];
+	    }
+	}
+
+}

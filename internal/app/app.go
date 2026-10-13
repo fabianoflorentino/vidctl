@@ -22,17 +22,26 @@ import (
 	"github.com/fabianoflorentino/vidctl/internal/presets"
 	"github.com/fabianoflorentino/vidctl/internal/sysinfo"
 	"github.com/fabianoflorentino/vidctl/internal/systemtheme"
+	"github.com/fabianoflorentino/vidctl/internal/update"
+	"github.com/fabianoflorentino/vidctl/internal/version"
 	wailsruntime "github.com/wailsapp/wails/v2/pkg/runtime"
 )
+
+// updateChecker abstracts the version check so tests can inject a fake without
+// hitting the network.
+type updateChecker interface {
+	Check(current string) (update.Info, error)
+}
 
 // App exposes the application operations to the frontend through Wails
 // bindings: dialogs, media probing, compression queue and settings.
 type App struct {
-	ctx   context.Context
-	jobs  *compress.Manager
-	sys   *sysinfo.Collector
-	store *config.Store
-	enc   *encode.Detector
+	ctx     context.Context
+	jobs    *compress.Manager
+	sys     *sysinfo.Collector
+	store   *config.Store
+	enc     *encode.Detector
+	updates updateChecker
 }
 
 const videoFilterPattern = "*.mp4;*.mkv;*.mov;*.avi;*.webm;*.m4v;*.ts;*.flv"
@@ -52,10 +61,11 @@ func NewApp() *App {
 // persistence. Tests pass a store rooted in a temporary directory.
 func newApp(store *config.Store) *App {
 	a := &App{
-		jobs:  compress.NewManager(),
-		sys:   sysinfo.NewCollector(),
-		store: store,
-		enc:   &encode.Detector{},
+		jobs:    compress.NewManager(),
+		sys:     sysinfo.NewCollector(),
+		store:   store,
+		enc:     &encode.Detector{},
+		updates: update.New(runtime.GOOS),
 	}
 	a.jobs.SetOnFinish(a.notifyFinish)
 	return a
@@ -528,4 +538,20 @@ func (a *App) OpenFolder(path string) error {
 	default:
 		return exec.Command("xdg-open", dir).Start()
 	}
+}
+
+// CheckUpdate asks GitHub whether a newer release exists. Network or API
+// failures return an Info with Ok=false and no error, so the check is never a
+// blocker. The result is cached for the session by the checker.
+func (a *App) CheckUpdate() (update.Info, error) {
+	return a.updates.Check(version.Version)
+}
+
+// OpenRelease opens a URL in the default browser, used by the "new version
+// available" badge to point at the release page or asset download.
+func (a *App) OpenRelease(url string) {
+	if a.ctx == nil || url == "" {
+		return
+	}
+	wailsruntime.BrowserOpenURL(a.ctx, url)
 }

@@ -14,7 +14,12 @@ solo el sistema operativo de los paquetes.
 
 ## [Unreleased]
 
-Nada aún — en desarrollo.
+- **Verificación de actualización** (fase 8): al abrir, la app consulta la
+  release más reciente de GitHub (`internal/update`, timeout de 5 s y caché por
+  sesión) y muestra la badge "vX.Y.Z disponible" en la barra superior cuando
+  hay versión nueva — al hacer clic abre la release en el navegador. Un botón de
+  flechas repite la comprobación; offline y errores de red son silenciosos. La
+  versión del binario se incrusta vía `-ldflags` (Makefile y workflow release).
 
 ## [2.5.0] — 2026-10-12
 

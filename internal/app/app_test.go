@@ -17,6 +17,7 @@ import (
 	"github.com/fabianoflorentino/vidctl/internal/events"
 	"github.com/fabianoflorentino/vidctl/internal/notify"
 	"github.com/fabianoflorentino/vidctl/internal/presets"
+	"github.com/fabianoflorentino/vidctl/internal/update"
 )
 
 func skipOnWindows(t *testing.T) {
@@ -1166,5 +1167,42 @@ func TestSystemThemeBinding(t *testing.T) {
 	a := NewApp()
 	if got := a.SystemTheme(); got != "dark" && got != "light" {
 		t.Errorf("SystemTheme() = %q, want dark|light", got)
+	}
+}
+
+type fakeUpdateChecker struct {
+	info  update.Info
+	times int
+}
+
+func (f *fakeUpdateChecker) Check(current string) (update.Info, error) {
+	f.times++
+	return f.info, nil
+}
+
+func TestCheckUpdateBinding(t *testing.T) {
+	a := newTestApp(t)
+	a.updates = &fakeUpdateChecker{info: update.Info{Ok: true, HasUpdate: true, Latest: "v9.9.9"}}
+	got, err := a.CheckUpdate()
+	if err != nil {
+		t.Fatalf("CheckUpdate: %v", err)
+	}
+	if !got.Ok || !got.HasUpdate || got.Latest != "v9.9.9" {
+		t.Errorf("CheckUpdate = %+v; want ok+hasUpdate v9.9.9", got)
+	}
+	if fc, ok := a.updates.(*fakeUpdateChecker); ok && fc.times != 1 {
+		t.Errorf("checker called %d times; want 1", fc.times)
+	}
+}
+
+func TestCheckUpdateSilentOnFailure(t *testing.T) {
+	a := newTestApp(t)
+	a.updates = &fakeUpdateChecker{info: update.Info{Ok: false}}
+	got, err := a.CheckUpdate()
+	if err != nil {
+		t.Fatalf("CheckUpdate: %v", err)
+	}
+	if got.Ok {
+		t.Errorf("CheckUpdate = %+v; want silent no-update", got)
 	}
 }

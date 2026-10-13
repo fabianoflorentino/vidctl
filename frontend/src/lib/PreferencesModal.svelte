@@ -5,6 +5,7 @@
   import type { RadioOption } from './RadioCardGroup.svelte'
   import Toggle from './Toggle.svelte'
   import { t, LANGS, type LangId } from './i18n.svelte'
+  import type { update } from '../../wailsjs/go/models.js'
 
   type ThemeChoice = 'system' | 'light' | 'dark'
 
@@ -20,6 +21,8 @@
     audioSuffix: string
     notifyOnDone: boolean
     openFolderOnDone: boolean
+    updateInfo: update.Info | null
+    checkingUpdate: boolean
     onclose?: () => void
     ontheme?: (theme: ThemeChoice) => void
     onlanguage?: (lang: LangId) => void
@@ -30,6 +33,8 @@
     onaudiosuffix?: (value: string) => void
     onnotifydone?: (value: boolean) => void
     onopenfolder?: (value: boolean) => void
+    onCheckUpdate?: () => void
+    onOpenRelease?: (url: string) => void
   }
 
   let {
@@ -44,6 +49,8 @@
     audioSuffix,
     notifyOnDone,
     openFolderOnDone,
+    updateInfo,
+    checkingUpdate,
     onclose = () => {},
     ontheme,
     onlanguage,
@@ -54,6 +61,8 @@
     onaudiosuffix,
     onnotifydone,
     onopenfolder,
+    onCheckUpdate = () => {},
+    onOpenRelease = () => {},
   }: Props = $props()
 
   const themeOptions = $derived<RadioOption[]>([
@@ -63,9 +72,43 @@
   ])
 
   const languageOptions = $derived<RadioOption[]>(LANGS.map((l) => ({ id: l.id, title: l.label, description: '' })))
+
+  const updateState: string = $derived(checkingUpdate ? 'checking' : !updateInfo?.ok ? 'offline' : updateInfo.hasUpdate ? 'available' : 'uptodate')
 </script>
 
 <Modal {open} title={t('prefs.title')} {onclose}>
+  <div class="modal-section">
+    <h2>{t('update.title')}</h2>
+    <div class="modal-row">
+      <span class="toggle-label">
+        <span class="radio-card-title">
+          {#if updateState === 'checking'}
+            {t('update.checking')}
+          {:else if updateState === 'available'}
+            {t('update.available')}
+          {:else if updateState === 'uptodate'}
+            {t('update.upToDate')}
+          {:else}
+            {t('update.offline')}
+          {/if}
+        </span>
+        {#if updateInfo?.ok && updateInfo.latest}
+          <span class="radio-card-desc">{updateInfo.latest}</span>
+        {/if}
+      </span>
+      <div class="row-actions">
+        <button class="btn small" onclick={onCheckUpdate} disabled={checkingUpdate}>
+          {t('update.check')}
+        </button>
+        {#if updateState === 'available' && updateInfo?.url}
+          <button class="btn small solid" onclick={() => onOpenRelease(updateInfo!.url)}>
+            {t('update.open')}
+          </button>
+        {/if}
+      </div>
+    </div>
+  </div>
+
   <div class="modal-section">
     <h2>
       {t('prefs.language')}

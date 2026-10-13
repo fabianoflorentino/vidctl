@@ -56,7 +56,8 @@ jobs:
       - name: Build app
         shell: bash
         run: |
-          wails build -clean ${{ runner.os == 'Linux' && '-tags webkit2_41' || '' }}
+          wails build -clean ${{ runner.os == 'Linux' && '-tags webkit2_41' || '' }} \
+            -ldflags "-X github.com/fabianoflorentino/vidctl/internal/version.Version=${GITHUB_REF_NAME}"
 
       - name: Package
         shell: bash
@@ -109,7 +110,9 @@ jobs:
             apt-get install -yqq nodejs
             export PATH="$(go env GOPATH)/bin:$PATH"
             go install github.com/wailsapp/wails/v2/cmd/wails@v2.16.0
-            wails build -clean -tags webkit2_41
+            wails build -clean -tags webkit2_41 \
+              -ldflags "-X github.com/fabianoflorentino/vidctl/internal/version.Version=${VERSION}" \
+              -ldflags "-X github.com/fabianoflorentino/vidctl/internal/version.Version=${VERSION}"
             VER=${VERSION#v}
             ARCH=$(dpkg --print-architecture)
             install -Dm755 build/bin/vidctl pkg/deb/vidctl/usr/bin/vidctl

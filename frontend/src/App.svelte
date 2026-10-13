@@ -25,9 +25,11 @@
     ExtractAudio,
     OpenAudioDialog,
     SystemTheme,
+    CheckUpdate,
+    OpenRelease,
   } from '../wailsjs/go/main/App.js'
   import { EventsOn, EventsOff, OnFileDrop, OnFileDropOff, Environment } from '../wailsjs/runtime/runtime.js'
-  import type { main, presets, media, config, encode, audio } from '../wailsjs/go/models.js'
+  import type { presets, media, config, encode, audio, update } from '../wailsjs/go/models.js'
   import { compress as bindings, config as configBindings } from '../wailsjs/go/models.js'
   import StatusPage from './lib/StatusPage.svelte'
   import VideoRow from './lib/VideoRow.svelte'
@@ -355,6 +357,25 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   })
 
   let prefsOpen = $state(false)
+
+  let updateInfo = $state<update.Info | null>(null)
+  let checkingUpdate = $state(false)
+
+  async function checkUpdate() {
+    if (checkingUpdate) return
+    checkingUpdate = true
+    dbg('update: check started')
+    try {
+      const info = await CheckUpdate()
+      updateInfo = info
+      dbg(`update: result ok=${info.ok} hasUpdate=${info.hasUpdate} current=${info.current} latest=${info.latest} url=${info.url}`)
+    } catch (err) {
+      dbg(`update: CheckUpdate() rejected: ${String(err)}`)
+      updateInfo = { ok: false, hasUpdate: false, current: '', latest: '', url: '', assetURL: '' }
+    } finally {
+      checkingUpdate = false
+    }
+  }
   let audioSpec = $state<audio.Spec | undefined>(undefined)
   let audioInvalid = $state('')
   let audioOutputPath = $state('')
@@ -915,6 +936,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
     DebugEnabled()
       .then((v) => (debug = v))
       .catch(() => {})
+    checkUpdate()
     window.addEventListener('error', (ev) => {
       dbg(`ERRO JS: ${ev.message} em ${ev.filename}:${ev.lineno}:${ev.colno}`)
     })
@@ -1678,6 +1700,8 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   {audioSuffix}
   {notifyOnDone}
   {openFolderOnDone}
+  {updateInfo}
+  {checkingUpdate}
   onclose={() => (prefsOpen = false)}
   ontheme={setTheme}
   onlanguage={(l) => (language = l)}
@@ -1688,4 +1712,6 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   onaudiosuffix={(v) => (audioSuffix = v)}
   onnotifydone={(v) => (notifyOnDone = v)}
   onopenfolder={(v) => (openFolderOnDone = v)}
+  onCheckUpdate={checkUpdate}
+  onOpenRelease={(url) => OpenRelease(url)}
 />

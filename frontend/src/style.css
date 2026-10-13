@@ -1624,6 +1624,13 @@ input[type="number"].num {
   padding: 10px 12px;
 }
 
+.row-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
 .modal-section h2 .help {
   display: inline-block;
   vertical-align: middle;
