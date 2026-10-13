@@ -360,28 +360,28 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
 
   let updateInfo = $state<update.Info | null>(null)
   let checkingUpdate = $state(false)
-  let updateNote = $state('')
-  let updateNoteTimer: ReturnType<typeof setTimeout> | undefined
+  let updateToast = $state('')
+  let updateToastTimer: ReturnType<typeof setTimeout> | undefined
 
-  function flashUpdateNote(note: string) {
-    updateNote = note
-    if (updateNoteTimer) clearTimeout(updateNoteTimer)
-    updateNoteTimer = setTimeout(() => {
-      updateNote = ''
+  function flashUpdateToast(note: string) {
+    updateToast = note
+    if (updateToastTimer) clearTimeout(updateToastTimer)
+    updateToastTimer = setTimeout(() => {
+      updateToast = ''
     }, 3500)
   }
 
   async function checkUpdate() {
     if (checkingUpdate) return
     checkingUpdate = true
-    updateNote = ''
+    updateToast = ''
     try {
       updateInfo = await CheckUpdate()
-      if (updateInfo.ok && !updateInfo.hasUpdate) flashUpdateNote(t('update.upToDate'))
-      else if (!updateInfo.ok) flashUpdateNote(t('update.offline'))
+      if (updateInfo.ok && !updateInfo.hasUpdate) flashUpdateToast(t('update.upToDate'))
+      else if (!updateInfo.ok) flashUpdateToast(t('update.offline'))
     } catch {
       updateInfo = { ok: false, hasUpdate: false, current: '', latest: '', url: '', assetURL: '' }
-      flashUpdateNote(t('update.offline'))
+      flashUpdateToast(t('update.offline'))
     } finally {
       checkingUpdate = false
     }
@@ -1292,9 +1292,6 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
         <path d="M21 3v6h-6" />
       </svg>
     </button>
-    {#if updateNote}
-      <span class="update-note" role="status">{updateNote}</span>
-    {/if}
     <button class="icon-btn" onclick={() => (prefsOpen = true)} aria-label={t('topbar.prefs')} title={t('topbar.prefs')}>
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
         <path d="M4 7h16M4 12h16M4 17h16" />
@@ -1724,6 +1721,10 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
 <footer class="foot mono">
   {t('footer.engine')}
 </footer>
+
+{#if updateToast}
+  <div class="update-toast" role="status">{updateToast}</div>
+{/if}
 
 <PreferencesModal
   open={prefsOpen}
