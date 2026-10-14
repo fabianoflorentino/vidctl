@@ -14,6 +14,10 @@ solo el sistema operativo de los paquetes.
 
 ## [Unreleased]
 
+Nada aún — en desarrollo.
+
+## [2.7.0] — 2026-10-14
+
 - **Presets personalizados** (fase 9): crea, edita y elimina tus propios presets
   además de los fijos — nombre, modo (tamaño o CRF), bitrate de audio, códec
   (H.264/H.265) y codificador (software/NVENC/AMF/QSV/VideoToolbox). Se guardan

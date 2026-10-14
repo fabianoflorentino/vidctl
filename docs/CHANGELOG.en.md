@@ -14,6 +14,10 @@ system of the packages.
 
 ## [Unreleased]
 
+Nothing yet — in development.
+
+## [2.7.0] — 2026-10-14
+
 - **Custom presets** (phase 9): create, edit and delete your own presets on top
   of the built-ins — name, mode (size or CRF), audio bitrate, codec (H.264/H.265)
   and encoder (software/NVENC/AMF/QSV/VideoToolbox). Saved in `presets.json` in
