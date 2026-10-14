@@ -14,7 +14,12 @@ operacional dos pacotes.
 
 ## [Unreleased]
 
-Nada ainda — em desenvolvimento.
+- **Presets personalizados** (fase 9): crie, edite e exclua seus próprios
+  presets além dos fixos — nome, modo (tamanho ou CRF), bitrate de áudio, codec
+  (H.264/H.265) e codificador (software/NVENC/AMF/QSV/VideoToolbox). Salvos em
+  `presets.json` na pasta de configuração (escrita atômica), entram na seção
+  Presets e comprimem como qualquer outro, com IDs `custom-` e validação dos
+  campos.
 
 ## [2.6.0] — 2026-10-13
 

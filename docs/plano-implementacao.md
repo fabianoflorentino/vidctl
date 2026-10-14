@@ -38,7 +38,7 @@ Branch            | Fase | PR
 `feat/audio`      | 6 — Extração de áudio | mergeado
 `feat/notificacoes`| 7 — Notificação + abrir pasta | mergeado
 `feat/updates`    | 8 — Verificação de atualização | entregue na v2.6.0
-`feat/presets`    | 9 — Presets personalizados | pendente
+`feat/presets`    | 9 — Presets personalizados | entregue na v2.7.0
 `feat/i18n`       | 10 — i18n pt-BR/en/es/zh + base em inglês | mergeado
 `feat/split-tempo`| 11 — Corte por tempo | pendente
 `feat/transcricao`| 12 — Transcrição de vídeo | pendente
@@ -599,6 +599,16 @@ modo offline atual).
 **Objetivo:** criar/editar/excluir presets além dos 6 fixos em
 `internal/presets/presets.go:16-71`.
 
+> **Status: ✅ implementada e entregue na v2.7.0** — ver `feat/presets`
+> (mergeado). `internal/presets/custom.go` adicionou `Store` (persistência em
+> `presets.json` na pasta de config, escrita atômica), `Validate` (tabela de
+> erros), IDs `custom-<slug>` com sufixo numérico e `SetCustomSource` — o app
+> registra o store e `List`/`ByID` passam a incluir os custom (por último), de
+> modo que `EffectivePreset` resolve um preset custom direto. Bindings
+> `Add/Update/DeleteCustomPreset` (+`GetCustomPresets`) retornam a lista
+> completa. Front: botão "+ criar" e "editar" na seção Presets com modal
+> (nome/modo/tamanho ou CRF/bitrate áudio/codec/hardware), i18n ×4.
+
 ### Backend
 - `internal/presets`: persistência de custom presets (`os.UserConfigDir()/
   vidctl/presets.json`, mesma escrita atômica da fase 1); `List()` = builtins +
@@ -957,7 +967,7 @@ v2.3.0  → Fase 6 (extrair áudio)                      [entregue]
 v2.4.0  → Fase 10 (i18n + base em inglês)                 [entregue]
 v2.5.0  → Fase 7 (notificações)                       [entregue — feat/notificacoes]
 v2.6.0  → Fase 8 (check update)                       [entregue — feat/updates]
-v2.7.0  → Fase 9 (presets custom)                     [depende de config]
+v2.7.0  → Fase 9 (presets custom)                     [entregue — feat/presets]
 v2.8.0  → Fase 12 (transcrição srt/vtt/txt)
 ```
 

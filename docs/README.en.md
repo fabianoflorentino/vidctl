@@ -16,7 +16,8 @@ cut, remove audio, FPS, rotation, thumbnail). 100% offline.
 ## Features
 
 - Exact presets per platform (WhatsApp 10/16 MB, Instagram 16 MB, Shorts 30 MB,
-  YouTube CRF, or a free size you define)
+  YouTube CRF, or a free size you define) — plus you can create your own presets
+  ("create preset" in the Presets section)
 - **Cut**: splits the video by time — N equal parts or X minutes per part
   (e.g., 30 min → 6 × 5 min) — with at least 1 min per part; each part is
   compressed independently and saved as `name-part1.mp4`, … The `min/part`
@@ -210,6 +211,17 @@ PATH binary, and the "check again" button confirms the result.
 | YouTube Shorts | 2-pass | 30 MB |
 | YouTube (regular video) | CRF 23 | no limit |
 | Custom size | 2-pass | user-defined |
+
+### Custom presets
+
+On top of the built-ins, you can **create your own presets**: the **Presets**
+section of the sidebar has a **"create preset"** button — name, mode (size in MB
+or CRF), audio bitrate, codec (H.264/H.265) and encoder
+(software/NVENC/AMF/QSV/VideoToolbox). A selected custom preset shows the
+**"edit"** button (and can be deleted from the modal). They are saved in
+`presets.json` in the configuration folder (same atomic write as `config.json`),
+get `custom-` IDs and are listed like any other preset — including in the
+quality/estimate safeguards.
 
 ## Size estimate
 
