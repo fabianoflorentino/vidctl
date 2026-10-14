@@ -461,7 +461,6 @@ export namespace sysinfo {
 
 }
 
-
 export namespace update {
 	
 	export class Info {
@@ -488,3 +487,4 @@ export namespace update {
 	}
 
 }
+
