@@ -72,14 +72,22 @@ var presets = []Preset{
 	},
 }
 
-// List returns all available presets.
+// List returns all available presets: the platform built-ins first, then the
+// user-created ones. A nil custom source means "no custom presets".
 func List() []Preset {
-	return presets
+	out := append([]Preset(nil), presets...)
+	out = append(out, customPresets()...)
+	return out
 }
 
-// ByID returns a copy of the preset with the given ID.
+// ByID returns a copy of any preset, built-in or custom, with the given ID.
 func ByID(id string) (Preset, bool) {
 	for _, p := range presets {
+		if p.ID == id {
+			return p, true
+		}
+	}
+	for _, p := range customPresets() {
 		if p.ID == id {
 			return p, true
 		}

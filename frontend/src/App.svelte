@@ -27,6 +27,9 @@
     SystemTheme,
     CheckUpdate,
     OpenRelease,
+    AddCustomPreset,
+    UpdateCustomPreset,
+    DeleteCustomPreset,
   } from '../wailsjs/go/main/App.js'
   import { EventsOn, EventsOff, OnFileDrop, OnFileDropOff, Environment } from '../wailsjs/runtime/runtime.js'
   import type { presets, media, config, encode, audio, update } from '../wailsjs/go/models.js'
@@ -34,6 +37,7 @@
   import StatusPage from './lib/StatusPage.svelte'
   import VideoRow from './lib/VideoRow.svelte'
   import Stepper from './lib/Stepper.svelte'
+import PresetModal from './lib/PresetModal.svelte'
 import RadioCardGroup from './lib/RadioCardGroup.svelte'
   import Toggle from './lib/Toggle.svelte'
   import Section from './lib/Section.svelte'
@@ -357,6 +361,34 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   })
 
   let prefsOpen = $state(false)
+
+  let presetEditOpen = $state(false)
+  let editingPreset = $state<presets.Preset | null>(null)
+
+  function openNewPreset() {
+    editingPreset = null
+    presetEditOpen = true
+  }
+
+  function openEditPreset(id: string) {
+    editingPreset = presetList.find((p) => p.id === id) ?? null
+    presetEditOpen = true
+  }
+
+  async function savePreset(p: presets.Preset) {
+    const list = editingPreset ? await UpdateCustomPreset(editingPreset.id, p) : await AddCustomPreset(p)
+    presetList = list
+    if (editingPreset && !list.some((x) => x.id === editingPreset!.id)) return
+    if (!list.some((x) => x.id === selectedPresetId)) selectedPresetId = p.id
+  }
+
+  async function deletePreset(id: string) {
+    const list = await DeleteCustomPreset(id)
+    presetList = list
+    if (selectedPresetId === id) {
+      selectedPresetId = list.some((x) => x.id === 'whatsapp-status') ? 'whatsapp-status' : (list[0]?.id ?? '')
+    }
+  }
 
   let updateInfo = $state<update.Info | null>(null)
   let checkingUpdate = $state(false)
@@ -1380,6 +1412,14 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
           </Section>
 
       <Section title={t('sec.presets')} open={sectionState.presets} onchange={() => toggleSection("presets")} infoTip={t('sec.presetsTip')}>
+          <div class="presets-head">
+            {#if selectedPresetId.startsWith('custom-')}
+              <button class="btn small" onclick={() => openEditPreset(selectedPresetId)}>
+                {t('preset.edit')}
+              </button>
+            {/if}
+            <button class="btn small solid" onclick={openNewPreset}>{t('preset.create')}</button>
+          </div>
           <RadioCardGroup options={presetOptions} selected={selectedPresetId} name={t('sec.presets')} onchange={selectPresetById} />
           </Section>
 
@@ -1687,6 +1727,15 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
 <footer class="foot mono">
   {t('footer.engine')}
 </footer>
+
+{#if presetEditOpen}
+  <PresetModal
+    preset={editingPreset}
+    onclose={() => (presetEditOpen = false)}
+    onSave={savePreset}
+    onDelete={deletePreset}
+  />
+{/if}
 
 <PreferencesModal
   open={prefsOpen}
