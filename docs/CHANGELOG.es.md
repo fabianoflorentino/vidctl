@@ -23,6 +23,11 @@ solo el sistema operativo de los paquetes.
   nube; sin motor, la app indica cómo instalarlo. Entra en la misma cola
   (`Task.Kind = transcribe`), con progreso, cancelación y "abrir carpeta".
 
+- **Corregido — corte por tiempo**: eliminado el mínimo de 1 min por parte. El
+  sobrante ahora se convierte en la última parte aunque dure menos de 1 min
+  (ej.: vídeo de 1:49 → `1:00` + `0:49`), en vez de bloquear el corte. El límite
+  de 60 partes se mantiene.
+
 ## [2.7.0] — 2026-10-14
 
 - **Presets personalizados** (fase 9): crea, edita y elimina tus propios presets
