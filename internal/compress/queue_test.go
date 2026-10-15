@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/fabianoflorentino/vidctl/internal/events"
+	"github.com/fabianoflorentino/vidctl/internal/transcribe"
 )
 
 func statusByID(m *Manager, id string) (TaskStatus, bool) {
@@ -179,6 +180,34 @@ func TestManagerDispatchesAudioTasks(t *testing.T) {
 	}
 	if s.Kind != events.KindAudio || s.InputPath != "/videos/a.mp4" {
 		t.Errorf("status = %+v; want kind audio e o caminho de entrada", s)
+	}
+}
+
+func TestManagerDispatchesTranscribeTasks(t *testing.T) {
+	m := NewManager()
+	called := false
+	m.run = func(context.Context, string, Job) error {
+		t.Error("transcribe task should not go through the compression runner")
+		return nil
+	}
+	m.runTranscribe = func(_ context.Context, jobID string, task Task) error {
+		called = true
+		if task.Kind != events.KindTranscribe {
+			t.Errorf("kind no runner = %q; want transcribe", task.Kind)
+		}
+		if jobID == "" || task.TranscribeSpec.InputPath != "/videos/a.mp4" {
+			t.Errorf("runner should receber jobID e spec: %q %+v", jobID, task)
+		}
+		return nil
+	}
+
+	id, _ := m.Enqueue(Task{Kind: events.KindTranscribe, InputPath: "/videos/a.mp4", TranscribeSpec: transcribe.Spec{InputPath: "/videos/a.mp4"}})
+	s := waitState(t, m, id, StateDone)
+	if !called {
+		t.Error("runTranscribe was not called for the transcription task")
+	}
+	if s.Kind != events.KindTranscribe || s.InputPath != "/videos/a.mp4" {
+		t.Errorf("status = %+v; want kind transcribe e o caminho de entrada", s)
 	}
 }
 

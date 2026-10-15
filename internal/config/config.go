@@ -48,19 +48,31 @@ type Config struct {
 	OpenFolderOnDone bool    `json:"openFolderOnDone"`
 	// AudioSuffix is appended to the file name of an extracted track.
 	AudioSuffix string `json:"audioSuffix"`
+	// Transcribe* persist the phase-12 transcription preferences.
+	TranscribeEngine         string `json:"transcribeEngine"`
+	TranscribeModelPath      string `json:"transcribeModelPath"`
+	TranscribeLanguage       string `json:"transcribeLanguage"`
+	TranscribeWordTimestamps bool   `json:"transcribeWordTimestamps"`
+	TranscribeFormat         string `json:"transcribeFormat"`
+	// TranscribeSuffix is appended to the file name of a transcript.
+	TranscribeSuffix string `json:"transcribeSuffix"`
 }
 
 // Defaults returns the configuration used on a fresh install.
 func Defaults() Config {
 	return Config{
-		PresetID:         "whatsapp-status",
-		SizeMB:           10,
-		CRF:              23,
-		Language:         "pt",
-		MaxParallel:      1,
-		NotifyOnDone:     false,
-		OpenFolderOnDone: false,
-		AudioSuffix:      "-audio",
+		PresetID:           "whatsapp-status",
+		SizeMB:             10,
+		CRF:                23,
+		Language:           "pt",
+		MaxParallel:        1,
+		NotifyOnDone:       false,
+		OpenFolderOnDone:   false,
+		AudioSuffix:        "-audio",
+		TranscribeEngine:   "auto",
+		TranscribeLanguage: "auto",
+		TranscribeFormat:   "all",
+		TranscribeSuffix:   "-transcript",
 	}
 }
 
@@ -93,6 +105,23 @@ func (c Config) Normalize() Config {
 	if out.AudioSuffix == "" {
 		out.AudioSuffix = Defaults().AudioSuffix
 	}
+	out.TranscribeEngine = strings.ToLower(strings.TrimSpace(out.TranscribeEngine))
+	if !validTranscribeEngine(out.TranscribeEngine) {
+		out.TranscribeEngine = Defaults().TranscribeEngine
+	}
+	out.TranscribeModelPath = strings.TrimSpace(out.TranscribeModelPath)
+	out.TranscribeLanguage = strings.ToLower(strings.TrimSpace(out.TranscribeLanguage))
+	if out.TranscribeLanguage == "" {
+		out.TranscribeLanguage = Defaults().TranscribeLanguage
+	}
+	out.TranscribeFormat = strings.ToLower(strings.TrimSpace(out.TranscribeFormat))
+	if !validTranscribeFormat(out.TranscribeFormat) {
+		out.TranscribeFormat = Defaults().TranscribeFormat
+	}
+	out.TranscribeSuffix = strings.TrimSpace(out.TranscribeSuffix)
+	if out.TranscribeSuffix == "" {
+		out.TranscribeSuffix = Defaults().TranscribeSuffix
+	}
 	out.SizeMB = clamp(out.SizeMB, 0, MaxSizeMB)
 	out.CRF = clamp(out.CRF, MinCRF, MaxCRF)
 	if out.MaxParallel < 1 {
@@ -122,7 +151,33 @@ func (c Config) Validate() error {
 	default:
 		return fmt.Errorf("%w: language must be pt, en, es or zh", ErrInvalidConfig)
 	}
+	if e := strings.ToLower(strings.TrimSpace(c.TranscribeEngine)); e != "" && !validTranscribeEngine(e) {
+		return fmt.Errorf("%w: transcribeEngine must be auto, whispercpp or vosk", ErrInvalidConfig)
+	}
+	if f := strings.ToLower(strings.TrimSpace(c.TranscribeFormat)); f != "" && !validTranscribeFormat(f) {
+		return fmt.Errorf("%w: transcribeFormat must be all, srt, vtt or txt", ErrInvalidConfig)
+	}
 	return nil
+}
+
+// validTranscribeEngine reports whether id is a recognized transcription engine.
+func validTranscribeEngine(id string) bool {
+	switch id {
+	case "auto", "whispercpp", "vosk":
+		return true
+	default:
+		return false
+	}
+}
+
+// validTranscribeFormat reports whether id is a recognized transcript format.
+func validTranscribeFormat(id string) bool {
+	switch id {
+	case "all", "srt", "vtt", "txt":
+		return true
+	default:
+		return false
+	}
 }
 
 // Store reads and writes the config file for one directory.
