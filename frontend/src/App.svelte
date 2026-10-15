@@ -24,6 +24,8 @@
     RefreshEncoders,
     ExtractAudio,
     OpenAudioDialog,
+    TranscribeVideo,
+    GetTranscribers,
     SystemTheme,
     CheckUpdate,
     OpenRelease,
@@ -32,7 +34,7 @@
     DeleteCustomPreset,
   } from '../wailsjs/go/main/App.js'
   import { EventsOn, EventsOff, OnFileDrop, OnFileDropOff, Environment } from '../wailsjs/runtime/runtime.js'
-  import type { presets, media, config, encode, audio, update } from '../wailsjs/go/models.js'
+  import type { presets, media, config, encode, audio, transcribe, update } from '../wailsjs/go/models.js'
   import { compress as bindings, config as configBindings } from '../wailsjs/go/models.js'
   import StatusPage from './lib/StatusPage.svelte'
   import VideoRow from './lib/VideoRow.svelte'
@@ -43,6 +45,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   import Section from './lib/Section.svelte'
   import PreferencesModal from './lib/PreferencesModal.svelte'
   import AudioPanel from './lib/AudioPanel.svelte'
+  import TranscribeModal from './lib/TranscribeModal.svelte'
   import { stageLabel } from './lib/stages'
   import { t, setLang, langId, type LangId } from './lib/i18n.svelte'
 
@@ -54,7 +57,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   type QueueState = 'queued' | 'running' | 'done' | 'error' | 'canceled'
   type QueueItem = {
     jobId: string
-    kind: 'compress' | 'audio'
+    kind: 'compress' | 'audio' | 'transcribe'
     meta: string
     label: string
     inputPath: string
@@ -135,6 +138,14 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   let ffmpegPath = $state('')
   let ffprobePath = $state('')
   let audioSuffix = $state('-audio')
+  let transcribeEngine = $state('auto')
+  let transcribeLanguage = $state('auto')
+  let transcribeFormat = $state('all')
+  let transcribeWordTimestamps = $state(false)
+  let transcribeModelPath = $state('')
+  let transcribeSuffix = $state('-transcript')
+  let transcribers = $state<string[]>([])
+  let transcribeOpen = $state(false)
   let notifyOnDone = $state(false)
   let openFolderOnDone = $state(false)
   let configReady = $state(false)
@@ -152,6 +163,12 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
     notifyOnDone: false,
     openFolderOnDone: false,
     audioSuffix: '-audio',
+    transcribeEngine: 'auto',
+    transcribeModelPath: '',
+    transcribeLanguage: 'auto',
+    transcribeWordTimestamps: false,
+    transcribeFormat: 'all',
+    transcribeSuffix: '-transcript',
   })
 
   function currentConfig(): config.Config {
@@ -164,6 +181,12 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
       ffmpegPath,
       ffprobePath,
       audioSuffix,
+      transcribeEngine,
+      transcribeModelPath,
+      transcribeLanguage,
+      transcribeWordTimestamps,
+      transcribeFormat,
+      transcribeSuffix,
       notifyOnDone,
       openFolderOnDone,
       language,
@@ -292,7 +315,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   function fromTask(t: bindings.TaskStatus): QueueItem {
     return {
       jobId: t.jobId,
-      kind: t.kind === 'audio' ? 'audio' : 'compress',
+      kind: t.kind === 'audio' ? 'audio' : t.kind === 'transcribe' ? 'transcribe' : 'compress',
       meta: '',
       label: t.label,
       inputPath: t.inputPath,
@@ -1043,6 +1066,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
     await loadConfig()
     await checkFFmpeg()
     await loadEncoders()
+    await loadTranscribers()
     await refreshQueue()
   }
 
@@ -1063,6 +1087,15 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
     } catch (err) {
       encoders = null
       encodersError = String(err)
+    }
+  }
+
+  async function loadTranscribers() {
+    try {
+      transcribers = await GetTranscribers()
+    } catch (err) {
+      transcribers = []
+      dbg(`GetTranscribers error=${String(err)}`)
     }
   }
 
@@ -1111,6 +1144,12 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
       ffmpegPath = saved.ffmpegPath ?? ''
       ffprobePath = saved.ffprobePath ?? ''
       audioSuffix = saved.audioSuffix ?? '-audio'
+      transcribeEngine = saved.transcribeEngine || 'auto'
+      transcribeModelPath = saved.transcribeModelPath ?? ''
+      transcribeLanguage = saved.transcribeLanguage || 'auto'
+      transcribeWordTimestamps = saved.transcribeWordTimestamps ?? false
+      transcribeFormat = saved.transcribeFormat || 'all'
+      transcribeSuffix = saved.transcribeSuffix || '-transcript'
       notifyOnDone = saved.notifyOnDone ?? false
       openFolderOnDone = saved.openFolderOnDone ?? false
 
@@ -1228,6 +1267,29 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
       dbg(`ExtractAudio error=${String(err)}`)
       error = String(err)
     }
+  }
+
+  async function runTranscribe(spec: transcribe.Spec) {
+    const jobId = await TranscribeVideo(spec)
+    dbg(`TranscribeVideo ok job=${jobId} engine=${spec.engine} format=${spec.format}`)
+    transcribeEngine = spec.engine || 'auto'
+    transcribeLanguage = spec.language || 'auto'
+    transcribeFormat = spec.format || 'all'
+    transcribeWordTimestamps = spec.wordTimestamps
+    transcribeModelPath = spec.modelPath
+    createItem({
+      jobId,
+      kind: 'transcribe',
+      meta: spec.format,
+      label: fileName(spec.inputPath),
+      inputPath: spec.inputPath,
+      presetId: '',
+      outputPath: spec.outputBase,
+    })
+  }
+
+  function openTranscribe() {
+    transcribeOpen = true
   }
 
   const AUDIO_EXTS: Record<string, string> = { mp3: 'mp3', opus: 'opus', aac: 'aac', flac: 'flac', wav: 'wav', copy: 'mka' }
@@ -1564,6 +1626,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
           {thumb}
           onSwitch={pickInput}
           onClear={reset}
+          onTranscribe={openTranscribe}
         />
         <div class="out-card group-card">
           <div class="group-card-body">
@@ -1648,7 +1711,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
                 <div class="qi-body">
                   <div class="qi-line">
                     <span class="qi-label" title={item.inputPath}>{item.label}</span>
-                    <span class="qi-preset mono">{item.kind === 'audio' ? (item.meta || t('queue.audio')).toUpperCase() : presetName(item.presetId)}</span>
+                    <span class="qi-preset mono">{item.kind === 'audio' ? (item.meta || t('queue.audio')).toUpperCase() : item.kind === 'transcribe' ? (item.meta || t('queue.transcribe')).toUpperCase() : presetName(item.presetId)}</span>
                     <span class="qi-state mono">{stateLabel(item)}</span>
                   </div>
                   {#if item.state === 'running' && item.jobId !== previewItem?.jobId}
@@ -1658,7 +1721,7 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
                     <div class="qi-error mono">{item.error}</div>
                   {/if}
                 </div>
-                {#if item.state === 'done' && item.kind === 'audio' && item.outputPath}
+                {#if item.state === 'done' && (item.kind === 'audio' || item.kind === 'transcribe') && item.outputPath}
                   <button class="btn subtle small" onclick={() => OpenFolder(item.outputPath)}>{t('queue.openFolder')}</button>
                 {:else if item.state === 'queued' || item.state === 'running'}
                   <button class="btn subtle small" onclick={() => cancelItem(item.jobId)}>{t('queue.cancel')}</button>
@@ -1734,6 +1797,20 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
     onclose={() => (presetEditOpen = false)}
     onSave={savePreset}
     onDelete={deletePreset}
+  />
+{/if}
+
+{#if transcribeOpen}
+  <TranscribeModal
+    {inputPath}
+    engines={transcribers}
+    engine={transcribeEngine}
+    language={transcribeLanguage}
+    format={transcribeFormat}
+    wordTimestamps={transcribeWordTimestamps}
+    modelPath={transcribeModelPath}
+    onclose={() => (transcribeOpen = false)}
+    onRun={runTranscribe}
   />
 {/if}
 

@@ -17,6 +17,7 @@
     thumb?: string
     onSwitch?: () => void
     onClear?: () => void
+    onTranscribe?: () => void
   }
 
   let {
@@ -28,16 +29,19 @@
     thumb = '',
     onSwitch = () => {},
     onClear = () => {},
+    onTranscribe = () => {},
   }: Props = $props()
 
   const orientation = $derived(info.width > info.height ? '16:9' : '9:16')
 
   const kebabItems = $derived<KebabItem[]>([
+    { id: 'transcribe', label: t('transcribe.menu') },
     { id: 'switch', label: t('video.row.switch') },
     { id: 'clear', label: t('video.row.clear') },
   ])
 
   function onKebab(id: string) {
+    if (id === 'transcribe') onTranscribe()
     if (id === 'switch') onSwitch()
     if (id === 'clear') onClear()
   }

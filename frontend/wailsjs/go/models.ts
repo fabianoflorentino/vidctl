@@ -246,6 +246,12 @@ export namespace config {
 	    notifyOnDone: boolean;
 	    openFolderOnDone: boolean;
 	    audioSuffix: string;
+	    transcribeEngine: string;
+	    transcribeModelPath: string;
+	    transcribeLanguage: string;
+	    transcribeWordTimestamps: boolean;
+	    transcribeFormat: string;
+	    transcribeSuffix: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new Config(source);
@@ -264,6 +270,12 @@ export namespace config {
 	        this.notifyOnDone = source["notifyOnDone"];
 	        this.openFolderOnDone = source["openFolderOnDone"];
 	        this.audioSuffix = source["audioSuffix"];
+	        this.transcribeEngine = source["transcribeEngine"];
+	        this.transcribeModelPath = source["transcribeModelPath"];
+	        this.transcribeLanguage = source["transcribeLanguage"];
+	        this.transcribeWordTimestamps = source["transcribeWordTimestamps"];
+	        this.transcribeFormat = source["transcribeFormat"];
+	        this.transcribeSuffix = source["transcribeSuffix"];
 	    }
 	}
 
@@ -456,6 +468,39 @@ export namespace sysinfo {
 	        this.memTotalMB = source["memTotalMB"];
 	        this.ffmpegCpu = source["ffmpegCpu"];
 	        this.gpu = source["gpu"];
+	    }
+	}
+
+}
+
+export namespace transcribe {
+	
+	export class Spec {
+	    inputPath: string;
+	    outputBase: string;
+	    engine: string;
+	    language: string;
+	    modelPath: string;
+	    format: string;
+	    wordTimestamps: boolean;
+	    trimStartSec: number;
+	    trimEndSec: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new Spec(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.inputPath = source["inputPath"];
+	        this.outputBase = source["outputBase"];
+	        this.engine = source["engine"];
+	        this.language = source["language"];
+	        this.modelPath = source["modelPath"];
+	        this.format = source["format"];
+	        this.wordTimestamps = source["wordTimestamps"];
+	        this.trimStartSec = source["trimStartSec"];
+	        this.trimEndSec = source["trimEndSec"];
 	    }
 	}
 
