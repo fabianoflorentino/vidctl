@@ -280,6 +280,11 @@
             <p data-i18n="card.customPresetsDesc">Crie seus próprios presets — nome, modo (tamanho ou CRF), bitrate de áudio, codec e codificador — e edite ou exclua quando quiser. Ficam salvos em presets.json e entram na lista normalmente.</p>
           </article>
           <article class="card">
+            <span class="tag">novo</span>
+            <h3 data-i18n="card.transcribe">Transcrição local (SRT/VTT + texto)</h3>
+            <p data-i18n="card.transcribeDesc">Gere legendas .srt/.vtt e texto .txt com um motor de speech-to-text offline (whisper.cpp ou vosk). Escolha idioma, formato, timestamps por palavra e a janela de tempo — tudo roda local, nada vai para a nuvem, e a tarefa entra na mesma fila.</p>
+          </article>
+          <article class="card">
             <h3 data-i18n="card.offline">100% offline</h3>
             <p data-i18n="card.offlineDesc">Encode local com ffmpeg nativo. Seu vídeo não sai da sua máquina — ideal pra material sensível.</p>
           </article>
@@ -521,6 +526,7 @@
             'card.twopass': '2-pass para tamanho exato', 'card.twopassDesc': 'Primeiro passe analisa a cena, segundo aplica o bitrate. O arquivo sai no tamanho alvo — não em cima, não quase.',
             'card.presets': 'Presets por plataforma', 'card.presetsDesc': 'WhatsApp Status (10 MB), WhatsApp 16 MB, Instagram Reels, Shorts 30 MB, YouTube em CRF e tamanho personalizado.',
             'card.customPresets': 'Presets personalizados', 'card.customPresetsDesc': 'Crie seus próprios presets — nome, modo (tamanho ou CRF), bitrate de áudio, codec e codificador — e edite ou exclua quando quiser. Ficam salvos em presets.json e entram na lista normalmente.',
+            'card.transcribe': 'Transcrição local (SRT/VTT + texto)', 'card.transcribeDesc': 'Gere legendas .srt/.vtt e texto .txt com um motor de speech-to-text offline (whisper.cpp ou vosk). Escolha idioma, formato, timestamps por palavra e a janela de tempo — tudo roda local, nada vai para a nuvem, e a tarefa entra na mesma fila.',
             'card.metrics': 'Métricas ao vivo', 'card.metricsDesc': 'Durante a conversão o painel mostra CPU, memória, carga do ffmpeg e GPU (engine de vídeo) — pra você saber que a máquina está trabalhando sem travar a interface.',
             'card.theme': 'Tema claro e escuro', 'card.themeDesc': 'Segue o sistema e pode ser fixado no botão sol/lua. A escolha persiste entre aberturas do app.',
             'card.notifications': 'Notificações do sistema', 'card.notificationsDesc': 'Aviso do desktop quando a tarefa termina ou falha, e a opção de revelar a pasta do arquivo de saída — os dois toggles nas Preferências.',
@@ -579,6 +585,7 @@
             'card.twopass': '2-pass for an exact size', 'card.twopassDesc': 'First pass analyzes the scene, second applies the bitrate. The file hits the target size — not over, not close.',
             'card.presets': 'Presets per platform', 'card.presetsDesc': 'WhatsApp Status (10 MB), WhatsApp 16 MB, Instagram Reels, Shorts 30 MB, YouTube in CRF and custom size.',
             'card.customPresets': 'Custom presets', 'card.customPresetsDesc': 'Create your own presets — name, mode (size or CRF), audio bitrate, codec and encoder — and edit or delete them anytime. Saved in presets.json and listed right in the sidebar.',
+            'card.transcribe': 'Local transcription (SRT/VTT + text)', 'card.transcribeDesc': 'Generate .srt/.vtt subtitles and .txt text with an offline speech-to-text engine (whisper.cpp or vosk). Pick language, format, word timestamps and the time window — everything runs locally, nothing goes to the cloud, and the task joins the same queue.',
             'card.metrics': 'Live metrics', 'card.metricsDesc': 'During conversion the panel shows CPU, memory, ffmpeg load and GPU (video engine) — so you know the machine is working without freezing the UI.',
             'card.theme': 'Light and dark theme', 'card.themeDesc': 'Follows the system and can be pinned with the sun/moon button. The choice persists between app launches.',
             'card.notifications': 'System notifications', 'card.notificationsDesc': 'A desktop alert when a task finishes or fails, and an option to reveal the output file folder — both toggles live in Preferences.',
@@ -637,6 +644,7 @@
             'card.twopass': '2-pass para tamaño exacto', 'card.twopassDesc': 'El primer pase analiza la escena, el segundo aplica el bitrate. El archivo sale en el tamaño objetivo — ni más, ni casi.',
             'card.presets': 'Presets por plataforma', 'card.presetsDesc': 'WhatsApp Status (10 MB), WhatsApp 16 MB, Instagram Reels, Shorts 30 MB, YouTube en CRF y tamaño personalizado.',
             'card.customPresets': 'Presets personalizados', 'card.customPresetsDesc': 'Crea tus propios presets — nombre, modo (tamaño o CRF), bitrate de audio, códec y codificador — y edítalos o elimínalos cuando quieras. Se guardan en presets.json y aparecen en la lista normalmente.',
+            'card.transcribe': 'Transcripción local (SRT/VTT + texto)', 'card.transcribeDesc': 'Genera subtítulos .srt/.vtt y texto .txt con un motor de speech-to-text offline (whisper.cpp o vosk). Elige idioma, formato, timestamps por palabra y la ventana de tiempo — todo se ejecuta local, nada va a la nube, y la tarea entra en la misma cola.',
             'card.metrics': 'Métricas en vivo', 'card.metricsDesc': 'Durante la conversión el panel muestra CPU, memoria, carga del ffmpeg y GPU (engine de vídeo) — para que sepas que la máquina trabaja sin congelar la interfaz.',
             'card.theme': 'Tema claro y oscuro', 'card.themeDesc': 'Sigue el sistema y se puede fijar con el botón sol/luna. La elección persiste entre ejecuciones.',
             'card.notifications': 'Notificaciones del sistema', 'card.notificationsDesc': 'Aviso del escritorio cuando una tarea termina o falla, y la opción de revelar la carpeta del archivo de salida — los dos interruptores en Preferencias.',
@@ -695,6 +703,7 @@
             'card.twopass': '2-pass 精确控制大小', 'card.twopassDesc': '第一次编码分析画面，第二次应用码率。文件恰好达到目标大小 — 不多不少。',
             'card.presets': '按平台预设', 'card.presetsDesc': 'WhatsApp Status（10 MB）、WhatsApp 16 MB、Instagram Reels、Shorts 30 MB、YouTube 使用 CRF 以及自定义大小。',
             'card.customPresets': '自定义预设', 'card.customPresetsDesc': '创建你自己的预设——名称、模式（大小或 CRF）、音频码率、编码和编码器——随时编辑或删除。保存在 presets.json 中，并直接显示在列表中。',
+            'card.transcribe': '本地转写（SRT/VTT + 文本）', 'card.transcribeDesc': '使用离线语音识别引擎（whisper.cpp 或 vosk）生成 .srt/.vtt 字幕和 .txt 文本。可选择语言、格式、逐词时间戳和时间窗口——全部本地运行，不上传云端，任务进入同一队列。',
             'card.metrics': '实时指标', 'card.metricsDesc': '转换期间面板显示 CPU、内存、ffmpeg 负载和 GPU（视频引擎）— 让你知道机器正在工作，界面不卡顿。',
             'card.theme': '浅色与深色主题', 'card.themeDesc': '跟随系统，也可以通过日/月按钮固定。选择在应用重启后保持不变。',
             'card.notifications': '系统通知', 'card.notificationsDesc': '任务完成或失败时发出桌面通知，并可选择自动打开输出文件所在文件夹 —— 两个开关都在“设置”中。',

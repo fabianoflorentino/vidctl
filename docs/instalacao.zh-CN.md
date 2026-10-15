@@ -133,6 +133,18 @@ Get-FileHash vidctl-linux-x64.zip -Algorithm SHA256
 | macOS | `brew install ffmpeg` |
 | Windows | `winget install Gyan.FFmpeg` |
 
+## 本地转写（可选）
+
+转写（`.srt`/`.vtt` 字幕 + 文本）是**可选**功能，使用本地引擎 — 不上传云端。
+安装以下任一引擎，并在弹窗选项中指定模型（**⋮ → “转写视频…”**）：
+
+| 引擎 | 安装 | 模型 |
+|---|---|---|
+| whisper.cpp | PATH 中的 `whisper-cli` 二进制 | `ggml-*.bin` 文件（建议 `tiny`/`base`/`small`） |
+| vosk | PATH 中的 `vosk-transcriber` | 对应语言的模型目录 |
+
+未安装引擎时应用会提示，压缩功能照常可用。
+
 ## 从源码编译（可选）
 
 ```bash

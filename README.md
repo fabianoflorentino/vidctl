@@ -42,6 +42,10 @@ arquivo** (escala, corte, remover áudio, FPS, rotação, thumbnail). 100% offli
   de áudio sem reencodar o vídeo, escolhendo formato (mp3/opus/aac/flac/wav ou
   copiar), qualidade, canais e normalização — a extração entra na mesma fila
   de conversões
+- **Transcrição local (SRT/VTT + texto)**: pelo menu do vídeo ("transcrever
+  vídeo…") o app gera legendas `.srt`/`.vtt` e o texto plano `.txt` usando um
+  motor **offline** instalado na máquina (whisper.cpp ou vosk) — nada sai para
+  a nuvem; escolha idioma, formato, timestamps por palavra e a janela de tempo
 - **Sidebar colapsável + tempo de conversão**: os grupos de configuração
   colapsam e expandem (acordeão, um por vez) e cada conversão mostra o tempo
   decorrido e o total ao concluir, facilitando comparar presets e encoders
@@ -337,6 +341,30 @@ Sem reencodar o vídeo:
   usa os mesmos eventos, mostra progresso (`EXTRAINDO ÁUDIO`) e permite
   cancelar; ao concluir, o item ganha "abrir pasta".
 - Vídeos **sem faixa de áudio** não mostram a ação e, se tentados, falham com
+  "o vídeo não tem faixa de áudio".
+
+## Transcrição (legendas SRT/VTT + texto)
+
+No menu do vídeo (**⋮ → "transcrever vídeo…"**) o app abre o modal de
+transcrição. O áudio é extraído para PCM 16 kHz mono e entregue a um motor de
+**speech-to-text local**; nada é enviado para a nuvem. A saída são arquivos
+`.srt`, `.vtt` e/ou `.txt` ao lado do vídeo (sufixo padrão `-transcript`).
+
+| Opção | Detalhe |
+|---|---|
+| **Motor** | `auto` detecta; `whisper.cpp` (binário `whisper-cli`) ou `vosk` (`vosk-transcriber`) |
+| **Modelo** | caminho para o modelo local (`ggml-*.bin` no whisper; pasta/idioma no vosk). Não baixamos nada — você aponta o arquivo |
+| **Idioma** | `auto`, `pt` ou `en` |
+| **Formato** | `all` (srt+vtt+txt), `srt`, `vtt` ou `txt` |
+| **Timestamps por palavra** | uma legenda por palavra (só SRT/VTT; o TXT ignora) |
+| **Janela** | transcreve só o trecho `início`–`fim` em `mm:ss` (ex.: `0:30`–`2:00`) |
+
+- **Privacidade por padrão**: só motores locais. Sem nenhum instalado, o app
+  avisa (não sugere API na nuvem) e a compressão segue funcionando normalmente.
+- Instalação: `whisper-cli` (whisper.cpp) ou `vosk-transcriber`; modelos leves
+  sugeridos (`tiny`/`base`/`small`) — veja `docs/instalacao.md`.
+- A transcrição entra na **mesma fila** (`Task.Kind = transcribe`): progresso,
+  cancelamento e "abrir pasta" no item concluído. Vídeos sem áudio falham com
   "o vídeo não tem faixa de áudio".
 
 ## Fila de tarefas

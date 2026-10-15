@@ -150,6 +150,19 @@ install them through your distro:
 | macOS | `brew install ffmpeg` |
 | Windows | `winget install Gyan.FFmpeg` |
 
+## Local transcription (optional)
+
+Transcription (`.srt`/`.vtt` subtitles + text) is **optional** and uses a local
+engine — nothing is sent to the cloud. Install one of the engines and point the
+model in the modal options (**⋮ → "transcribe video…"**):
+
+| Engine | Install | Model |
+|---|---|---|
+| whisper.cpp | `whisper-cli` binary on the PATH | `ggml-*.bin` file (suggested: `tiny`/`base`/`small`) |
+| vosk | `vosk-transcriber` on the PATH | language model folder |
+
+Without an engine the app warns and compression keeps working normally.
+
 ## Build from source (optional)
 
 ```bash

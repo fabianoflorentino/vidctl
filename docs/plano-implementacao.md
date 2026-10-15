@@ -40,8 +40,8 @@ Branch            | Fase | PR
 `feat/updates`    | 8 — Verificação de atualização | entregue na v2.6.0
 `feat/presets`    | 9 — Presets personalizados | entregue na v2.7.0
 `feat/i18n`       | 10 — i18n pt-BR/en/es/zh + base em inglês | mergeado
-`feat/split-tempo`| 11 — Corte por tempo | pendente
-`feat/transcricao`| 12 — Transcrição de vídeo | pendente
+`feat/split-tempo`| 11 — Corte por tempo | entregue na v2.1.0
+`feat/transcricao`| 12 — Transcrição de vídeo | PR aberto
 `feat/sidebar`    | 13 — Barra lateral colapsável | pendente
 `feat/tempo`      | 14 — Tempo total de conversão | pendente
 `feat/drop`       | 15 — Importação por arrastar e soltar | pendente
@@ -717,6 +717,11 @@ sem telemetria obrigatória.
 > Reutiliza `audio.Extract`/PCM (fase 6), trim `-ss/-to` (fase 5) e fila
 `Task.Kind="transcribe"` (fase 2). Gera arquivos `.srt`, `.vtt` e `.txt` com
 timestamp opcional.
+>
+> **Status: entregue** na branch `feat/transcricao` — `internal/transcribe`
+> (detect/convert/extract/transcribe + wrappers whisper.cpp/vosk), binding
+> `TranscribeVideo` e `GetTranscribers`, `Task.Kind="transcribe"` na fila e o
+> `TranscribeModal.svelte` no menu do vídeo. Registrada aqui para referência.
 
 ### Modelo
 

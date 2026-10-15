@@ -14,7 +14,14 @@ operacional dos pacotes.
 
 ## [Unreleased]
 
-Nada ainda — em desenvolvimento.
+- **Transcrição local** (fase 12): pelo menu do vídeo ("transcrever vídeo…") o
+  app gera legendas `.srt`/`.vtt` e texto `.txt` usando um motor de
+  speech-to-text **offline** (whisper.cpp/`whisper-cli` ou vosk), com `auto`
+  detectando o que estiver instalado. Áudio extraído para PCM 16 kHz mono,
+  idioma `auto`/`pt`/`en`, formato `all`/`srt`/`vtt`/`txt`, timestamps por
+  palavra e janela `mm:ss`. Tudo roda local — nada é enviado para a nuvem;
+  sem motor instalado o app orienta a instalação. Entra na mesma fila
+  (`Task.Kind = transcribe`), com progresso, cancelamento e "abrir pasta".
 
 ## [2.7.0] — 2026-10-14
 

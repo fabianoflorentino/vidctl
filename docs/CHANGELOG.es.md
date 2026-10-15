@@ -14,7 +14,14 @@ solo el sistema operativo de los paquetes.
 
 ## [Unreleased]
 
-Nada aún — en desarrollo.
+- **Transcripción local** (fase 12): desde el menú del vídeo ("transcribir
+  vídeo…") la app genera subtítulos `.srt`/`.vtt` y texto `.txt` usando un
+  motor de speech-to-text **offline** (whisper.cpp/`whisper-cli` o vosk), con
+  `auto` detectando lo que esté instalado. Audio extraído a PCM 16 kHz mono,
+  idioma `auto`/`pt`/`en`, formato `all`/`srt`/`vtt`/`txt`, timestamps por
+  palabra y ventana `mm:ss`. Todo se ejecuta localmente — nada se envía a la
+  nube; sin motor, la app indica cómo instalarlo. Entra en la misma cola
+  (`Task.Kind = transcribe`), con progreso, cancelación y "abrir carpeta".
 
 ## [2.7.0] — 2026-10-14
 

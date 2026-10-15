@@ -43,6 +43,10 @@ cut, remove audio, FPS, rotation, thumbnail). 100% offline.
   audio track without re-encoding the video, choosing format
   (mp3/opus/aac/flac/wav or copy), quality, channels and normalization — the
   extraction joins the same task queue
+- **Local transcription (SRT/VTT + text)**: from the video menu ("transcribe
+  video…") the app generates `.srt`/`.vtt` subtitles and plain `.txt` using an
+  **offline** engine installed on the machine (whisper.cpp or vosk) — nothing
+  leaves for the cloud; pick language, format, word timestamps and time window
 - **Collapsible sidebar + conversion time**: configuration groups collapse and
   expand (accordion, one at a time) and every conversion shows elapsed and total
   time when done, making it easy to compare presets and encoders
@@ -336,6 +340,31 @@ re-encoding the video:
   done, the item gains "open folder".
 - Videos **without an audio track** do not show the action and, if attempted,
   fail with "the video has no audio track".
+
+## Transcription (SRT/VTT subtitles + text)
+
+From the video menu (**⋮ → "transcribe video…"**) the app opens the
+transcription modal. Audio is extracted to 16 kHz mono PCM and handed to a
+**local speech-to-text** engine; nothing is sent to the cloud. The output is
+`.srt`, `.vtt` and/or `.txt` files next to the video (default suffix
+`-transcript`).
+
+| Option | Detail |
+|---|---|
+| **Engine** | `auto` detects; `whisper.cpp` (`whisper-cli` binary) or `vosk` (`vosk-transcriber`) |
+| **Model** | path to the local model (`ggml-*.bin` for whisper; folder/language for vosk). Nothing is downloaded — you point at the file |
+| **Language** | `auto`, `pt` or `en` |
+| **Format** | `all` (srt+vtt+txt), `srt`, `vtt` or `txt` |
+| **Word timestamps** | one subtitle per word (SRT/VTT only; TXT ignores it) |
+| **Window** | transcribe only the `start`–`end` slice in `mm:ss` (e.g. `0:30`–`2:00`) |
+
+- **Privacy by default**: local engines only. With none installed the app warns
+  (it never suggests a cloud API) and compression keeps working normally.
+- Install `whisper-cli` (whisper.cpp) or `vosk-transcriber`; light models are
+  suggested (`tiny`/`base`/`small`) — see `docs/instalacao.md`.
+- Transcription joins the **same queue** (`Task.Kind = transcribe`): progress,
+  cancel and "open folder" on the finished item. Videos without audio fail with
+  "the video has no audio track".
 
 ## Task queue
 
