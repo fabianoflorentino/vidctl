@@ -7,12 +7,14 @@ import (
 	"github.com/fabianoflorentino/vidctl/internal/dlog"
 )
 
-// KindCompress identifies compression payloads; audio and transcription join
-// the queue in later phases with their own kinds.
+// KindCompress identifies compression payloads; audio and transcription jobs
+// share the same queue with their own kinds.
 const (
 	KindCompress = "compress"
 	// KindAudio identifies audio-extraction payloads (fase 6).
 	KindAudio = "audio"
+	// KindTranscribe identifies transcription payloads (fase 12).
+	KindTranscribe = "transcribe"
 )
 
 // Emitter is a function that dispatches a named event with a payload.
