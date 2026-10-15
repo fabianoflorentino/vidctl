@@ -10,6 +10,7 @@ import {config} from '../models';
 import {encode} from '../models';
 import {media} from '../models';
 import {sysinfo} from '../models';
+import {transcribe} from '../models';
 
 export function AddCustomPreset(arg1:presets.Preset):Promise<Array<presets.Preset>>;
 
@@ -51,6 +52,8 @@ export function GetTasks():Promise<Array<compress.TaskStatus>>;
 
 export function GetThumbnail(arg1:string,arg2:number):Promise<string>;
 
+export function GetTranscribers():Promise<Array<string>>;
+
 export function GetUsage():Promise<sysinfo.Snapshot>;
 
 export function OpenAudioDialog(arg1:string,arg2:string):Promise<string>;
@@ -69,10 +72,16 @@ export function OpenThumbnailDialog(arg1:string):Promise<string>;
 
 export function RefreshEncoders():Promise<encode.Availability>;
 
+export function RefreshTranscribers():Promise<Array<string>>;
+
 export function SaveConfig(arg1:config.Config):Promise<void>;
 
 export function SuggestAudioOutput(arg1:string,arg2:string):Promise<string>;
 
+export function SuggestTranscribeOutput(arg1:string):Promise<string>;
+
 export function SystemTheme():Promise<string>;
+
+export function TranscribeVideo(arg1:transcribe.Spec):Promise<string>;
 
 export function UpdateCustomPreset(arg1:string,arg2:presets.Preset):Promise<Array<presets.Preset>>;

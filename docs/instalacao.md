@@ -144,6 +144,19 @@ instale pela sua distro:
 | macOS | `brew install ffmpeg` |
 | Windows | `winget install Gyan.FFmpeg` |
 
+## Transcrição local (opcional)
+
+A transcrição (legendas `.srt`/`.vtt` + texto) é **opcional** e usa um motor
+local — nada é enviado para a nuvem. Instale um dos motores e aponte o modelo
+nas opções do modal (**⋮ → "transcrever vídeo…"**):
+
+| Motor | Instalação | Modelo |
+|---|---|---|
+| whisper.cpp | binário `whisper-cli` no PATH | arquivo `ggml-*.bin` (sugestão: `tiny`/`base`/`small`) |
+| vosk | `vosk-transcriber` no PATH | pasta do modelo do idioma |
+
+Sem motor instalado o app avisa e a compressão segue funcionando normalmente.
+
 ## Compilar do fonte (opcional)
 
 ```bash

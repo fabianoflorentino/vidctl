@@ -42,6 +42,10 @@ corte, quitar audio, FPS, rotación, thumbnail). 100 % offline.
   pista de audio sin recodificar el vídeo, eligiendo formato
   (mp3/opus/aac/flac/wav o copiar), calidad, canales y normalización — la
   extracción entra a la misma cola de tareas
+- **Transcripción local (SRT/VTT + texto)**: desde el menú del vídeo
+  ("transcribir vídeo…") la app genera subtítulos `.srt`/`.vtt` y texto plano
+  `.txt` con un motor **offline** instalado en la máquina (whisper.cpp o vosk) —
+  nada sale a la nube; elige idioma, formato, timestamps por palabra y ventana
 - **Sidebar colapsable + tiempo de conversión**: los grupos de configuración
   colapsan y expanden (acordeón, uno a la vez) y cada conversión muestra el
   tiempo transcurrido y el total al terminar, facilitando comparar presets y
@@ -342,6 +346,30 @@ elegido. Sin recodificar el vídeo:
   al terminar, el elemento gana "abrir carpeta".
 - Los vídeos **sin pista de audio** no muestran la acción y, si se intentan,
   fallan con "el vídeo no tiene pista de audio".
+
+## Transcripción (subtítulos SRT/VTT + texto)
+
+Desde el menú del vídeo (**⋮ → "transcribir vídeo…"**) la app abre el modal de
+transcripción. El audio se extrae a PCM 16 kHz mono y se entrega a un motor de
+**speech-to-text local**; nada se envía a la nube. La salida son archivos
+`.srt`, `.vtt` y/o `.txt` junto al vídeo (sufijo por defecto `-transcript`).
+
+| Opción | Detalle |
+|---|---|
+| **Motor** | `auto` detecta; `whisper.cpp` (binario `whisper-cli`) o `vosk` (`vosk-transcriber`) |
+| **Modelo** | ruta al modelo local (`ggml-*.bin` en whisper; carpeta/idioma en vosk). No se descarga nada — tú indicas el archivo |
+| **Idioma** | `auto`, `pt` o `en` |
+| **Formato** | `all` (srt+vtt+txt), `srt`, `vtt` o `txt` |
+| **Timestamps por palabra** | un subtítulo por palabra (solo SRT/VTT; el TXT lo ignora) |
+| **Ventana** | transcribe solo el tramo `inicio`–`fin` en `mm:ss` (ej.: `0:30`–`2:00`) |
+
+- **Privacidad por defecto**: solo motores locales. Sin ninguno instalado, la
+  app avisa (nunca sugiere una API en la nube) y la compresión sigue funcionando.
+- Instala `whisper-cli` (whisper.cpp) o `vosk-transcriber`; modelos ligeros
+  sugeridos (`tiny`/`base`/`small`) — ver `docs/instalacao.md`.
+- La transcripción entra en la **misma cola** (`Task.Kind = transcribe`):
+  progreso, cancelación y "abrir carpeta" en el elemento terminado. Los vídeos
+  sin audio fallan con "el vídeo no tiene pista de audio".
 
 ## Cola de tareas
 

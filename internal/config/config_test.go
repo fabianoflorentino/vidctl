@@ -145,17 +145,21 @@ func TestLoadCorruptFileReturnsDefaults(t *testing.T) {
 func TestSaveLoadRoundtrip(t *testing.T) {
 	store := newTestStore(t)
 	want := Config{
-		PresetID:         "youtube",
-		SizeMB:           37.5,
-		CRF:              19,
-		OutputDir:        "/tmp/vidctl-out",
-		FFmpegPath:       "/opt/ffmpeg/bin/ffmpeg",
-		FFprobePath:      "/opt/ffmpeg/bin/ffprobe",
-		Language:         "en",
-		MaxParallel:      3,
-		NotifyOnDone:     true,
-		OpenFolderOnDone: true,
-		AudioSuffix:      "-music",
+		PresetID:           "youtube",
+		SizeMB:             37.5,
+		CRF:                19,
+		OutputDir:          "/tmp/vidctl-out",
+		FFmpegPath:         "/opt/ffmpeg/bin/ffmpeg",
+		FFprobePath:        "/opt/ffmpeg/bin/ffprobe",
+		Language:           "en",
+		MaxParallel:        3,
+		NotifyOnDone:       true,
+		OpenFolderOnDone:   true,
+		AudioSuffix:        "-music",
+		TranscribeEngine:   "auto",
+		TranscribeLanguage: "auto",
+		TranscribeFormat:   "all",
+		TranscribeSuffix:   "-transcript",
 	}
 	if err := store.Save(want); err != nil {
 		t.Fatalf("Save: %v", err)
@@ -244,6 +248,8 @@ func TestSaveValidatesBeforeWriting(t *testing.T) {
 		{"crf negativo", Config{PresetID: "custom", CRF: -3, Language: "pt", MaxParallel: 1, AudioSuffix: "-audio"}, "crf"},
 		{"paralelismo zero", Config{PresetID: "custom", Language: "pt", MaxParallel: 0}, "maxParallel"},
 		{"idioma desconhecido", Config{PresetID: "custom", Language: "fr", MaxParallel: 1}, "language"},
+		{"transcribe engine desconhecido", Config{PresetID: "custom", Language: "pt", MaxParallel: 1, AudioSuffix: "-audio", TranscribeEngine: "cloud"}, "transcribeEngine"},
+		{"transcribe format desconhecido", Config{PresetID: "custom", Language: "pt", MaxParallel: 1, AudioSuffix: "-audio", TranscribeFormat: "docx"}, "transcribeFormat"},
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
@@ -358,14 +364,48 @@ func TestNormalize(t *testing.T) {
 			in:   Config{PresetID: "custom", Language: "pt", MaxParallel: 1, AudioSuffix: "-music"},
 			want: Config{PresetID: "custom", Language: "pt", MaxParallel: 1, AudioSuffix: "-music"},
 		},
+		{
+			name: "unknown transcribe engine falls back to auto",
+			in:   Config{PresetID: "custom", Language: "pt", MaxParallel: 1, AudioSuffix: "-audio", TranscribeEngine: "CLOUD"},
+			want: Config{PresetID: "custom", Language: "pt", MaxParallel: 1, AudioSuffix: "-audio", TranscribeEngine: "auto"},
+		},
+		{
+			name: "unknown transcribe format falls back to all",
+			in:   Config{PresetID: "custom", Language: "pt", MaxParallel: 1, AudioSuffix: "-audio", TranscribeFormat: "docx"},
+			want: Config{PresetID: "custom", Language: "pt", MaxParallel: 1, AudioSuffix: "-audio", TranscribeFormat: "all"},
+		},
+		{
+			name: "custom transcribe suffix is preserved",
+			in:   Config{PresetID: "custom", Language: "pt", MaxParallel: 1, AudioSuffix: "-audio", TranscribeSuffix: "-legenda"},
+			want: Config{PresetID: "custom", Language: "pt", MaxParallel: 1, AudioSuffix: "-audio", TranscribeSuffix: "-legenda"},
+		},
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.in.Normalize(); got != tt.want {
-				t.Errorf("Normalize() = %+v, want %+v", got, tt.want)
+			want := withTranscribeDefaults(tt.want)
+			if got := tt.in.Normalize(); got != want {
+				t.Errorf("Normalize() = %+v, want %+v", got, want)
 			}
 		})
 	}
+}
+
+// withTranscribeDefaults fills the phase-12 defaults Normalize always applies,
+// keeping the expectations focused on the field under test.
+func withTranscribeDefaults(c Config) Config {
+	if c.TranscribeEngine == "" {
+		c.TranscribeEngine = "auto"
+	}
+	if c.TranscribeLanguage == "" {
+		c.TranscribeLanguage = "auto"
+	}
+	if c.TranscribeFormat == "" {
+		c.TranscribeFormat = "all"
+	}
+	if c.TranscribeSuffix == "" {
+		c.TranscribeSuffix = "-transcript"
+	}
+	return c
 }
 
 func TestValidate(t *testing.T) {

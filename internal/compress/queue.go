@@ -11,6 +11,7 @@ import (
 	"github.com/fabianoflorentino/vidctl/internal/audio"
 	"github.com/fabianoflorentino/vidctl/internal/dlog"
 	"github.com/fabianoflorentino/vidctl/internal/events"
+	"github.com/fabianoflorentino/vidctl/internal/transcribe"
 )
 
 // Task states of the conversion queue.
@@ -33,6 +34,9 @@ type Task struct {
 	// InputPath and Spec carry the payload of an audio task (KindAudio).
 	InputPath string
 	Spec      audio.Spec
+	// TranscribeSpec carries the payload of a transcription task
+	// (KindTranscribe).
+	TranscribeSpec transcribe.Spec
 }
 
 // TaskStatus is the snapshot of a task sent to the frontend.
@@ -70,14 +74,15 @@ type taskEntry struct {
 // Manager runs queued compression jobs, up to maxParallel at a time, and
 // tracks each task's status for the frontend.
 type Manager struct {
-	mu          sync.Mutex
-	tasks       []*taskEntry
-	running     int
-	maxParallel int
-	seq         int64
-	run         func(ctx context.Context, jobID string, job Job) error
-	runAudio    func(ctx context.Context, jobID string, task Task) error
-	onFinish    func(kind, label, state, outputPath string, err error)
+	mu            sync.Mutex
+	tasks         []*taskEntry
+	running       int
+	maxParallel   int
+	seq           int64
+	run           func(ctx context.Context, jobID string, job Job) error
+	runAudio      func(ctx context.Context, jobID string, task Task) error
+	runTranscribe func(ctx context.Context, jobID string, task Task) error
+	onFinish      func(kind, label, state, outputPath string, err error)
 }
 
 // SetOnFinish installs a handler notified whenever a task reaches a terminal
@@ -90,9 +95,10 @@ func (m *Manager) SetOnFinish(fn func(kind, label, state, outputPath string, err
 // NewManager creates a queue manager that runs one job at a time.
 func NewManager() *Manager {
 	return &Manager{
-		maxParallel: 1,
-		run:         Run,
-		runAudio:    runAudioTask,
+		maxParallel:   1,
+		run:           Run,
+		runAudio:      runAudioTask,
+		runTranscribe: runTranscribeTask,
 	}
 }
 
@@ -100,6 +106,13 @@ func NewManager() *Manager {
 // pipeline, which emits its own done/error events.
 func runAudioTask(ctx context.Context, jobID string, task Task) error {
 	_, err := audio.Extract(ctx, jobID, task.InputPath, task.Spec)
+	return err
+}
+
+// runTranscribeTask is the default transcription worker: it dispatches to the
+// transcription pipeline, which emits its own done/error events.
+func runTranscribeTask(ctx context.Context, jobID string, task Task) error {
+	_, err := transcribe.Transcribe(ctx, jobID, task.TranscribeSpec)
 	return err
 }
 
@@ -302,9 +315,12 @@ func (m *Manager) pump() {
 func (m *Manager) worker(ctx context.Context, e *taskEntry) {
 	var err error
 	if ctx.Err() == nil {
-		if e.task.Kind == events.KindAudio {
+		switch e.task.Kind {
+		case events.KindAudio:
 			err = m.runAudio(ctx, e.task.JobID, e.task)
-		} else {
+		case events.KindTranscribe:
+			err = m.runTranscribe(ctx, e.task.JobID, e.task)
+		default:
 			err = m.run(ctx, e.task.JobID, e.task.Job)
 		}
 	} else {

@@ -22,6 +22,7 @@ import (
 	"github.com/fabianoflorentino/vidctl/internal/presets"
 	"github.com/fabianoflorentino/vidctl/internal/sysinfo"
 	"github.com/fabianoflorentino/vidctl/internal/systemtheme"
+	"github.com/fabianoflorentino/vidctl/internal/transcribe"
 	"github.com/fabianoflorentino/vidctl/internal/update"
 	"github.com/fabianoflorentino/vidctl/internal/version"
 	wailsruntime "github.com/wailsapp/wails/v2/pkg/runtime"
@@ -479,6 +480,15 @@ func newAudioTask(spec audio.Spec) compress.Task {
 	}
 }
 
+func newTranscribeTask(spec transcribe.Spec) compress.Task {
+	return compress.Task{
+		Kind:           events.KindTranscribe,
+		Label:          filepath.Base(spec.InputPath),
+		InputPath:      spec.InputPath,
+		TranscribeSpec: spec,
+	}
+}
+
 // ExtractAudio validates the request and enqueues an audio-extraction task,
 // returning its job ID. Failures inside the worker (missing audio track,
 // ffmpeg errors) surface as the item's error event.
@@ -502,6 +512,52 @@ func (a *App) SuggestAudioOutput(inputPath, codec string) (string, error) {
 	}
 	cfg := a.loadConfig()
 	name, err := audio.SuggestOutput(inputPath, codec, cfg.AudioSuffix)
+	if err != nil {
+		return "", err
+	}
+	dir := strings.TrimSpace(cfg.OutputDir)
+	if dir == "" {
+		dir = filepath.Dir(inputPath)
+	}
+	return filepath.Join(dir, name), nil
+}
+
+// GetTranscribers returns the transcription engines installed on this machine,
+// in preference order. The result is cached until RefreshTranscribers resets it.
+func (a *App) GetTranscribers() []string {
+	return transcribe.AvailableEngines()
+}
+
+// RefreshTranscribers drops the cached engine detection and re-probes the PATH.
+func (a *App) RefreshTranscribers() []string {
+	transcribe.ResetDetection()
+	return transcribe.AvailableEngines()
+}
+
+// TranscribeVideo validates the request and enqueues a transcription task,
+// returning its job ID. Failures inside the worker (no engine, no audio track,
+// engine errors) surface as the item's error event.
+func (a *App) TranscribeVideo(spec transcribe.Spec) (string, error) {
+	if strings.TrimSpace(spec.InputPath) == "" {
+		return "", errors.New("no video selected")
+	}
+	if err := spec.Validate(); err != nil {
+		return "", err
+	}
+	jobID, _ := a.jobs.Enqueue(newTranscribeTask(spec))
+	dlog.Printf("[app] TranscribeVideo input=%q engine=%q format=%q out=%q job=%s", spec.InputPath, spec.Engine, spec.Format, spec.OutputBase, jobID)
+	return jobID, nil
+}
+
+// SuggestTranscribeOutput proposes the output base path (without extension) of a
+// transcription, in the saved output directory or next to the input, using the
+// configured suffix.
+func (a *App) SuggestTranscribeOutput(inputPath string) (string, error) {
+	if strings.TrimSpace(inputPath) == "" {
+		return "", errors.New("no video selected")
+	}
+	cfg := a.loadConfig()
+	name, err := transcribe.SuggestName(inputPath, cfg.TranscribeSuffix)
 	if err != nil {
 		return "", err
 	}

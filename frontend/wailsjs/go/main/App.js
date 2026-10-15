@@ -82,6 +82,10 @@ export function GetThumbnail(arg1, arg2) {
   return window['go']['main']['App']['GetThumbnail'](arg1, arg2);
 }
 
+export function GetTranscribers() {
+  return window['go']['main']['App']['GetTranscribers']();
+}
+
 export function GetUsage() {
   return window['go']['main']['App']['GetUsage']();
 }
@@ -118,6 +122,10 @@ export function RefreshEncoders() {
   return window['go']['main']['App']['RefreshEncoders']();
 }
 
+export function RefreshTranscribers() {
+  return window['go']['main']['App']['RefreshTranscribers']();
+}
+
 export function SaveConfig(arg1) {
   return window['go']['main']['App']['SaveConfig'](arg1);
 }
@@ -126,8 +134,16 @@ export function SuggestAudioOutput(arg1, arg2) {
   return window['go']['main']['App']['SuggestAudioOutput'](arg1, arg2);
 }
 
+export function SuggestTranscribeOutput(arg1) {
+  return window['go']['main']['App']['SuggestTranscribeOutput'](arg1);
+}
+
 export function SystemTheme() {
   return window['go']['main']['App']['SystemTheme']();
+}
+
+export function TranscribeVideo(arg1) {
+  return window['go']['main']['App']['TranscribeVideo'](arg1);
 }
 
 export function UpdateCustomPreset(arg1, arg2) {

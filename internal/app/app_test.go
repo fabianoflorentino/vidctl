@@ -17,6 +17,7 @@ import (
 	"github.com/fabianoflorentino/vidctl/internal/events"
 	"github.com/fabianoflorentino/vidctl/internal/notify"
 	"github.com/fabianoflorentino/vidctl/internal/presets"
+	"github.com/fabianoflorentino/vidctl/internal/transcribe"
 	"github.com/fabianoflorentino/vidctl/internal/update"
 )
 
@@ -988,6 +989,125 @@ func TestSuggestAudioOutput(t *testing.T) {
 	}
 	if want := filepath.Join("/tmp", "x-triha.opus"); got != want {
 		t.Errorf("SuggestAudioOutput = %q, want %q", got, want)
+	}
+}
+
+func TestTranscribeVideoValidation(t *testing.T) {
+	a := newTestApp(t)
+	if _, err := a.TranscribeVideo(transcribe.Spec{}); err == nil || !strings.Contains(err.Error(), "no video") {
+		t.Errorf("empty spec should fail citing the video, got %v", err)
+	}
+	if _, err := a.TranscribeVideo(transcribe.Spec{InputPath: "in.mp4"}); err == nil {
+		t.Error("missing output base should fail")
+	}
+}
+
+func TestTranscribeVideoEnqueuesAndRuns(t *testing.T) {
+	skipOnWindows(t)
+	dir := t.TempDir()
+	scripts := map[string]string{
+		"ffmpeg": `#!/bin/sh
+out=""
+for a in "$@"; do out="$a"; done
+mkdir -p "$(dirname "$out")"
+printf 'wav' > "$out"
+exit 0
+`,
+		"ffprobe": `#!/bin/sh
+printf '%s\n' '{"streams":[
+	{"codec_type":"video","codec_name":"h264","width":320,"height":240},
+	{"codec_type":"audio","codec_name":"aac"}
+],"format":{"duration":5.0}}'
+`,
+		"whisper-cli": `#!/bin/sh
+base=""
+prev=""
+for a in "$@"; do
+  if [ "$prev" = "-of" ]; then base="$a"; fi
+  prev="$a"
+done
+printf '%s\n' '{"transcription":[{"offsets":{"from":0,"to":2000},"text":"hello world"}]}' > "$base.json"
+exit 0
+`,
+	}
+	for name, script := range scripts {
+		if err := os.WriteFile(filepath.Join(dir, name), []byte(script), 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	t.Setenv("PATH", dir)
+	transcribe.ResetDetection()
+	t.Cleanup(transcribe.ResetDetection)
+
+	a := NewApp()
+	events.SetEmitter(func(name string, data any) { a.jobs.Observe(name, data) })
+	defer events.SetEmitter(nil)
+
+	base := filepath.Join(t.TempDir(), "in-transcript")
+	jobID, err := a.TranscribeVideo(transcribe.Spec{
+		InputPath: "in.mp4", OutputBase: base, Engine: "auto", Language: "auto", Format: "all",
+		ModelPath: "/models/ggml.bin",
+	})
+	if err != nil || jobID == "" {
+		t.Fatalf("TranscribeVideo: jobID=%q err=%v", jobID, err)
+	}
+
+	s := waitTaskTerminal(t, a, jobID)
+	if s.State != compress.StateDone {
+		t.Fatalf("estado final = %q; want done (task=%+v)", s.State, s)
+	}
+	if s.Kind != events.KindTranscribe {
+		t.Errorf("kind = %q; want transcribe", s.Kind)
+	}
+	for _, ext := range []string{"srt", "vtt", "txt"} {
+		if _, err := os.Stat(base + "." + ext); err != nil {
+			t.Errorf("missing %s file: %v", ext, err)
+		}
+	}
+}
+
+func TestSuggestTranscribeOutput(t *testing.T) {
+	a := newTestApp(t)
+	if _, err := a.SuggestTranscribeOutput(""); err == nil {
+		t.Error("sem entrada should falhar")
+	}
+
+	got, err := a.SuggestTranscribeOutput(filepath.Join("videos", "meu video.mov"))
+	if err != nil {
+		t.Fatalf("SuggestTranscribeOutput: %v", err)
+	}
+	if want := filepath.Join("videos", "meu video-transcript"); got != want {
+		t.Errorf("SuggestTranscribeOutput = %q, want %q", got, want)
+	}
+
+	saved := config.Defaults()
+	saved.OutputDir = "destino"
+	saved.TranscribeSuffix = "-legenda"
+	if err := a.SaveConfig(saved); err != nil {
+		t.Fatalf("SaveConfig: %v", err)
+	}
+	got, err = a.SuggestTranscribeOutput("/tmp/x.mkv")
+	if err != nil {
+		t.Fatalf("SuggestTranscribeOutput com overrides: %v", err)
+	}
+	if want := filepath.Join("destino", "x-legenda"); got != want {
+		t.Errorf("SuggestTranscribeOutput = %q, want %q", got, want)
+	}
+}
+
+func TestGetAndRefreshTranscribers(t *testing.T) {
+	skipOnWindows(t)
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "whisper-cli"), []byte("#!/bin/sh\nexit 0\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("PATH", dir)
+	t.Cleanup(transcribe.ResetDetection)
+
+	a := newTestApp(t)
+	got := a.RefreshTranscribers()
+	if len(got) != 1 || got[0] != transcribe.EngineWhisper {
+		t.Errorf("RefreshTranscribers = %v; want [whispercpp]", got)
 	}
 }
 
