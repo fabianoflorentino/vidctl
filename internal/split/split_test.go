@@ -58,14 +58,38 @@ func TestPlanByParts(t *testing.T) {
 			},
 		},
 		{
-			name:        "partes menores que o minimo sao rejeitadas",
+			name:        "partes curtas sao permitidas",
 			durationSec: 300,
 			spec:        Spec{Parts: 6},
-			wantErr:     "the minimum is 1 min",
+			wantSegs: []Segment{
+				{Index: 1, StartSec: 0, EndSec: 50},
+				{Index: 2, StartSec: 50, EndSec: 100},
+				{Index: 3, StartSec: 100, EndSec: 150},
+				{Index: 4, StartSec: 150, EndSec: 200},
+				{Index: 5, StartSec: 200, EndSec: 250},
+				{Index: 6, StartSec: 250, EndSec: 300},
+			},
 		},
 		{name: "uma parte nao e corte", durationSec: 1800, spec: Spec{Parts: 1}, wantErr: "pelo menos 2 partes"},
 		{name: "partes demais", durationSec: 1800, spec: Spec{Parts: MaxParts + 1}, wantErr: "maximum"},
-		{name: "video curto demais", durationSec: 30, spec: Spec{Parts: 2}, wantErr: "shorter than the 1 min per part minimum"},
+		{
+			name:        "video de 30s cortado em 2",
+			durationSec: 30,
+			spec:        Spec{Parts: 2},
+			wantSegs: []Segment{
+				{Index: 1, StartSec: 0, EndSec: 15},
+				{Index: 2, StartSec: 15, EndSec: 30},
+			},
+		},
+		{
+			name:        "1:49 cortado em 2 partes",
+			durationSec: 109,
+			spec:        Spec{Parts: 2},
+			wantSegs: []Segment{
+				{Index: 1, StartSec: 0, EndSec: 54.5},
+				{Index: 2, StartSec: 54.5, EndSec: 109},
+			},
+		},
 		{name: "duracao invalida", durationSec: 0, spec: Spec{Parts: 2}, wantErr: "invalid video duration"},
 	}
 
@@ -108,8 +132,8 @@ func TestPlanByMinutes(t *testing.T) {
 			},
 		},
 		{
-			name:        "sobra menor que 1min junta na ultima parte",
-			durationSec: 1830, // 6x5min = 1800, sobra 30s (<60) -> parte 6 fica 1500-1830
+			name:        "sobra menor que 1min vira a ultima parte",
+			durationSec: 1830, // 6x5min = 1800, sobra 30s -> parte 7 de 30s
 			spec:        Spec{MinutesEach: 5},
 			wantSegs: []Segment{
 				{Index: 1, StartSec: 0, EndSec: 300},
@@ -117,7 +141,17 @@ func TestPlanByMinutes(t *testing.T) {
 				{Index: 3, StartSec: 600, EndSec: 900},
 				{Index: 4, StartSec: 900, EndSec: 1200},
 				{Index: 5, StartSec: 1200, EndSec: 1500},
-				{Index: 6, StartSec: 1500, EndSec: 1830},
+				{Index: 6, StartSec: 1500, EndSec: 1800},
+				{Index: 7, StartSec: 1800, EndSec: 1830},
+			},
+		},
+		{
+			name:        "1:49 com 1min por parte vira 1:00 + 0:49",
+			durationSec: 109,
+			spec:        Spec{MinutesEach: 1},
+			wantSegs: []Segment{
+				{Index: 1, StartSec: 0, EndSec: 60},
+				{Index: 2, StartSec: 60, EndSec: 109},
 			},
 		},
 		{
