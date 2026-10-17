@@ -679,10 +679,9 @@ minutos por parte, reaproveitando o mesmo encode.
   (`Index`, `StartSec`, `EndSec`), `Plan(durationSec, spec)` e
   `Filename(path, index, total)`.
   - `Parts`: fatias iguais de `duration/Parts`.
-  - `MinutesEach`: fatias de comprimento fixo; o resto vira parte própria, a não
-    ser que fique abaixo de `MinPartSec` — nesse caso é unido à última fatia,
-    para nenhuma parte sair com menos de 1 minuto.
-  - Limites: `MinPartSec`, `MaxParts` e `MaxMinutesEach`.
+  - `MinutesEach`: fatias de comprimento fixo; o resto vira a última parte,
+    mesmo que tenha menos de 1 min (ex.: 1:49 → 1:00 + 0:49).
+  - Limites: `MaxParts` e `MaxMinutesEach` (sem mínimo de duração por parte).
   - `Filename` insere `-partN` antes da extensão e preenche com zero quando o
     total passa de 9 dígitos, para os arquivos ordenarem corretamente.
 - `compress.Job.Split *split.Spec` (`omitempty`): ausente ou inválido, o job
@@ -697,8 +696,8 @@ minutos por parte, reaproveitando o mesmo encode.
   bloqueio quando o plano é inválido.
 
 ### Testes
-- `Plan` por partes, por minutos, resto absorvido, limites (`MinPartSec`,
-  `MaxParts`), duração zero/negativa, `Spec` vazio.
+- `Plan` por partes, por minutos, resto como parte final (< 1 min incluso),
+  limites (`MaxParts`, `MaxMinutesEach`), duração zero/negativa, `Spec` vazio.
 - `Filename` com 1, 9 e 10+ partes (zero-padding).
 - `compress`: `-ss`/`-to` por segmento e output `-partN` (90,8% no pacote).
 

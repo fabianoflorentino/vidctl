@@ -19,10 +19,11 @@ cut, remove audio, FPS, rotation, thumbnail). 100% offline.
   YouTube CRF, or a free size you define) — plus you can create your own presets
   ("create preset" in the Presets section)
 - **Cut**: splits the video by time — N equal parts or X minutes per part
-  (e.g., 30 min → 6 × 5 min) — with at least 1 min per part; each part is
-  compressed independently and saved as `name-part1.mp4`, … The `min/part`
-  accepts fractions (e.g., `1.5` = 1 m 30 s) and the counters offer an editable
-  field + **Shift** arrow keys for fine control
+  (e.g., 30 min → 6 × 5 min); each part is compressed independently and saved
+  as `name-part1.mp4`, … The leftover becomes the last part even when it is
+  under 1 min (e.g., 1:49 → 1:00 + 0:49), and the part count is capped at 60.
+  The `min/part` accepts fractions (e.g., `1.5` = 1 m 30 s) and the counters
+  offer an editable field + **Shift** arrow keys for fine control
 - **Task queue**: compressing and extracting audio share the same queue, which
   processes **one job at a time** (sequential); each item shows status, progress
   and cancellation, with "clear queue" for finished ones. There is a single
@@ -287,8 +288,7 @@ want to publish the content sliced.
 | Field | Rule |
 |---|---|
 | **N parts** | the video is divided into N equal segments (e.g., 30 min → 6 × 5 min) |
-| **min/part** | fixed-duration segments (accepts fractions: `1.5` = 1 m 30 s); the remainder becomes a final part if ≥ 1 min, otherwise it is joined to the last one |
-| Minimum | 1 minute per part — cuts that make a smaller part are blocked |
+| **min/part** | fixed-duration segments (accepts fractions: `1.5` = 1 m 30 s); the leftover becomes the last part even when it is under 1 min (e.g., 1:49 → 1:00 + 0:49) |
 | Maximum | 60 parts per video |
 
 Each part goes through the chosen compression pipeline (preset/size/CRF) and

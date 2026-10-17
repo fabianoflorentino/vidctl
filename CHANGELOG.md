@@ -23,6 +23,11 @@ operacional dos pacotes.
   sem motor instalado o app orienta a instalação. Entra na mesma fila
   (`Task.Kind = transcribe`), com progresso, cancelamento e "abrir pasta".
 
+- **Corrigido — corte por tempo**: removido o mínimo de 1 min por parte. A
+  sobra agora vira a última parte mesmo quando tem menos de 1 min (ex.: vídeo de
+  1:49 → `1:00` + `0:49`), em vez de bloquear o corte. O limite segue em 60
+  partes por vídeo.
+
 ## [2.7.0] — 2026-10-14
 
 - **Presets personalizados** (fase 9): crie, edite e exclua seus próprios

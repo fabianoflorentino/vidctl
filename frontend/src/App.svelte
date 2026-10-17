@@ -653,31 +653,24 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   let splitParts = $state(6)
   let splitMinutes = $state(5)
 
-  const MIN_PART_SEC = 60
   const MAX_PARTS = 60
 
   type SplitPlan = { count: number; sliceSec: number; error: string }
 
   function planSplit(durationSec: number): SplitPlan | null {
     if (!splitOn || !durationSec || durationSec <= 0) return null
-    if (durationSec < MIN_PART_SEC) {
-      return { count: 0, sliceSec: 0, error: t('split.tooShort') }
-    }
     if (splitAxis === 'parts') {
       const parts = Math.floor(splitParts)
       if (parts < 2) return { count: 0, sliceSec: 0, error: t('split.minParts') }
       if (parts > MAX_PARTS) return { count: 0, sliceSec: 0, error: t('split.maxParts', { n: MAX_PARTS }) }
       const slice = durationSec / parts
-      if (slice < MIN_PART_SEC) {
-        return { count: 0, sliceSec: 0, error: t('split.partsShort') }
-      }
       return { count: parts, sliceSec: slice, error: '' }
     }
     const slice = Math.max(1, splitMinutes) * 60
     const full = Math.floor(durationSec / slice)
     const tail = durationSec - full * slice
     let count = full
-    if (tail >= MIN_PART_SEC) count = full + 1
+    if (tail > 0) count = full + 1
     if (count < 2) return { count: 0, sliceSec: slice, error: t('split.tooFew') }
     if (count > MAX_PARTS) return { count: 0, sliceSec: slice, error: t('split.maxPartsGen', { n: count, n2: MAX_PARTS }) }
     return { count, sliceSec: slice, error: '' }

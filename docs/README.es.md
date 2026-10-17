@@ -19,10 +19,11 @@ corte, quitar audio, FPS, rotación, thumbnail). 100 % offline.
   YouTube CRF, o un tamaño libre que definas tú) — y puedes crear tus propios
   presets ("crear preset" en la sección Presets)
 - **Cortar**: divide el vídeo por tiempo — N partes iguales o X minutos por parte
-  (ej.: 30 min → 6 × 5 min) — con mínimo de 1 min por parte; cada parte se
-  comprime de forma independiente y se guarda como `nombre-part1.mp4`, … El
-  `min/parte` acepta fracciones (ej.: `1.5` = 1 m 30 s) y los contadores tienen
-  campo editable + flechas con **Shift** para ajuste fino
+  (ej.: 30 min → 6 × 5 min); cada parte se comprime de forma independiente y se
+  guarda como `nombre-part1.mp4`, … El sobrante se convierte en la última parte
+  aunque dure menos de 1 min (ej.: 1:49 → 1:00 + 0:49), y el total de partes está
+  limitado a 60. El `min/parte` acepta fracciones (ej.: `1.5` = 1 m 30 s) y los
+  contadores tienen campo editable + flechas con **Shift** para ajuste fino
 - **Cola de tareas**: comprimir y extraer audio comparten la misma cola, que
   procesa **un trabajo a la vez** (secuencial); cada elemento muestra estado,
   progreso y cancelación, con "vaciar cola" para los terminados. Hay un único
@@ -293,8 +294,7 @@ cuando quieres publicar el contenido en tajadas.
 | Campo | Regla |
 |---|---|
 | **N partes** | el vídeo se divide en N tramos iguales (ej.: 30 min → 6 × 5 min) |
-| **min/parte** | tramos con duración fija (acepta fracciones: `1.5` = 1 m 30 s); la sobra se vuelve parte final si tiene ≥ 1 min, si no se une a la última |
-| Mínimo | 1 minuto por parte — los cortes que generen parte menor se bloquean |
+| **min/parte** | tramos con duración fija (acepta fracciones: `1.5` = 1 m 30 s); el sobrante se vuelve la última parte aunque dure menos de 1 min (ej.: 1:49 → 1:00 + 0:49) |
 | Máximo | 60 partes por vídeo |
 
 Cada parte pasa por el pipeline de compresión elegido (preset/tamaño/CRF) y

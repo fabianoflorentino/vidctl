@@ -11,8 +11,6 @@ import (
 )
 
 const (
-	// MinPartSec is the minimum duration allowed for any part.
-	MinPartSec = 60.0
 	// MaxParts caps how many parts a single video may be cut into.
 	MaxParts = 60
 	// MaxMinutesEach caps the minutes-per-part input.
@@ -39,9 +37,9 @@ func (s Segment) Duration() float64 {
 
 // Plan computes sequential segments covering the whole video.
 // With Parts, the video is divided into equal slices of duration/Parts.
-// With MinutesEach, slices have fixed length and the remainder becomes its
-// own part, unless it would be shorter than MinPartSec — then it is merged
-// into the last slice (no part is ever shorter than 1 minute).
+// With MinutesEach, slices have fixed length and any remainder becomes its own
+// final part, even when shorter than a minute (e.g. a 1:49 video with 1 min per
+// part yields 1:00 + 0:49).
 func Plan(durationSec float64, spec Spec) ([]Segment, error) {
 	if spec.Parts > 0 && spec.MinutesEach > 0 {
 		return nil, errors.New("provide only one cut option: number of parts or minutes per part")
@@ -51,9 +49,6 @@ func Plan(durationSec float64, spec Spec) ([]Segment, error) {
 	}
 	if durationSec <= 0 {
 		return nil, errors.New("invalid video duration")
-	}
-	if durationSec < MinPartSec {
-		return nil, fmt.Errorf("video of %.0fs is shorter than the 1 min per part minimum", durationSec)
 	}
 
 	if spec.Parts > 0 {
@@ -70,11 +65,6 @@ func planByParts(durationSec float64, parts int) ([]Segment, error) {
 		return nil, fmt.Errorf("maximum of %d parts per video", MaxParts)
 	}
 	slice := durationSec / float64(parts)
-	if slice < MinPartSec {
-		return nil, fmt.Errorf(
-			"each part would be %s; the minimum is 1 min. Use fewer parts",
-			humanDuration(slice))
-	}
 	return segments(durationSec, func(i int) float64 {
 		return float64(i) * slice
 	}, parts), nil
@@ -91,12 +81,10 @@ func planByMinutes(durationSec float64, minutes float64) ([]Segment, error) {
 	full := int(math.Floor(durationSec / slice))
 	tail := durationSec - float64(full)*slice
 
+	// Any remainder becomes its own final part, however short.
 	total := full
-	switch {
-	case tail >= MinPartSec:
-		total++ // remainder becomes its own (shorter) part
-	case tail > 0:
-		// remainder < 1 min: merge into the last slice so no part is too short
+	if tail > 0 {
+		total++
 	}
 	if total < 2 {
 		return nil, fmt.Errorf(
@@ -140,13 +128,4 @@ func Filename(path string, index, total int) string {
 		num = strings.Repeat("0", width-len(num)) + num
 	}
 	return strings.TrimSuffix(path, ext) + "-part" + num + ext
-}
-
-func humanDuration(sec float64) string {
-	if sec >= 60 {
-		m := int(sec) / 60
-		s := int(sec) % 60
-		return fmt.Sprintf("%d min %d s", m, s)
-	}
-	return fmt.Sprintf("%.0f s", sec)
 }

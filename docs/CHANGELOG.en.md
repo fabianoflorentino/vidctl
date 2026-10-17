@@ -23,6 +23,10 @@ system of the packages.
   cloud; without an engine the app points you to the install. It joins the same
   queue (`Task.Kind = transcribe`) with progress, cancel and "open folder".
 
+- **Fixed — time cut**: removed the 1-min-per-part minimum. The leftover now
+  becomes the last part even when shorter than 1 min (e.g., a 1:49 video →
+  `1:00` + `0:49`) instead of blocking the cut. The 60-part cap stays.
+
 ## [2.7.0] — 2026-10-14
 
 - **Custom presets** (phase 9): create, edit and delete your own presets on top

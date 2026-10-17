@@ -244,7 +244,7 @@
           <article class="card">
             <span class="tag">novo</span>
             <h3 data-i18n="card.cut">Cortar</h3>
-            <p data-i18n="card.cutDesc">Divida o vídeo por tempo: N partes iguais ou X minutos por parte (30 min → 6 × 5 min). Mínimo de 1 min por parte, cada uma comprimida de verdade e salva como <code>nome-part1.mp4</code>.</p>
+            <p data-i18n="card.cutDesc">Divida o vídeo por tempo: N partes iguais ou X minutos por parte (30 min → 6 × 5 min). A sobra vira a última parte mesmo com menos de 1 min (1:49 → 1:00 + 0:49), cada uma comprimida de verdade e salva como <code>nome-part1.mp4</code>.</p>
           </article>
           <article class="card">
             <h3 data-i18n="card.twopass">2-pass para tamanho exato</h3>
@@ -311,7 +311,7 @@
           </div>
           <ul class="regras">
             <li data-i18n="cut.r1"><b>Escolha uma barra:</b> número de partes ou minutos por parte — a outra opção fica desligada.</li>
-            <li data-i18n="cut.r2"><b>Mínimo de 1 min</b> por parte. O app bloqueia cortes que gerem partes menores.</li>
+            <li data-i18n="cut.r2"><b>A sobra vira a última parte</b>, mesmo que tenha menos de 1 min. O limite é de 60 partes por vídeo.</li>
             <li data-i18n="cut.r3"><b>Sobra honesta:</b> se o vídeo não divide exato, a sobra vira uma parte final menor ou é juntada na última — nada se perde.</li>
             <li data-i18n="cut.r4"><b>Compressão por parte:</b> cada trecho passa pelo preset escolhido; em modo tamanho, o alvo vale para cada parte.</li>
             <li data-i18n="cut.r5"><b>Nomes previsíveis:</b> <code>video-part1.mp4</code>, <code>video-part2.mp4</code>… com zero à esquerda a partir de 10 partes.</li>
@@ -522,7 +522,7 @@
             'card.adjust': 'Ajustes de vídeo', 'card.adjustDesc': 'Escala (padrão/original/custom), corte por janela em <code>mm:ss</code>, remover áudio, FPS, rotação e geração de thumbnail — aplicados por trabalho, além do preset.',
             'card.audio': 'Extrair áudio', 'card.audioDesc': 'Pegue só a trilha de áudio sem reencodar o vídeo: mp3, opus, aac, flac, wav ou copiar (remux). Com qualidade em kbps, canais, normalização EBU R128 e janela <code>mm:ss</code> — na mesma fila de tarefas, com progresso e abrir pasta.',
             'card.sidebar': 'Sidebar colapsável + tempo', 'card.sidebarDesc': 'Os grupos de configuração colapsam e expandem (um por vez), a janela inteira aceita arrastar e soltar vídeo, e cada conversão mostra o tempo que levou — fácil comparar encoders e presets.',
-            'card.cut': 'Cortar', 'card.cutDesc': 'Divida o vídeo por tempo: N partes iguais ou X minutos por parte (30 min → 6 × 5 min). Mínimo de 1 min por parte, cada uma comprimida de verdade e salva como <code>nome-part1.mp4</code>.',
+            'card.cut': 'Cortar', 'card.cutDesc': 'Divida o vídeo por tempo: N partes iguais ou X minutos por parte (30 min → 6 × 5 min). A sobra vira a última parte mesmo com menos de 1 min (1:49 → 1:00 + 0:49), cada uma comprimida de verdade e salva como <code>nome-part1.mp4</code>.',
             'card.twopass': '2-pass para tamanho exato', 'card.twopassDesc': 'Primeiro passe analisa a cena, segundo aplica o bitrate. O arquivo sai no tamanho alvo — não em cima, não quase.',
             'card.presets': 'Presets por plataforma', 'card.presetsDesc': 'WhatsApp Status (10 MB), WhatsApp 16 MB, Instagram Reels, Shorts 30 MB, YouTube em CRF e tamanho personalizado.',
             'card.customPresets': 'Presets personalizados', 'card.customPresetsDesc': 'Crie seus próprios presets — nome, modo (tamanho ou CRF), bitrate de áudio, codec e codificador — e edite ou exclua quando quiser. Ficam salvos em presets.json e entram na lista normalmente.',
@@ -534,7 +534,7 @@
             'card.offline': '100% offline', 'card.offlineDesc': 'Encode local com ffmpeg nativo. Seu vídeo não sai da sua máquina — ideal pra material sensível.',
             'sec.cut': 'Corte por tempo',
             'cut.r1': '<b>Escolha uma barra:</b> número de partes ou minutos por parte — a outra opção fica desligada.',
-            'cut.r2': '<b>Mínimo de 1 min</b> por parte. O app bloqueia cortes que gerem partes menores.',
+            'cut.r2': '<b>A sobra vira a última parte</b>, mesmo que tenha menos de 1 min. O limite é de 60 partes por vídeo.',
             'cut.r3': '<b>Sobra honesta:</b> se o vídeo não divide exato, a sobra vira uma parte final menor ou é juntada na última — nada se perde.',
             'cut.r4': '<b>Compressão por parte:</b> cada trecho passa pelo preset escolhido; em modo tamanho, o alvo vale para cada parte.',
             'cut.r5': '<b>Nomes previsíveis:</b> <code>video-part1.mp4</code>, <code>video-part2.mp4</code>… com zero à esquerda a partir de 10 partes.',
@@ -581,7 +581,7 @@
             'card.adjust': 'Video adjustments', 'card.adjustDesc': 'Scale (default/original/custom), window cut in <code>mm:ss</code>, remove audio, FPS, rotation and thumbnail generation — applied per job, on top of the preset.',
             'card.audio': 'Extract audio', 'card.audioDesc': 'Grab just the audio track without re-encoding the video: mp3, opus, aac, flac, wav or copy (remux). With kbps quality, channels, EBU R128 normalization and an <code>mm:ss</code> window — in the same task queue, with progress and open folder.',
             'card.sidebar': 'Collapsible sidebar + time', 'card.sidebarDesc': 'Configuration groups collapse and expand (one at a time), the whole window accepts drag and drop, and every conversion shows how long it took — easy to compare encoders and presets.',
-            'card.cut': 'Cut', 'card.cutDesc': 'Split the video by time: N equal parts or X minutes per part (30 min → 6 × 5 min). At least 1 min per part, each one really compressed and saved as <code>name-part1.mp4</code>.',
+            'card.cut': 'Cut', 'card.cutDesc': 'Split the video by time: N equal parts or X minutes per part (30 min → 6 × 5 min). The leftover becomes the last part even under 1 min (1:49 → 1:00 + 0:49), each one really compressed and saved as <code>name-part1.mp4</code>.',
             'card.twopass': '2-pass for an exact size', 'card.twopassDesc': 'First pass analyzes the scene, second applies the bitrate. The file hits the target size — not over, not close.',
             'card.presets': 'Presets per platform', 'card.presetsDesc': 'WhatsApp Status (10 MB), WhatsApp 16 MB, Instagram Reels, Shorts 30 MB, YouTube in CRF and custom size.',
             'card.customPresets': 'Custom presets', 'card.customPresetsDesc': 'Create your own presets — name, mode (size or CRF), audio bitrate, codec and encoder — and edit or delete them anytime. Saved in presets.json and listed right in the sidebar.',
@@ -593,7 +593,7 @@
             'card.offline': '100% offline', 'card.offlineDesc': 'Local encode with native ffmpeg. Your video never leaves your machine — ideal for sensitive material.',
             'sec.cut': 'Cut by time',
             'cut.r1': '<b>Pick one bar:</b> number of parts or minutes per part — the other option turns off.',
-            'cut.r2': '<b>At least 1 min</b> per part. The app blocks cuts that make smaller parts.',
+            'cut.r2': '<b>The leftover becomes the last part</b>, even when under 1 min. The cap is 60 parts per video.',
             'cut.r3': '<b>Honest remainder:</b> if the video does not divide evenly, the remainder becomes a shorter final part or is added to the last one — nothing is lost.',
             'cut.r4': '<b>Compression per part:</b> each segment goes through the chosen preset; in size mode, the target applies to every part.',
             'cut.r5': '<b>Predictable names:</b> <code>video-part1.mp4</code>, <code>video-part2.mp4</code>… with leading zeros from 10 parts on.',
@@ -640,7 +640,7 @@
             'card.adjust': 'Ajustes de vídeo', 'card.adjustDesc': 'Escala (predeterminado/original/custom), corte por ventana en <code>mm:ss</code>, quitar audio, FPS, rotación y generación de thumbnail — aplicados por trabajo, además del preset.',
             'card.audio': 'Extraer audio', 'card.audioDesc': 'Toma solo la pista de audio sin recodificar el vídeo: mp3, opus, aac, flac, wav o copiar (remux). Con calidad en kbps, canales, normalización EBU R128 y ventana <code>mm:ss</code> — en la misma cola de tareas, con progreso y abrir carpeta.',
             'card.sidebar': 'Sidebar colapsable + tiempo', 'card.sidebarDesc': 'Los grupos de configuración colapsan y expanden (uno a la vez), la ventana entera acepta arrastrar y soltar, y cada conversión muestra cuánto tardó — fácil comparar codificadores y presets.',
-            'card.cut': 'Cortar', 'card.cutDesc': 'Divide el vídeo por tiempo: N partes iguales o X minutos por parte (30 min → 6 × 5 min). Mínimo 1 min por parte, cada una comprimida de verdad y guardada como <code>nombre-part1.mp4</code>.',
+            'card.cut': 'Cortar', 'card.cutDesc': 'Divide el vídeo por tiempo: N partes iguales o X minutos por parte (30 min → 6 × 5 min). El sobrante se convierte en la última parte aunque dure menos de 1 min (1:49 → 1:00 + 0:49), cada una comprimida de verdad y guardada como <code>nombre-part1.mp4</code>.',
             'card.twopass': '2-pass para tamaño exacto', 'card.twopassDesc': 'El primer pase analiza la escena, el segundo aplica el bitrate. El archivo sale en el tamaño objetivo — ni más, ni casi.',
             'card.presets': 'Presets por plataforma', 'card.presetsDesc': 'WhatsApp Status (10 MB), WhatsApp 16 MB, Instagram Reels, Shorts 30 MB, YouTube en CRF y tamaño personalizado.',
             'card.customPresets': 'Presets personalizados', 'card.customPresetsDesc': 'Crea tus propios presets — nombre, modo (tamaño o CRF), bitrate de audio, códec y codificador — y edítalos o elimínalos cuando quieras. Se guardan en presets.json y aparecen en la lista normalmente.',
@@ -652,7 +652,7 @@
             'card.offline': '100% offline', 'card.offlineDesc': 'Encode local con ffmpeg nativo. Tu vídeo no sale de tu máquina — ideal para material sensible.',
             'sec.cut': 'Corte por tiempo',
             'cut.r1': '<b>Elige una barra:</b> número de partes o minutos por parte — la otra opción se apaga.',
-            'cut.r2': '<b>Mínimo de 1 min</b> por parte. La app bloquea cortes que generen partes menores.',
+            'cut.r2': '<b>El sobrante se vuelve la última parte</b>, aunque dure menos de 1 min. El límite es de 60 partes por vídeo.',
             'cut.r3': '<b>Sobra honesta:</b> si el vídeo no divide exacto, la sobra se vuelve una parte final menor o se une a la última — nada se pierde.',
             'cut.r4': '<b>Compresión por parte:</b> cada tramo pasa por el preset elegido; en modo tamaño, el objetivo vale por parte.',
             'cut.r5': '<b>Nombres predecibles:</b> <code>video-part1.mp4</code>, <code>video-part2.mp4</code>… con cero a la izquierda desde 10 partes.',
@@ -699,7 +699,7 @@
             'card.adjust': '视频调整', 'card.adjustDesc': '缩放（默认/原始/自定义）、<code>mm:ss</code> 窗口裁剪、移除音频、FPS、旋转和生成缩略图 — 在预设基础上按任务应用。',
             'card.audio': '提取音频', 'card.audioDesc': '无需重新编码即可提取音轨：mp3、opus、aac、flac、wav 或复制（重新封装）。支持 kbps 质量、声道、EBU R128 标准化和 <code>mm:ss</code> 窗口 — 在同一个任务队列中，带进度并打开文件夹。',
             'card.sidebar': '可折叠侧栏 + 用时', 'card.sidebarDesc': '配置分组可折叠与展开（每次一个），整个窗口支持拖放，每次转换都会显示耗时 — 方便对比编码器和预设。',
-            'card.cut': '切割', 'card.cutDesc': '按时间分割视频：N 等分或每段 X 分钟（30 分钟 → 6 × 5 分钟）。每段至少 1 分钟，每段真实压缩并保存为 <code>名称-part1.mp4</code>。',
+            'card.cut': '切割', 'card.cutDesc': '按时间分割视频：N 等分或每段 X 分钟（30 分钟 → 6 × 5 分钟）。余下部分会成为最后一段，即使不足 1 分钟（1:49 → 1:00 + 0:49），每段真实压缩并保存为 <code>名称-part1.mp4</code>。',
             'card.twopass': '2-pass 精确控制大小', 'card.twopassDesc': '第一次编码分析画面，第二次应用码率。文件恰好达到目标大小 — 不多不少。',
             'card.presets': '按平台预设', 'card.presetsDesc': 'WhatsApp Status（10 MB）、WhatsApp 16 MB、Instagram Reels、Shorts 30 MB、YouTube 使用 CRF 以及自定义大小。',
             'card.customPresets': '自定义预设', 'card.customPresetsDesc': '创建你自己的预设——名称、模式（大小或 CRF）、音频码率、编码和编码器——随时编辑或删除。保存在 presets.json 中，并直接显示在列表中。',
@@ -711,7 +711,7 @@
             'card.offline': '100% 离线', 'card.offlineDesc': '使用原生 ffmpeg 本地编码。你的视频不会离开你的电脑 — 适合敏感素材。',
             'sec.cut': '按时长切割',
             'cut.r1': '<b>选择一种方式：</b>段数或每段分钟数 — 另一个选项会关闭。',
-            'cut.r2': '每段<b>至少 1 分钟</b>。应用会阻止产生过短片段的切割。',
+            'cut.r2': '<b>余下部分成为最后一段</b>，即使不足 1 分钟。每个视频最多 60 段。',
             'cut.r3': '<b>余数诚实：</b>若视频无法等分，余数变为较短的末段或并入最后一段 — 不丢失任何内容。',
             'cut.r4': '<b>按段压缩：</b>每个片段都经过所选预设；大小模式下目标按每段生效。',
             'cut.r5': '<b>可预测的文件名：</b><code>video-part1.mp4</code>、<code>video-part2.mp4</code>… 从 10 段起补零。',
