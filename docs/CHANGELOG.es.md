@@ -14,6 +14,10 @@ solo el sistema operativo de los paquetes.
 
 ## [Unreleased]
 
+Nada aún — en desarrollo.
+
+## [2.8.0] — 2026-10-17
+
 - **Transcripción local** (fase 12): desde el menú del vídeo ("transcribir
   vídeo…") la app genera subtítulos `.srt`/`.vtt` y texto `.txt` usando un
   motor de speech-to-text **offline** (whisper.cpp/`whisper-cli` o vosk), con

@@ -14,6 +14,10 @@ system of the packages.
 
 ## [Unreleased]
 
+Nothing yet — in development.
+
+## [2.8.0] — 2026-10-17
+
 - **Local transcription** (phase 12): from the video menu ("transcribe
   video…") the app generates `.srt`/`.vtt` subtitles and plain `.txt` using an
   **offline** speech-to-text engine (whisper.cpp/`whisper-cli` or vosk), with

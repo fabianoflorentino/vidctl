@@ -41,7 +41,7 @@ Branch            | Fase | PR
 `feat/presets`    | 9 — Presets personalizados | entregue na v2.7.0
 `feat/i18n`       | 10 — i18n pt-BR/en/es/zh + base em inglês | mergeado
 `feat/split-tempo`| 11 — Corte por tempo | entregue na v2.1.0
-`feat/transcricao`| 12 — Transcrição de vídeo | PR aberto
+`feat/transcricao`| 12 — Transcrição de vídeo | entregue na v2.8.0
 `feat/sidebar`    | 13 — Barra lateral colapsável | pendente
 `feat/tempo`      | 14 — Tempo total de conversão | pendente
 `feat/drop`       | 15 — Importação por arrastar e soltar | pendente
@@ -972,7 +972,7 @@ v2.4.0  → Fase 10 (i18n + base em inglês)                 [entregue]
 v2.5.0  → Fase 7 (notificações)                       [entregue — feat/notificacoes]
 v2.6.0  → Fase 8 (check update)                       [entregue — feat/updates]
 v2.7.0  → Fase 9 (presets custom)                     [entregue — feat/presets]
-v2.8.0  → Fase 12 (transcrição srt/vtt/txt)
+v2.8.0  → Fase 12 (transcrição srt/vtt/txt)            [entregue]
 ```
 
 Cada versão deve passar por `make check` (vet + test + gofmt + svelte-check) e

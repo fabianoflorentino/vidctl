@@ -14,6 +14,10 @@ operacional dos pacotes.
 
 ## [Unreleased]
 
+Nada ainda — em desenvolvimento.
+
+## [2.8.0] — 2026-10-17
+
 - **Transcrição local** (fase 12): pelo menu do vídeo ("transcrever vídeo…") o
   app gera legendas `.srt`/`.vtt` e texto `.txt` usando um motor de
   speech-to-text **offline** (whisper.cpp/`whisper-cli` ou vosk), com `auto`
