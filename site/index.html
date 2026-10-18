@@ -10,6 +10,13 @@
     />
     <link rel="icon" type="image/svg+xml" href="img/favicon.svg" />
     <link rel="stylesheet" href="css/main.css" />
+    <script>
+      try {
+        if (window.matchMedia && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          document.documentElement.classList.add("anim");
+        }
+      } catch (e) { /* no animation enhancer */ }
+    </script>
   </head>
   <body>
     <header class="nav">
@@ -763,6 +770,59 @@
         if (sel) { sel.value = saved; sel.addEventListener('change', function () { applyLang(sel.value); try { localStorage.setItem(LS, sel.value); } catch (e) {} }); }
         if (dsel) { dsel.value = saved; dsel.addEventListener('change', function () { if (sel) sel.value = dsel.value; applyLang(dsel.value); try { localStorage.setItem(LS, dsel.value); } catch (e) {} }); }
         applyLang(saved);
+      })();
+    </script>
+    <script>
+      (function () {
+        // Sticky nav: denser once the page is scrolled.
+        var nav = document.querySelector(".nav");
+        function onScroll() {
+          if (nav) nav.classList.toggle("scrolled", window.scrollY > 8);
+        }
+        onScroll();
+        window.addEventListener("scroll", onScroll, { passive: true });
+
+        // Scroll reveal: adds `.in` as sections enter the viewport. The `anim`
+        // class (head script) already hides the elements, so this is the only
+        // place that needs to run; without it everything stays visible.
+        var root = document.documentElement;
+        if (!root.classList.contains("anim")) return;
+
+        if (!("IntersectionObserver" in window)) {
+          root.classList.remove("anim");
+          return;
+        }
+
+        try {
+          var selector =
+            ".section-head,.card,.preset,.steps li,.corte-demo,.regras li,.tech-list span,.foot";
+          var els = Array.prototype.slice.call(document.querySelectorAll(selector));
+          var io = new IntersectionObserver(
+            function (entries) {
+              for (var i = 0; i < entries.length; i++) {
+                if (entries[i].isIntersecting) {
+                  entries[i].target.classList.add("in");
+                  io.unobserve(entries[i].target);
+                }
+              }
+            },
+            { rootMargin: "0px 0px -6% 0px", threshold: 0.1 }
+          );
+          els.forEach(function (el, i) {
+            el.style.setProperty("--rd", (i % 6) * 55 + "ms");
+            io.observe(el);
+          });
+          // Safety net: reveal anything already near the viewport in case the
+          // observer misses it, leaving the rest to animate on scroll.
+          window.setTimeout(function () {
+            var limit = window.innerHeight * 1.2;
+            els.forEach(function (el) {
+              if (el.getBoundingClientRect().top < limit) el.classList.add("in");
+            });
+          }, 2500);
+        } catch (e) {
+          root.classList.remove("anim");
+        }
       })();
     </script>
   </body>
