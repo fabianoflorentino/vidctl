@@ -14,6 +14,10 @@ operacional dos pacotes.
 
 ## [Unreleased]
 
+Nada ainda — em desenvolvimento.
+
+## [2.10.0] — 2026-10-18
+
 - **Tela principal mais limpa**: o rodapé saiu e a barra superior ficou só com o
   botão de **opções** no canto direito (sem o nome "vidctl" no centro). O status
   do **ffmpeg** passou para dentro do menu, com indicador verde. A área de

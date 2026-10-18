@@ -14,6 +14,10 @@ solo el sistema operativo de los paquetes.
 
 ## [Unreleased]
 
+Nada aún — en desarrollo.
+
+## [2.10.0] — 2026-10-18
+
 - **Pantalla principal más limpia**: el pie desapareció y la barra superior ahora
   solo tiene el botón de **opciones** a la derecha (sin el nombre "vidctl" en el
   centro). El estado de **ffmpeg** pasó dentro del menú, con indicador verde. El

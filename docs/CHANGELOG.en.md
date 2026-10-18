@@ -14,6 +14,10 @@ system of the packages.
 
 ## [Unreleased]
 
+Nothing yet — in development.
+
+## [2.10.0] — 2026-10-18
+
 - **Cleaner main screen**: the footer is gone and the top bar now holds only the
   **options** button on the right (no "vidctl" name in the center). The
   **ffmpeg** status moved inside the menu, with a green indicator. The

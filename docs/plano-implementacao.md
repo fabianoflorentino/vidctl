@@ -975,6 +975,7 @@ v2.7.0  → Fase 9 (presets custom)                     [entregue — feat/prese
 v2.8.0  → Fase 12 (transcrição srt/vtt/txt)            [entregue]
 v2.9.0  → identidade visual (azul vívido + site)       [entregue]
 v2.9.1  → corrige versão embutida (AUR/RPM) e update  [entregue]
+v2.10.0 → tela principal mais limpa (menu no topo)     [entregue]
 ```
 
 Cada versão deve passar por `make check` (vet + test + gofmt + svelte-check) e
