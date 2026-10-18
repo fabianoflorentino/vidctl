@@ -61,8 +61,8 @@ arquivo** (escala, corte, remover áudio, FPS, rotação, thumbnail). 100% offli
   abre numa janela de **1360×768** por padrão
 - Tema claro/escuro: **"Sistema"** segue o tema real do desktop (lê o GTK no
   Linux, `AppleInterfaceStyle` no macOS e o registro no Windows — o WebKit
-  nem sempre reporta o tema certo), e dá para fixar claro/escuro no botão de
-  sol/lua no topo (a escolha persiste entre execuções)
+  nem sempre reporta o tema certo), e dá para fixar claro/escuro nas
+  **Preferências** (a escolha persiste entre execuções)
 - Visual no padrão **Constrict**: tema escuro fosco com accent slate, tema
   claro derivado e ícone próprio nos instaladores de todas as plataformas
 - Sem internet: fontes e interface bundladas no binário
@@ -75,10 +75,10 @@ arquivo** (escala, corte, remover áudio, FPS, rotação, thumbnail). 100% offli
 - **Notificações do sistema**: aviso do desktop quando uma tarefa termina ou
   falha, e opção de abrir automaticamente a pasta do arquivo de saída ao
   concluir — os dois toggles ficam nas Preferências
-- **Verificação de atualização**: ao abrir, o app consulta o GitHub e, se houver
-  versão nova, mostra um badge na barra de cima ("v2.6.0 disponível") com link
-  para a release; dá para reexecutar a checagem no botão de setas. Offline não
-  é erro — apenas nada aparece
+- **Verificação de atualização**: ao abrir, o app consulta o GitHub e mostra o
+  estado nas **Preferências** (nova versão, atualizado, versão local
+  desconhecida ou offline), com link para a release; dá para reexecutar a
+  checagem. Offline não é erro — apenas indica que não deu para verificar
 - No Windows, conversões e sondagens de arquivo não abrem janelas de console
 
 ## Instalação
@@ -409,11 +409,11 @@ resultado da conversão: um desktop sem notificador apenas ignora o aviso.
 
 O vidctl confere, ao abrir, se há release mais nova na
 [página de releases](https://github.com/fabianoflorentino/vidctl/releases):
-- Sempre que existe uma versão nova, o **badge** (ex.: `v2.6.0 disponível`)
-  aparece na barra de cima, ao lado das Preferências; clica nele para abrir a
-  release no navegador.
-- O ícone de **atualizar** (setas) na mesma barra reexecuta a verificação a
-  qualquer momento.
+- O estado aparece nas **Preferências** (abertas pelo painel no canto inferior
+  direito): **verificando**, **nova versão disponível** com o número da versão
+  (e um botão para abrir a release), **vidctl está atualizado**, **versão local
+  desconhecida** (build sem versão embutida) ou **sem conexão**.
+- O botão **verificar** reexecuta a checagem a qualquer momento.
 - A checagem consulta a API pública do GitHub com timeout de 5 s e **cache por
   sessão**; offline, timeout ou erro HTTP são silenciosos (`Ok=false`) — o app
   nunca trava nem bloqueia o boot por causa da atualização.
