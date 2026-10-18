@@ -201,22 +201,12 @@ button {
   font-family: var(--mono);
 }
 
-/* dock (menu de opções, canto inferior direito; em fluxo, sem sobrepor) */
-.dockbar {
+/* topbar (menu de opções no canto superior direito) */
+.topbar {
   flex: none;
   display: flex;
   justify-content: flex-end;
-  padding: 0 14px 14px;
-}
-
-.dock {
-  display: flex;
-  align-items: center;
-  padding: 6px;
-  background: var(--window);
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  box-shadow: var(--panel-shadow);
+  padding: 12px 18px 6px;
 }
 
 .sources-head {
