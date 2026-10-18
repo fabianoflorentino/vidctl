@@ -286,7 +286,6 @@ const pt: Dict = {
   // actions / footer / errors
   'action.compress': 'Comprimir…',
   'action.switchVideo': 'Trocar vídeo…',
-  'footer.engine': 'h264 + aac · 2-pass quando há limite de tamanho',
 
   // preferences
   'prefs.title': 'Preferências',
@@ -589,7 +588,6 @@ const en: Dict = {
   'sum.configCrf': '{name} · CRF {crf}',
   'action.compress': 'Compress…',
   'action.switchVideo': 'Switch video…',
-  'footer.engine': 'h264 + aac · 2-pass when size is limited',
   'prefs.title': 'Preferences',
   'prefs.language': 'Language',
   'prefs.languageTip': 'Choose the interface language. The app remembers your choice between runs.',
@@ -888,7 +886,6 @@ const es: Dict = {
   'sum.configCrf': '{name} · CRF {crf}',
   'action.compress': 'Comprimir…',
   'action.switchVideo': 'Cambiar vídeo…',
-  'footer.engine': 'h264 + aac · 2-pass con límite de tamaño',
   'prefs.title': 'Preferencias',
   'prefs.language': 'Idioma',
   'prefs.languageTip': 'Elige el idioma de la interfaz. El app recuerda la elección entre ejecuciones.',
@@ -1187,7 +1184,6 @@ const zh: Dict = {
   'sum.configCrf': '{name} · CRF {crf}',
   'action.compress': '压缩…',
   'action.switchVideo': '切换视频…',
-  'footer.engine': 'h264 + aac · 限制大小时 2-pass',
   'prefs.title': '设置',
   'prefs.language': '语言',
   'prefs.languageTip': '选择界面语言。应用会在运行时记住你的选择。',
