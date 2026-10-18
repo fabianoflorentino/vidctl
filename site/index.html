@@ -3,12 +3,19 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0a0e17" />
     <title>vidctl — vídeo leve, história completa</title>
     <meta
       name="description"
       content="vidctl comprime vídeos para o tamanho exato de cada plataforma (WhatsApp, Instagram, Shorts, YouTube), com codec H.265 e aceleração de GPU (NVENC/QSV/AMF/VT), ajustes por arquivo, corte em partes por tempo e extração da trilha de áudio (mp3/opus/aac/flac/wav) — tema claro/escuro, métricas ao vivo, desktop, offline, open-source."
     />
     <link rel="icon" type="image/svg+xml" href="img/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="css/main.css" />
     <script>
       try {
@@ -21,8 +28,13 @@
   <body>
     <header class="nav">
       <a class="brand" href="#">
-        <span class="brand-mark" aria-hidden="true"></span>
-        vid<span>ctl</span>
+        <svg class="brand-icon" viewBox="0 0 32 32" aria-hidden="true">
+          <g transform="translate(3 5)">
+            <path d="M2.5 3 h11 a2.5 2.5 0 0 1 2.5 2.5 v6 a2.5 2.5 0 0 1 -2.5 2.5 H2.5 A2.5 2.5 0 0 1 0 11.5 V5.5 A2.5 2.5 0 0 1 2.5 3 z" />
+            <path d="M17.5 7.3 L22.5 4.3 v9.4 l-5 -3 z" />
+          </g>
+        </svg>
+        vidctl
       </a>
       <nav class="nav-links">
         <a href="#recursos" data-i18n="nav.features">recursos</a>
@@ -48,13 +60,7 @@
           <span data-i18n="hero.h1a">Vídeo leve,</span><br />
           <em data-i18n="hero.h1b">história completa.</em>
         </h1>
-        <p class="lede" data-i18n="hero.lede">Escolha o destino — WhatsApp, Instagram, Shorts, YouTube. O vidctl calcula o bitrate pra caber
-          no tamanho alvo <strong>sem cortar a duração nem o formato</strong>. Ganhe velocidade com
-          <strong>H.265 e aceleração de GPU</strong> (NVENC/QSV/AMF/VideoToolbox), aplique <strong>ajustes por arquivo</strong>
-          (escala, corte em <code>mm:ss</code>, remover áudio, FPS, rotação, thumbnail) e, se quiser,
-          <strong>divida em partes</strong> — 30 min viram 6 × 5 min, prontos pra publicar. Precisa só do áudio?
-          <strong>Extraia a trilha</strong> em mp3, opus, aac, flac ou wav (ou copie sem recodificar) — tudo local, nada de nuvem.
-        </p>
+        <p class="lede" data-i18n="hero.lede">Tamanho exato por plataforma, corte em partes e extração de áudio — com H.265 e GPU, tudo local e offline.</p>
 
         <div class="cta-row">
           <a class="btn btn-acid btn-sm" href="https://github.com/fabianoflorentino/vidctl/releases" target="_blank" rel="noopener">
@@ -389,7 +395,15 @@
     </main>
 
     <footer class="foot">
-      <p data-i18n="foot.mit"><span class="brand-mark" aria-hidden="true"></span> vid<span>ctl</span> — código aberto sob MIT</p>
+      <p class="foot-brand">
+        <svg class="brand-icon" viewBox="0 0 32 32" aria-hidden="true">
+          <g transform="translate(3 5)">
+            <path d="M2.5 3 h11 a2.5 2.5 0 0 1 2.5 2.5 v6 a2.5 2.5 0 0 1 -2.5 2.5 H2.5 A2.5 2.5 0 0 1 0 11.5 V5.5 A2.5 2.5 0 0 1 2.5 3 z" />
+            <path d="M17.5 7.3 L22.5 4.3 v9.4 l-5 -3 z" />
+          </g>
+        </svg>
+        <span data-i18n="foot.mit">vidctl — código aberto sob MIT</span>
+      </p>
       <p class="dim">
         <a href="https://github.com/fabianoflorentino/vidctl" target="_blank" rel="noopener">github</a> ·
         <a href="https://github.com/fabianoflorentino" target="_blank" rel="noopener">@fabianoflorentino</a> ·
@@ -505,7 +519,7 @@
             'nav.features': 'recursos', 'nav.cut': 'corte', 'nav.destinations': 'presets', 'nav.how': 'como funciona', 'nav.github': 'github ↗',
             'hero.kicker': 'ffmpeg 2-pass &middot; H.265 + GPU &middot; corte em partes &middot; extrair áudio &middot; desktop &middot; open-source',
             'hero.h1a': 'Vídeo leve,', 'hero.h1b': 'história completa.',
-            'hero.lede': 'Escolha o destino — WhatsApp, Instagram, Shorts, YouTube. O vidctl calcula o bitrate pra caber no tamanho alvo <strong>sem cortar a duração nem o formato</strong>. Ganhe velocidade com <strong>H.265 e aceleração de GPU</strong> (NVENC/QSV/AMF/VideoToolbox), aplique <strong>ajustes por arquivo</strong> (escala, corte em <code>mm:ss</code>, remover áudio, FPS, rotação, thumbnail) e, se quiser, <strong>divida em partes</strong> — 30 min viram 6 × 5 min, prontos pra publicar. Precisa só do áudio? <strong>Extraia a trilha</strong> em mp3, opus, aac, flac ou wav (ou copie sem recodificar) — tudo local, nada de nuvem.',
+            'hero.lede': 'Tamanho exato por plataforma, corte em partes e extração de áudio — com H.265 e GPU, tudo local e offline.',
             'hero.download': 'baixar', 'hero.downloadSub': 'última release · linux / windows / macos',
             'hero.code': 'código no github ↗',
             'demo.aria': 'Demonstração animada do vidctl: barra lateral em acordeão (Avançado aberto com H.265, NVENC e preset p4; Presets, Cortar, Extrair áudio, Ajustes de vídeo e Tamanho colapsados), cartão de saída ao lado do vídeo, compressão no preset WhatsApp Status com corte em 6 partes de 5 minutos, métricas de CPU/RAM/ffmpeg/GPU e tempo em tempo real, extração de áudio em MP3 rodando na fila de tarefas e, no fim, a tela inicial em tema claro.',
@@ -558,13 +572,13 @@
             'step.run': 'Executar', 'step.runDesc': '2-pass com orçamento por parte, barra agregada e métricas de CPU/RAM/GPU ao vivo.',
             'step.send': 'Enviar', 'step.sendDesc': 'Pronto. Toca em “abrir pasta” e manda pra plataforma.',
             'step.audio': 'Extrair áudio (opcional)', 'step.audioDesc': 'Precisa da trilha? Escolha formato (mp3/opus/aac/flac/wav/copiar), qualidade, canais e janela — sai sem reencodar o vídeo, na mesma fila de tarefas.',
-            'tech': 'construído com', 'foot.mit': '<span class="brand-mark" aria-hidden="true"></span> vid<span>ctl</span> — código aberto sob MIT'
+            'tech': 'construído com', 'foot.mit': 'vidctl — código aberto sob MIT'
           },
           en: {
             'nav.features': 'features', 'nav.cut': 'cut', 'nav.destinations': 'presets', 'nav.how': 'how it works', 'nav.github': 'github ↗',
             'hero.kicker': 'ffmpeg 2-pass &middot; H.265 + GPU &middot; cut into parts &middot; extract audio &middot; desktop &middot; open-source',
             'hero.h1a': 'Lite video,', 'hero.h1b': 'full story.',
-            'hero.lede': 'Pick a destination — WhatsApp, Instagram, Shorts, YouTube. vidctl derives the bitrate to hit the target size <strong>without cutting duration or format</strong>. Speed things up with <strong>H.265 and GPU acceleration</strong> (NVENC/QSV/AMF/VideoToolbox), apply <strong>per-file adjustments</strong> (scale, <code>mm:ss</code> cut, remove audio, FPS, rotation, thumbnail) and, if you want, <strong>split into parts</strong> — 30 min become 6 × 5 min, ready to publish. Only need the audio? <strong>Extract the track</strong> as mp3, opus, aac, flac or wav (or remux without re-encoding) — all local, no cloud.',
+            'hero.lede': 'Exact size per platform, split into parts and audio extraction — with H.265 and GPU, all local and offline.',
             'hero.download': 'download', 'hero.downloadSub': 'latest release · linux / windows / macos',
             'hero.code': 'source on github ↗',
             'demo.aria': 'Animated vidctl demo: accordion sidebar (Advanced open with H.265, NVENC and p4 preset; Presets, Cut, Extract audio, Video adjustments and Size collapsed), output card next to the video, WhatsApp Status compression cut into 6 parts of 5 minutes, live CPU/RAM/ffmpeg/GPU metrics and time, MP3 audio extraction running in the task queue and, at the end, the empty screen in light theme.',
@@ -617,13 +631,13 @@
             'step.run': 'Run', 'step.runDesc': '2-pass with per-part budget, aggregated bar and live CPU/RAM/GPU metrics.',
             'step.send': 'Send', 'step.sendDesc': 'Done. Tap “open folder” and ship it to the platform.',
             'step.audio': 'Extract audio (optional)', 'step.audioDesc': 'Need the track? Pick format (mp3/opus/aac/flac/wav/copy), quality, channels and window — it comes out without re-encoding the video, in the same task queue.',
-            'tech': 'built with', 'foot.mit': '<span class="brand-mark" aria-hidden="true"></span> vid<span>ctl</span> — open source under MIT'
+            'tech': 'built with', 'foot.mit': 'vidctl — open source under MIT'
           },
           es: {
             'nav.features': 'funciones', 'nav.cut': 'corte', 'nav.destinations': 'presets', 'nav.how': 'cómo funciona', 'nav.github': 'github ↗',
             'hero.kicker': 'ffmpeg 2-pass &middot; H.265 + GPU &middot; cortar en partes &middot; extraer audio &middot; escritorio &middot; open-source',
             'hero.h1a': 'Vídeo ligero,', 'hero.h1b': 'historia completa.',
-            'hero.lede': 'Elige el destino — WhatsApp, Instagram, Shorts, YouTube. vidctl calcula el bitrate para caber en el tamaño objetivo <strong>sin cortar duración ni formato</strong>. Gana velocidad con <strong>H.265 y aceleración por GPU</strong> (NVENC/QSV/AMF/VideoToolbox), aplica <strong>ajustes por archivo</strong> (escala, corte en <code>mm:ss</code>, quitar audio, FPS, rotación, thumbnail) y, si quieres, <strong>divide en partes</strong> — 30 min se vuelven 6 × 5 min, listos para publicar. ¿Solo necesitas el audio? <strong>Extrae la pista</strong> en mp3, opus, aac, flac o wav (o copia sin recodificar) — todo local, nada de nube.',
+            'hero.lede': 'Tamaño exacto por plataforma, corte en partes y extracción de audio — con H.265 y GPU, todo local y offline.',
             'hero.download': 'descargar', 'hero.downloadSub': 'última release · linux / windows / macos',
             'hero.code': 'código en github ↗',
             'demo.aria': 'Demo animada de vidctl: barra lateral en acordeón (Avanzado abierto con H.265, NVENC y preset p4; Presets, Cortar, Extraer audio, Ajustes de vídeo y Tamaño colapsados), tarjeta de salida junto al vídeo, compresión en el preset WhatsApp Status con corte en 6 partes de 5 minutos, métricas de CPU/RAM/ffmpeg/GPU y tiempo en tiempo real, extracción de audio en MP3 en la cola de tareas y, al final, la pantalla inicial en tema claro.',
@@ -676,13 +690,13 @@
             'step.run': 'Ejecutar', 'step.runDesc': '2-pass con presupuesto por parte, barra agregada y métricas de CPU/RAM/GPU en vivo.',
             'step.send': 'Enviar', 'step.sendDesc': 'Listo. Toca “abrir carpeta” y mándalo a la plataforma.',
             'step.audio': 'Extraer audio (opcional)', 'step.audioDesc': '¿Necesitas la pista? Elige formato (mp3/opus/aac/flac/wav/copiar), calidad, canales y ventana — sale sin recodificar el vídeo, en la misma cola de tareas.',
-            'tech': 'construido con', 'foot.mit': '<span class="brand-mark" aria-hidden="true"></span> vid<span>ctl</span> — open source bajo MIT'
+            'tech': 'construido con', 'foot.mit': 'vidctl — open source bajo MIT'
           },
           zh: {
             'nav.features': '功能', 'nav.cut': '切割', 'nav.destinations': '预设', 'nav.how': '工作原理', 'nav.github': 'github ↗',
             'hero.kicker': 'ffmpeg 2-pass &middot; H.265 + GPU &middot; 分段切割 &middot; 提取音频 &middot; 桌面 &middot; 开源',
             'hero.h1a': '轻量视频，', 'hero.h1b': '故事完整。',
-            'hero.lede': '选择目标 — WhatsApp、Instagram、Shorts、YouTube。vidctl 推导码率以命中目标大小，<strong>不裁剪时长也不改格式</strong>。用 <strong>H.265 和 GPU 加速</strong>（NVENC/QSV/AMF/VideoToolbox）获得更快速度，应用 <strong>按文件调整</strong>（缩放、<code>mm:ss</code> 裁剪、移除音频、FPS、旋转、缩略图），还可以 <strong>分段切割</strong> — 30 分钟变成 6 × 5 分钟，随时可发布。只需要音频？<strong>提取音轨</strong>为 mp3、opus、aac、flac 或 wav（或直接重新封装）— 全部本地处理，不上云。',
+            'hero.lede': '按平台精确大小、分段切割与音频提取 — 支持 H.265 与 GPU，全部本地离线完成。',
             'hero.download': '下载', 'hero.downloadSub': '最新版本 · linux / windows / macos',
             'hero.code': 'GitHub 源码 ↗',
             'demo.aria': 'vidctl 动画面板：手风琴侧栏（高级展开显示 H.265、NVENC 和 p4 预设；预设、切割、提取音频、视频调整和大小折叠），视频旁的输出卡片，WhatsApp Status 预设压缩并切割为 6 段 5 分钟，实时 CPU/RAM/ffmpeg/GPU 指标与时间，任务队列中运行 MP3 音频提取，结尾为浅色主题的空状态页面。',
@@ -735,7 +749,7 @@
             'step.run': '执行', 'step.runDesc': '2-pass 按段预算、汇总进度条和实时 CPU/RAM/GPU 指标。',
             'step.send': '发送', 'step.sendDesc': '完成。点击“打开文件夹”并上传到平台。',
             'step.audio': '提取音频（可选）', 'step.audioDesc': '需要音轨？选择格式（mp3/opus/aac/flac/wav/复制）、质量、声道和窗口 — 无需重新编码即可提取，并进入同一个任务队列。',
-            'tech': '使用以下技术构建', 'foot.mit': '<span class="brand-mark" aria-hidden="true"></span> vid<span>ctl</span> — MIT 许可的开源项目'
+            'tech': '使用以下技术构建', 'foot.mit': 'vidctl — MIT 许可的开源项目'
           }
         };
         var LS = 'vidctl-site-lang';

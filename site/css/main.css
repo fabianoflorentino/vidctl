@@ -20,23 +20,23 @@
 }
 
 :root {
-  --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Cantarell", "Helvetica Neue", sans-serif;
-  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Cantarell", "Helvetica Neue", sans-serif;
+  --mono: "JetBrains Mono", "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
 
-  --page: #131313;
-  --panel: #1e1e1e;
-  --panel-2: #242424;
-  --line: rgba(255, 255, 255, 0.12);
-  --line-strong: rgba(255, 255, 255, 0.24);
-  --ink: #e9e9e9;
-  --ink-dim: #a0a0a0;
-  --ink-faint: #6f6f6f;
-  --accent: #78aeed;
-  --accent-ink: #10233c;
-  --accent-bg: rgba(120, 174, 237, 0.18);
-  --ok: #33d17a;
-  --radius: 12px;
-  --radius-sm: 8px;
+  --page: #0a0e17;
+  --panel: #0e1424;
+  --panel-2: #141d31;
+  --line: rgba(148, 163, 184, 0.15);
+  --line-strong: rgba(148, 163, 184, 0.3);
+  --ink: #e8eef7;
+  --ink-dim: #9fb0c9;
+  --ink-faint: #6b7794;
+  --accent: #3b82f6;
+  --accent-ink: #05122b;
+  --accent-bg: rgba(59, 130, 246, 0.15);
+  --ok: #3fb950;
+  --radius: 14px;
+  --radius-sm: 9px;
 }
 
 * {
@@ -49,7 +49,14 @@ html {
 
 body {
   margin: 0;
-  background: var(--page);
+  background-color: var(--page);
+  background-image:
+    radial-gradient(1100px 520px at 50% -8%, rgba(59, 130, 246, 0.14), transparent 62%),
+    linear-gradient(rgba(148, 163, 184, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.05) 1px, transparent 1px);
+  background-size: 100% 620px, 46px 46px, 46px 46px;
+  background-repeat: no-repeat, repeat, repeat;
+  background-position: top center, 0 0, 0 0;
   color: var(--ink);
   font-family: var(--sans);
   line-height: 1.55;
@@ -84,37 +91,28 @@ a {
 .brand {
   display: inline-flex;
   align-items: center;
-  gap: 9px;
+  gap: 10px;
   font-weight: 800;
-  font-size: 17px;
-  letter-spacing: 0.01em;
+  font-size: 18px;
+  letter-spacing: -0.015em;
   color: var(--ink);
+  transition: opacity 0.2s ease;
 }
 
-.brand span {
+.brand:hover {
+  opacity: 0.85;
+}
+
+.brand-icon {
+  width: 26px;
+  height: 26px;
+  flex: none;
   color: var(--accent);
+  filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.45));
 }
 
-.brand-mark {
-  width: 22px;
-  height: 22px;
-  border-radius: 6px;
-  background:
-    linear-gradient(135deg, var(--accent), #4d8ad0);
-  clip-path: polygon(0 0, 72% 0, 72% 100%, 0 100%);
-  position: relative;
-}
-
-.brand-mark::after {
-  content: "";
-  position: absolute;
-  right: -8px;
-  top: 4px;
-  width: 0;
-  height: 0;
-  border-left: 9px solid var(--accent);
-  border-top: 7px solid transparent;
-  border-bottom: 7px solid transparent;
+.brand-icon path {
+  fill: currentColor;
 }
 
 .nav-links {
@@ -304,9 +302,9 @@ a {
   --faint: #6f6f6f;
   --line: rgba(255, 255, 255, 0.12);
   --line-2: rgba(255, 255, 255, 0.24);
-  --acc: #78aeed;
+  --acc: #3b82f6;
   --acc-ink: #10233c;
-  --acc-bg: rgba(120, 174, 237, 0.18);
+  --acc-bg: rgba(59, 130, 246, 0.18);
   --ok: #33d17a;
   --ok-bg: rgba(51, 209, 122, 0.16);
 
@@ -325,9 +323,9 @@ a {
   --faint: #999999;
   --line: rgba(0, 0, 0, 0.16);
   --line-2: rgba(0, 0, 0, 0.28);
-  --acc: #3584e4;
+  --acc: #2563eb;
   --acc-ink: #ffffff;
-  --acc-bg: rgba(53, 132, 228, 0.14);
+  --acc-bg: rgba(37, 99, 235, 0.14);
   --ok: #2ec27e;
   --ok-bg: rgba(46, 194, 126, 0.16);
 }
@@ -1319,7 +1317,7 @@ a {
 }
 
 .corte-demo .parts span:nth-child(odd) {
-  border-color: rgba(120, 174, 237, 0.5);
+  border-color: rgba(59, 130, 246, 0.5);
 }
 
 .regras {
@@ -1463,11 +1461,6 @@ a {
   100% { transform: translate3d(-1%, 3%, 0) scale(1.03); }
 }
 
-@keyframes mark-glow {
-  0%, 100% { box-shadow: 0 0 6px rgba(120, 174, 237, 0.35); }
-  50%      { box-shadow: 0 0 18px rgba(120, 174, 237, 0.75); }
-}
-
 @keyframes shine {
   to { background-position: 250% center; }
 }
@@ -1490,9 +1483,9 @@ body::before {
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(closest-side, rgba(120, 174, 237, 0.16), transparent 70%) 18% 28% / 42% 42% no-repeat,
+    radial-gradient(closest-side, rgba(59, 130, 246, 0.16), transparent 70%) 18% 28% / 42% 42% no-repeat,
     radial-gradient(closest-side, rgba(77, 138, 208, 0.14), transparent 70%) 82% 18% / 46% 46% no-repeat,
-    radial-gradient(closest-side, rgba(120, 174, 237, 0.12), transparent 70%) 62% 92% / 52% 52% no-repeat;
+    radial-gradient(closest-side, rgba(59, 130, 246, 0.12), transparent 70%) 62% 92% / 52% 52% no-repeat;
   filter: blur(24px);
   animation: aurora 26s ease-in-out infinite alternate;
 }
@@ -1505,7 +1498,7 @@ body::before {
 .nav.scrolled {
   background: rgba(19, 19, 19, 0.94);
   box-shadow: 0 12px 34px rgba(0, 0, 0, 0.45);
-  border-bottom-color: rgba(120, 174, 237, 0.35);
+  border-bottom-color: rgba(59, 130, 246, 0.35);
 }
 
 .nav-links a {
@@ -1531,10 +1524,6 @@ body::before {
   transform: scaleX(1);
 }
 
-.brand-mark {
-  animation: mark-glow 4.5s ease-in-out infinite;
-}
-
 /* ---- hero ---- */
 .kicker { animation: fade-up 0.7s ease both; }
 .hero h1 span,
@@ -1545,7 +1534,7 @@ body::before {
 
 @supports ((-webkit-background-clip: text) or (background-clip: text)) {
   .hero h1 em {
-    background: linear-gradient(100deg, var(--accent), #b6d6ff, #4d8ad0, var(--accent));
+    background: linear-gradient(100deg, var(--accent), #9dc0ff, #2563eb, var(--accent));
     background-size: 250% auto;
     -webkit-background-clip: text;
     background-clip: text;
@@ -1566,8 +1555,8 @@ body::before {
 }
 
 .demo:hover {
-  border-color: rgba(120, 174, 237, 0.4);
-  box-shadow: 0 36px 90px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(120, 174, 237, 0.12);
+  border-color: rgba(59, 130, 246, 0.4);
+  box-shadow: 0 36px 90px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(59, 130, 246, 0.12);
 }
 
 /* ---- buttons ---- */
@@ -1577,12 +1566,12 @@ body::before {
 }
 
 .btn-acid {
-  box-shadow: 0 8px 24px rgba(120, 174, 237, 0.25);
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.25);
 }
 
 .btn-acid:hover {
   transform: translateY(-2px);
-  box-shadow: 0 14px 32px rgba(120, 174, 237, 0.45);
+  box-shadow: 0 14px 32px rgba(59, 130, 246, 0.45);
 }
 
 .btn-ghost:hover {
@@ -1627,9 +1616,9 @@ body::before {
 
 .card:hover,
 .preset:hover {
-  border-color: rgba(120, 174, 237, 0.5);
+  border-color: rgba(59, 130, 246, 0.5);
   background: var(--panel-2);
-  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.38), 0 0 0 1px rgba(120, 174, 237, 0.16) inset;
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.38), 0 0 0 1px rgba(59, 130, 246, 0.16) inset;
 }
 
 .card .tag {
@@ -1644,13 +1633,13 @@ body::before {
   left: -160%;
   width: 55%;
   height: 100%;
-  background: linear-gradient(100deg, transparent, rgba(120, 174, 237, 0.4), transparent);
+  background: linear-gradient(100deg, transparent, rgba(59, 130, 246, 0.4), transparent);
   transform: skewX(-18deg);
   animation: sheen 6s ease-in-out infinite;
 }
 
 .steps li:hover {
-  border-color: rgba(120, 174, 237, 0.4);
+  border-color: rgba(59, 130, 246, 0.4);
 }
 
 .steps .step-num {
@@ -1703,7 +1692,7 @@ body::before {
 
 .demo .afill,
 .aq .afill {
-  box-shadow: 0 0 10px rgba(120, 174, 237, 0.5);
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
 }
 
 /* ---- scroll reveal ---- */
@@ -1763,4 +1752,171 @@ body::before {
     opacity: 1;
     transform: none;
   }
+}
+
+/* ==========================================================================
+   theme v2 — dev-tool / editorial polish (dark navy + vivid blue)
+   ========================================================================== */
+
+/* section eyebrow: "01 / Recursos" */
+.section-head {
+  gap: 12px;
+}
+
+.section-head .step-num {
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.section-head .step-num::after {
+  content: " /";
+  color: var(--ink-faint);
+}
+
+.section-head h2 {
+  letter-spacing: -0.025em;
+}
+
+.section-head h2::after {
+  width: 46px;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent), transparent);
+}
+
+/* headings: editorial italic accent word */
+.hero h1 {
+  letter-spacing: -0.035em;
+}
+
+.hero h1 em {
+  font-style: italic;
+}
+
+.kicker {
+  color: var(--accent);
+}
+
+/* nav: glassy, blue hairline on scroll */
+.nav {
+  background: rgba(10, 14, 23, 0.72);
+  backdrop-filter: blur(14px) saturate(150%);
+}
+
+.nav.scrolled {
+  background: rgba(10, 14, 23, 0.94);
+}
+
+/* hero demo frame with accent top line */
+.demo {
+  position: relative;
+  border-color: var(--line-strong);
+}
+
+.demo::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  z-index: 2;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  opacity: 0.7;
+}
+
+/* cards: subtle accent top line on hover */
+.card {
+  position: relative;
+  background: linear-gradient(180deg, var(--panel-2), var(--panel));
+}
+
+.card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  border-radius: var(--radius) var(--radius) 0 0;
+  background: linear-gradient(90deg, var(--accent), transparent 60%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.card:hover::before {
+  opacity: 1;
+}
+
+/* corte: both columns read as cards, demo gets an accent cap */
+.corte-demo {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(180deg, var(--panel-2), var(--panel));
+  border-color: var(--line-strong);
+}
+
+.corte-demo::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent), transparent);
+}
+
+.corte-demo .src b {
+  color: var(--accent);
+}
+
+.corte-demo .parts span {
+  background: var(--panel);
+  border-color: var(--line-strong);
+  color: var(--ink-dim);
+}
+
+.regras {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+}
+
+/* presets: accent rail on hover */
+.preset {
+  position: relative;
+  overflow: hidden;
+}
+
+.preset::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 12px;
+  bottom: 12px;
+  width: 3px;
+  border-radius: 3px;
+  background: var(--accent);
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: transform 0.3s ease;
+}
+
+.preset:hover::before {
+  transform: scaleY(1);
+}
+
+/* steps: number badge */
+.steps .step-num {
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.foot .brand-icon {
+  width: 22px;
+  height: 22px;
+}
+
+.foot-brand {
+  font-weight: 700;
 }
