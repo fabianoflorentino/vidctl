@@ -14,6 +14,10 @@ operacional dos pacotes.
 
 ## [Unreleased]
 
+Nada ainda — em desenvolvimento.
+
+## [2.9.1] — 2026-10-18
+
 - **Corrigido — verificação de atualização**: os pacotes do **AUR** e do
   **RPM** compilavam sem embutir a versão (o binário ficava `dev`), então a
   checagem concluía que o app estava atualizado. Agora o `PKGBUILD` e o spec do

@@ -14,6 +14,10 @@ solo el sistema operativo de los paquetes.
 
 ## [Unreleased]
 
+Nada aún — en desarrollo.
+
+## [2.9.1] — 2026-10-18
+
 - **Corregido — verificación de actualización**: los paquetes de **AUR** y
   **RPM** se compilaban sin incorporar la versión (el binario quedaba `dev`),
   así que la comprobación concluía que la app estaba actualizada. Ahora el

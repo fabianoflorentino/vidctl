@@ -12,6 +12,10 @@ changelog：它们之间的差异仅在于包的操作系统。
 
 ## [Unreleased]
 
+暂无 — 开发中。
+
+## [2.9.1] — 2026-10-18
+
 - **修复 — 更新检查**：**AUR** 和 **RPM** 包在构建时未嵌入版本号（二进制为
   `dev`），因此检查会误判应用已是最新。现在 `PKGBUILD` 与 RPM spec 会传入
   `-ldflags -X ...internal/version.Version`，与 `.deb` 和 `.zip` 一致。并且当

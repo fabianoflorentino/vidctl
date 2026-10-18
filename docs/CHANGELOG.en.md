@@ -14,6 +14,10 @@ system of the packages.
 
 ## [Unreleased]
 
+Nothing yet — in development.
+
+## [2.9.1] — 2026-10-18
+
 - **Fixed — update check**: the **AUR** and **RPM** packages built without
   embedding the version (the binary stayed `dev`), so the check concluded the
   app was up to date. Now the `PKGBUILD` and the RPM spec pass
