@@ -417,8 +417,8 @@ aviso.
 
 El vidctl comprueba al abrir si hay una release más reciente en la
 [página de releases](https://github.com/fabianoflorentino/vidctl/releases):
-- El estado aparece en las **Preferencias** (se abren desde el panel de la
-  esquina inferior derecha): **comprobando**, **nueva versión disponible** con
+- El estado aparece en las **Preferencias** (botón en la esquina superior
+  derecha): **comprobando**, **nueva versión disponible** con
   el número de versión (y un botón para abrir la release), **vidctl está
   actualizado**, **versión local desconocida** (build sin versión incorporada)
   o **sin conexión**.

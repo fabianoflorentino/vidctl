@@ -14,10 +14,9 @@ operacional dos pacotes.
 
 ## [Unreleased]
 
-- **Tela principal mais limpa**: a barra superior e o rodapé saíram. O botão de
-  **opções** (Preferências) fica num painel no canto inferior direito, com o
-  mesmo design da barra lateral, e o status do **ffmpeg** aparece dentro do
-  próprio menu, com indicador verde quando disponível. A área de
+- **Tela principal mais limpa**: o rodapé saiu e a barra superior ficou só com o
+  botão de **opções** no canto direito (sem o nome "vidctl" no centro). O status
+  do **ffmpeg** passou para dentro do menu, com indicador verde. A área de
   arrastar-e-soltar (estado vazio) foi para dentro de um painel com o mesmo
   design da barra lateral. O título da janela passou de "vidctl — video
   compressor" para **"video controller"**.

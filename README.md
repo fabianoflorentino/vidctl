@@ -409,8 +409,8 @@ resultado da conversão: um desktop sem notificador apenas ignora o aviso.
 
 O vidctl confere, ao abrir, se há release mais nova na
 [página de releases](https://github.com/fabianoflorentino/vidctl/releases):
-- O estado aparece nas **Preferências** (abertas pelo painel no canto inferior
-  direito): **verificando**, **nova versão disponível** com o número da versão
+- O estado aparece nas **Preferências** (botão no canto superior direito):
+  **verificando**, **nova versão disponível** com o número da versão
   (e um botão para abrir a release), **vidctl está atualizado**, **versão local
   desconhecida** (build sem versão embutida) ou **sem conexão**.
 - O botão **verificar** reexecuta a checagem a qualquer momento.

@@ -408,7 +408,7 @@ conversion result: a desktop without a notifier simply ignores the alert.
 
 vidctl checks, on launch, whether a newer release exists on the
 [releases page](https://github.com/fabianoflorentino/vidctl/releases):
-- The state appears in **Preferences** (opened from the bottom-right panel):
+- The state appears in **Preferences** (button in the top-right corner):
   **checking**, **new version available** with the version number (and a button
   to open the release), **vidctl is up to date**, **unknown local version**
   (build without an embedded version) or **offline**.
