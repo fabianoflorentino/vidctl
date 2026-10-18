@@ -14,7 +14,11 @@ operacional dos pacotes.
 
 ## [Unreleased]
 
-Nada ainda — em desenvolvimento.
+- **Tela principal mais limpa**: a barra superior e o rodapé saíram; o status do
+  **ffmpeg** e o botão de **Preferências** agora ficam num painel no canto
+  inferior direito, e a área de arrastar-e-soltar (estado vazio) foi para dentro
+  de um painel com o mesmo design da barra lateral. O título da janela passou de
+  "vidctl — video compressor" para **"video controller"**.
 
 ## [2.9.1] — 2026-10-18
 

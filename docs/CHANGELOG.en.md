@@ -14,7 +14,11 @@ system of the packages.
 
 ## [Unreleased]
 
-Nothing yet — in development.
+- **Cleaner main screen**: the top bar and footer are gone; the **ffmpeg**
+  status and the **Preferences** button now live in a panel in the bottom-right
+  corner, and the drag-and-drop area (empty state) moved inside a panel with the
+  same design as the sidebar. The window title changed from
+  "vidctl — video compressor" to **"video controller"**.
 
 ## [2.9.1] — 2026-10-18
 
