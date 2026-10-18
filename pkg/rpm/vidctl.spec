@@ -32,7 +32,8 @@ Wails and Go, 100% offline.
 %build
 export PATH="$PATH:$(go env GOPATH)/bin"
 go install github.com/wailsapp/wails/v2/cmd/wails@v2.15.0
-wails build -clean -tags webkit2_41
+wails build -clean -tags webkit2_41 \
+  -ldflags "-X github.com/fabianoflorentino/vidctl/internal/version.Version=v%{version}"
 
 %install
 install -Dm755 build/bin/vidctl %{buildroot}%{_bindir}/vidctl
