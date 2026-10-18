@@ -14,7 +14,12 @@ system of the packages.
 
 ## [Unreleased]
 
-Nothing yet — in development.
+- **Fixed — update check**: the **AUR** and **RPM** packages built without
+  embedding the version (the binary stayed `dev`), so the check concluded the
+  app was up to date. Now the `PKGBUILD` and the RPM spec pass
+  `-ldflags -X ...internal/version.Version`, like the `.deb` and the `.zip`.
+  And when the local version cannot be determined, the app shows
+  **"unknown local version"** instead of claiming it is up to date.
 
 ## [2.9.0] — 2026-10-18
 

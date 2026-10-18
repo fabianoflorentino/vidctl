@@ -14,7 +14,12 @@ operacional dos pacotes.
 
 ## [Unreleased]
 
-Nada ainda — em desenvolvimento.
+- **Corrigido — verificação de atualização**: os pacotes do **AUR** e do
+  **RPM** compilavam sem embutir a versão (o binário ficava `dev`), então a
+  checagem concluía que o app estava atualizado. Agora o `PKGBUILD` e o spec do
+  RPM passam `-ldflags -X ...internal/version.Version`, como o `.deb` e os
+  `.zip`. E, quando a versão local não puder ser determinada, o app mostra
+  **"versão local desconhecida"** em vez de afirmar que está atualizado.
 
 ## [2.9.0] — 2026-10-18
 
