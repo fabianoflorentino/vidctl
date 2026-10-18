@@ -24,7 +24,8 @@ prepare() {
 build() {
   cd "${srcdir}/vidctl-${pkgver}"
   export PATH="$PATH:$(go env GOPATH)/bin"
-  wails build -clean -tags webkit2_41
+  wails build -clean -tags webkit2_41 \
+    -ldflags "-X github.com/fabianoflorentino/vidctl/internal/version.Version=v${pkgver}"
 }
 
 package() {

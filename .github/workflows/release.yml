@@ -111,7 +111,6 @@ jobs:
             export PATH="$(go env GOPATH)/bin:$PATH"
             go install github.com/wailsapp/wails/v2/cmd/wails@v2.16.0
             wails build -clean -tags webkit2_41 \
-              -ldflags "-X github.com/fabianoflorentino/vidctl/internal/version.Version=${VERSION}" \
               -ldflags "-X github.com/fabianoflorentino/vidctl/internal/version.Version=${VERSION}"
             VER=${VERSION#v}
             ARCH=$(dpkg --print-architecture)

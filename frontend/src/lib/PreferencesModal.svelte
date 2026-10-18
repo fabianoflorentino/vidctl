@@ -73,7 +73,21 @@
 
   const languageOptions = $derived<RadioOption[]>(LANGS.map((l) => ({ id: l.id, title: l.label, description: '' })))
 
-  const updateState: string = $derived(checkingUpdate ? 'checking' : !updateInfo?.ok ? 'offline' : updateInfo.hasUpdate ? 'available' : 'uptodate')
+  function knownVersion(v: string | undefined): boolean {
+    return !!v && /[0-9]+\.[0-9]+\.[0-9]+/.test(v)
+  }
+
+  const updateState: string = $derived(
+    checkingUpdate
+      ? 'checking'
+      : !updateInfo?.ok
+        ? 'offline'
+        : updateInfo.hasUpdate
+          ? 'available'
+          : knownVersion(updateInfo.current)
+            ? 'uptodate'
+            : 'dev',
+  )
 </script>
 
 <Modal {open} title={t('prefs.title')} {onclose}>
@@ -88,6 +102,8 @@
             {t('update.available')}
           {:else if updateState === 'uptodate'}
             {t('update.upToDate')}
+          {:else if updateState === 'dev'}
+            {t('update.dev')}
           {:else}
             {t('update.offline')}
           {/if}
