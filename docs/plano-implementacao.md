@@ -973,6 +973,7 @@ v2.5.0  → Fase 7 (notificações)                       [entregue — feat/not
 v2.6.0  → Fase 8 (check update)                       [entregue — feat/updates]
 v2.7.0  → Fase 9 (presets custom)                     [entregue — feat/presets]
 v2.8.0  → Fase 12 (transcrição srt/vtt/txt)            [entregue]
+v2.9.0  → identidade visual (azul vívido + site)       [entregue]
 ```
 
 Cada versão deve passar por `make check` (vet + test + gofmt + svelte-check) e

@@ -16,6 +16,14 @@ system of the packages.
 
 Nothing yet — in development.
 
+## [2.9.0] — 2026-10-18
+
+- **New visual identity**: the app's highlight blue moved from a washed tone to
+  a **vivid blue** — `#3b82f6` in the dark theme and `#2563eb` in the light one —
+  making the interface more vibrant and professional. The website got the same
+  treatment (dark navy background, Inter + JetBrains Mono, entrance animations
+  and the brand with the app icon + "vidctl").
+
 ## [2.8.0] — 2026-10-17
 
 - **Local transcription** (phase 12): from the video menu ("transcribe

@@ -16,6 +16,14 @@ solo el sistema operativo de los paquetes.
 
 Nada aún — en desarrollo.
 
+## [2.9.0] — 2026-10-18
+
+- **Nueva identidad visual**: el azul de acento de la app pasó de un tono lavado
+  a un **azul vivo** — `#3b82f6` en el tema oscuro y `#2563eb` en el claro —
+  haciendo la interfaz más vibrante y profesional. El sitio recibió el mismo
+  tratamiento (fondo navy oscuro, Inter + JetBrains Mono, animaciones de entrada
+  y la marca con el icono de la app + "vidctl").
+
 ## [2.8.0] — 2026-10-17
 
 - **Transcripción local** (fase 12): desde el menú del vídeo ("transcribir

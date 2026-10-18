@@ -16,6 +16,14 @@ operacional dos pacotes.
 
 Nada ainda — em desenvolvimento.
 
+## [2.9.0] — 2026-10-18
+
+- **Nova identidade visual**: o azul de destaque do app saiu do tom lavado para
+  um **azul vívido** — `#3b82f6` no tema escuro e `#2563eb` no claro — deixando
+  a interface mais vibrante e profissional. O site institucional ganhou o mesmo
+  tratamento (fundo navy escuro, Inter + JetBrains Mono, animações de entrada e
+  a marca com o ícone do app + "vidctl").
+
 ## [2.8.0] — 2026-10-17
 
 - **Transcrição local** (fase 12): pelo menu do vídeo ("transcrever vídeo…") o
