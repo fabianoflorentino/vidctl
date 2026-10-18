@@ -29,7 +29,7 @@ func main() {
 
 	// Create application with options
 	err := wails.Run(&options.App{
-		Title:     "vidctl — video compressor",
+		Title:     "video controller",
 		Width:     1360,
 		Height:    768,
 		MinWidth:  720,

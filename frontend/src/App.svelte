@@ -1339,18 +1339,11 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
 <div class="drop-overlay" class:show={dragging} aria-hidden="true"></div>
 
 <header class="topbar">
-  <span class="ffmpeg-pill" class:bad={!ffmpegOk}>
-    <span class="dot"></span>
-    {ffmpegOk ? t('topbar.ffmpegOk') : t('topbar.ffmpegMissing')}
-  </span>
-  <span class="topbar-title">vidctl</span>
-  <div class="topbar-end">
-    <button class="icon-btn" onclick={() => (prefsOpen = true)} aria-label={t('topbar.prefs')} title={t('topbar.prefs')}>
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-        <path d="M4 7h16M4 12h16M4 17h16" />
-      </svg>
-    </button>
-  </div>
+  <button class="icon-btn" onclick={() => (prefsOpen = true)} aria-label={t('topbar.prefs')} title={t('topbar.prefs')}>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+      <path d="M4 7h16M4 12h16M4 17h16" />
+    </svg>
+  </button>
 </header>
 
 {#if !ffmpegOk}
@@ -1361,13 +1354,17 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
 {/if}
 
 {#if appView === 'empty'}
-  <StatusPage
-    title={t('empty.title')}
-    subtitle={t('empty.subtitle')}
-    actionLabel={t('empty.open')}
-    onAction={pickInput}
-    hot={dragging}
-  />
+  <div class="empty-view">
+    <div class="empty-panel">
+      <StatusPage
+        title={t('empty.title')}
+        subtitle={t('empty.subtitle')}
+        actionLabel={t('empty.open')}
+        onAction={pickInput}
+        hot={dragging}
+      />
+    </div>
+  </div>
 {:else}
   <div class="split">
     <aside
@@ -1779,10 +1776,6 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
     </main>
   </div>
 {/if}
-
-<footer class="foot mono">
-  {t('footer.engine')}
-</footer>
 
 {#if presetEditOpen}
   <PresetModal

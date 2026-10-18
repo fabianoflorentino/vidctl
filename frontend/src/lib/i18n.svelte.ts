@@ -15,8 +15,6 @@ type Dict = Record<string, string>
 
 const pt: Dict = {
   // topbar / banner
-  'topbar.ffmpegOk': 'ffmpeg OK',
-  'topbar.ffmpegMissing': 'ffmpeg ausente',
   'topbar.prefs': 'Preferências',
   'update.title': 'Atualização',
   'update.available': 'nova versão disponível',
@@ -286,7 +284,6 @@ const pt: Dict = {
   // actions / footer / errors
   'action.compress': 'Comprimir…',
   'action.switchVideo': 'Trocar vídeo…',
-  'footer.engine': 'h264 + aac · 2-pass quando há limite de tamanho',
 
   // preferences
   'prefs.title': 'Preferências',
@@ -340,8 +337,6 @@ const pt: Dict = {
 }
 
 const en: Dict = {
-  'topbar.ffmpegOk': 'ffmpeg OK',
-  'topbar.ffmpegMissing': 'ffmpeg missing',
   'topbar.prefs': 'Preferences',
   'update.title': 'Update',
   'update.available': 'new version available',
@@ -589,7 +584,6 @@ const en: Dict = {
   'sum.configCrf': '{name} · CRF {crf}',
   'action.compress': 'Compress…',
   'action.switchVideo': 'Switch video…',
-  'footer.engine': 'h264 + aac · 2-pass when size is limited',
   'prefs.title': 'Preferences',
   'prefs.language': 'Language',
   'prefs.languageTip': 'Choose the interface language. The app remembers your choice between runs.',
@@ -639,8 +633,6 @@ const en: Dict = {
 }
 
 const es: Dict = {
-  'topbar.ffmpegOk': 'ffmpeg OK',
-  'topbar.ffmpegMissing': 'ffmpeg no encontrado',
   'topbar.prefs': 'Preferencias',
   'update.title': 'Actualización',
   'update.available': 'nueva versión disponible',
@@ -888,7 +880,6 @@ const es: Dict = {
   'sum.configCrf': '{name} · CRF {crf}',
   'action.compress': 'Comprimir…',
   'action.switchVideo': 'Cambiar vídeo…',
-  'footer.engine': 'h264 + aac · 2-pass con límite de tamaño',
   'prefs.title': 'Preferencias',
   'prefs.language': 'Idioma',
   'prefs.languageTip': 'Elige el idioma de la interfaz. El app recuerda la elección entre ejecuciones.',
@@ -938,8 +929,6 @@ const es: Dict = {
 }
 
 const zh: Dict = {
-  'topbar.ffmpegOk': 'ffmpeg 正常',
-  'topbar.ffmpegMissing': 'ffmpeg 缺失',
   'topbar.prefs': '设置',
   'update.title': '更新',
   'update.available': '有新版本可用',
@@ -1187,7 +1176,6 @@ const zh: Dict = {
   'sum.configCrf': '{name} · CRF {crf}',
   'action.compress': '压缩…',
   'action.switchVideo': '切换视频…',
-  'footer.engine': 'h264 + aac · 限制大小时 2-pass',
   'prefs.title': '设置',
   'prefs.language': '语言',
   'prefs.languageTip': '选择界面语言。应用会在运行时记住你的选择。',

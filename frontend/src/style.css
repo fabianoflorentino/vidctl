@@ -201,26 +201,12 @@ button {
   font-family: var(--mono);
 }
 
-/* topbar */
+/* topbar (menu de opções no canto superior direito) */
 .topbar {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 18px;
-  background: var(--window);
-}
-
-.topbar-title {
-  font-size: 15px;
-  font-weight: 700;
-}
-
-.topbar-end {
+  flex: none;
   display: flex;
-  align-items: center;
-  gap: 10px;
-  justify-self: end;
+  justify-content: flex-end;
+  padding: 12px 18px 6px;
 }
 
 .sources-head {
@@ -229,31 +215,6 @@ button {
   justify-content: space-between;
   gap: 10px;
   margin: 2px 2px 10px;
-}
-
-.ffmpeg-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  justify-self: start;
-  font-size: 12px;
-  color: var(--fg-dim);
-  line-height: 1;
-}
-
-.ffmpeg-pill .dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--success);
-}
-
-.ffmpeg-pill.bad {
-  color: var(--error);
-}
-
-.ffmpeg-pill.bad .dot {
-  background: var(--error);
 }
 
 .icon-btn {
@@ -1243,12 +1204,28 @@ input[type="number"].num {
   height: 4px;
 }
 
-/* footer */
-.foot {
-  padding: 8px 18px 12px;
-  font-size: 12px;
-  color: var(--fg-faint);
-  text-align: center;
+/* empty state: dropzone dentro de um painel (mesmo design da sidebar) */
+.empty-view {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  padding: 14px;
+}
+
+.empty-panel {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  background: var(--window);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: var(--panel-shadow);
+  padding: 14px;
+  overflow: hidden;
+}
+
+.empty-panel .status-page {
+  margin: 0;
 }
 
 /* resumo do trabalho (espaço livre enquanto ocioso) */
@@ -1529,6 +1506,28 @@ input[type="number"].num {
   display: block;
   font-size: 14px;
   font-weight: 600;
+}
+
+.radio-card-title .ok-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 7px;
+  border-radius: 50%;
+  vertical-align: middle;
+  background: var(--success);
+}
+
+.radio-card-title.ok {
+  color: var(--success);
+}
+
+.radio-card-title.bad {
+  color: var(--error);
+}
+
+.radio-card-title.bad .ok-dot {
+  background: var(--error);
 }
 
 .radio-card-desc {

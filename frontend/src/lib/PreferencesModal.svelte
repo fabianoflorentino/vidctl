@@ -224,7 +224,10 @@
     <h2>{t('prefs.ffmpegSection')}</h2>
     <div class="modal-row">
       <span class="toggle-label">
-        <span class="radio-card-title">{ffmpegOk ? t('prefs.ffmpegOk') : t('prefs.ffmpegBad')}</span>
+        <span class="radio-card-title" class:ok={ffmpegOk} class:bad={!ffmpegOk}>
+          <span class="ok-dot"></span>
+          {ffmpegOk ? t('prefs.ffmpegOk') : t('prefs.ffmpegBad')}
+        </span>
         <span class="radio-card-desc">
           {ffmpegMsg || t('prefs.ffmpegDesc')}
         </span>

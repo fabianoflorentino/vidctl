@@ -14,7 +14,12 @@ system of the packages.
 
 ## [Unreleased]
 
-Nothing yet — in development.
+- **Cleaner main screen**: the footer is gone and the top bar now holds only the
+  **options** button on the right (no "vidctl" name in the center). The
+  **ffmpeg** status moved inside the menu, with a green indicator. The
+  drag-and-drop area (empty state) moved inside a panel with the same design as
+  the sidebar. The window title changed from "vidctl — video compressor" to
+  **"video controller"**.
 
 ## [2.9.1] — 2026-10-18
 

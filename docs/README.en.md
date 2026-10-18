@@ -62,8 +62,8 @@ cut, remove audio, FPS, rotation, thumbnail). 100% offline.
   WebKit/WebView2), opening in a **1360×768** window by default
 - Light/dark theme: **"System"** follows the real desktop theme (reads GTK on
   Linux, `AppleInterfaceStyle` on macOS and the registry on Windows — WebKit
-  does not always report the right theme), and you can pin light/dark with the
-  sun/moon button at the top (the choice persists between runs)
+  does not always report the right theme), and you can pin light/dark in
+  **Preferences** (the choice persists between runs)
 - **Constrict**-style visuals: matte dark theme with slate accent, derived light
   theme and a custom icon in the installers of every platform
 - No internet: fonts and UI bundled in the binary
@@ -76,10 +76,10 @@ cut, remove audio, FPS, rotation, thumbnail). 100% offline.
 - **System notifications**: a desktop alert when a task finishes or fails, and
   an option to open the output file folder automatically on success — both
   toggles live in Preferences
-- **Update check**: on launch the app queries GitHub and, if a newer version
-  exists, shows a badge in the top bar ("v2.6.0 available") linking to the
-  release; the refresh button re-runs the check. Offline is not an error — it
-  just shows nothing
+- **Update check**: on launch the app queries GitHub and shows the state in
+  **Preferences** (new version, up to date, unknown local version or offline)
+  with a link to the release; the check can be re-run. Offline is not an error —
+  it just means it could not check
 - On Windows, conversions and file probing do not open console windows
 
 ## Installation
@@ -408,10 +408,11 @@ conversion result: a desktop without a notifier simply ignores the alert.
 
 vidctl checks, on launch, whether a newer release exists on the
 [releases page](https://github.com/fabianoflorentino/vidctl/releases):
-- Whenever a new version exists, the **badge** (e.g. `v2.6.0 available`)
-  appears in the top bar, next to Preferences; clicking it opens the release in
-  the browser.
-- The **refresh** icon (arrows) in the same bar re-runs the check at any time.
+- The state appears in **Preferences** (button in the top-right corner):
+  **checking**, **new version available** with the version number (and a button
+  to open the release), **vidctl is up to date**, **unknown local version**
+  (build without an embedded version) or **offline**.
+- The **check** button re-runs the verification at any time.
 - The check hits the public GitHub API with a 5 s timeout and a **per-session
   cache**; offline, timeout or HTTP errors are silent (`Ok=false`) — the app
   never freezes or blocks boot because of the update check.

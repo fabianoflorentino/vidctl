@@ -14,7 +14,12 @@ solo el sistema operativo de los paquetes.
 
 ## [Unreleased]
 
-Nada aún — en desarrollo.
+- **Pantalla principal más limpia**: el pie desapareció y la barra superior ahora
+  solo tiene el botón de **opciones** a la derecha (sin el nombre "vidctl" en el
+  centro). El estado de **ffmpeg** pasó dentro del menú, con indicador verde. El
+  área de arrastrar y soltar (estado vacío) pasó a un panel con el mismo diseño
+  de la barra lateral. El título de la ventana cambió de "vidctl — video
+  compressor" a **"video controller"**.
 
 ## [2.9.1] — 2026-10-18
 
