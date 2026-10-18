@@ -15,8 +15,6 @@ type Dict = Record<string, string>
 
 const pt: Dict = {
   // topbar / banner
-  'topbar.ffmpegOk': 'ffmpeg OK',
-  'topbar.ffmpegMissing': 'ffmpeg ausente',
   'topbar.prefs': 'Preferências',
   'update.title': 'Atualização',
   'update.available': 'nova versão disponível',
@@ -339,8 +337,6 @@ const pt: Dict = {
 }
 
 const en: Dict = {
-  'topbar.ffmpegOk': 'ffmpeg OK',
-  'topbar.ffmpegMissing': 'ffmpeg missing',
   'topbar.prefs': 'Preferences',
   'update.title': 'Update',
   'update.available': 'new version available',
@@ -637,8 +633,6 @@ const en: Dict = {
 }
 
 const es: Dict = {
-  'topbar.ffmpegOk': 'ffmpeg OK',
-  'topbar.ffmpegMissing': 'ffmpeg no encontrado',
   'topbar.prefs': 'Preferencias',
   'update.title': 'Actualización',
   'update.available': 'nueva versión disponible',
@@ -935,8 +929,6 @@ const es: Dict = {
 }
 
 const zh: Dict = {
-  'topbar.ffmpegOk': 'ffmpeg 正常',
-  'topbar.ffmpegMissing': 'ffmpeg 缺失',
   'topbar.prefs': '设置',
   'update.title': '更新',
   'update.available': '有新版本可用',

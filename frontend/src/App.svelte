@@ -1769,16 +1769,14 @@ import RadioCardGroup from './lib/RadioCardGroup.svelte'
   </div>
 {/if}
 
-<div class="dock">
-  <span class="dock-status" class:bad={!ffmpegOk}>
-    <span class="dot"></span>
-    {ffmpegOk ? t('topbar.ffmpegOk') : t('topbar.ffmpegMissing')}
-  </span>
-  <button class="icon-btn" onclick={() => (prefsOpen = true)} aria-label={t('topbar.prefs')} title={t('topbar.prefs')}>
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-      <path d="M4 7h16M4 12h16M4 17h16" />
-    </svg>
-  </button>
+<div class="dockbar">
+  <div class="dock">
+    <button class="icon-btn" onclick={() => (prefsOpen = true)} aria-label={t('topbar.prefs')} title={t('topbar.prefs')}>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <path d="M4 7h16M4 12h16M4 17h16" />
+      </svg>
+    </button>
+  </div>
 </div>
 
 {#if presetEditOpen}
