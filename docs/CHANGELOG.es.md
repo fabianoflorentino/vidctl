@@ -14,11 +14,13 @@ solo el sistema operativo de los paquetes.
 
 ## [Unreleased]
 
-- **Pantalla principal más limpia**: la barra superior y el pie desaparecieron;
-  el estado de **ffmpeg** y el botón de **Preferencias** ahora están en un panel
-  en la esquina inferior derecha, y el área de arrastrar y soltar (estado vacío)
-  pasó a un panel con el mismo diseño de la barra lateral. El título de la
-  ventana cambió de "vidctl — video compressor" a **"video controller"**.
+- **Pantalla principal más limpia**: la barra superior y el pie desaparecieron.
+  El botón de **opciones** (Preferencias) está en un panel en la esquina inferior
+  derecha, con el mismo diseño de la barra lateral, y el estado de **ffmpeg**
+  aparece dentro del propio menú, con indicador verde cuando está disponible. El
+  área de arrastrar y soltar (estado vacío) pasó a un panel con el mismo diseño
+  de la barra lateral. El título de la ventana cambió de "vidctl — video
+  compressor" a **"video controller"**.
 
 ## [2.9.1] — 2026-10-18
 
