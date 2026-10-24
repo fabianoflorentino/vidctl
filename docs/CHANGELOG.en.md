@@ -15,8 +15,8 @@ system of the packages.
 ## [Unreleased]
 
 - **New brand**: the app icon and the site mark changed from a video camera to a
-  **centered lens** with an aperture iris, in the brand blue — reflected in the
-  installers, the favicon and the site.
+  **centered lens** with an aperture iris, in the brand blue — in the
+  installers, the favicon, the site mark and the app's empty state.
 
 ## [2.10.0] — 2026-10-18
 

@@ -16,7 +16,8 @@ operacional dos pacotes.
 
 - **Nova marca**: o ícone do app e a marca do site passaram de uma câmera de
   vídeo para uma **lente central** com íris de abertura, no azul da identidade —
-  refletida nos instaladores, no favicon e no site.
+  nos instaladores, no favicon, na marca do site e no estado vazio da tela
+  inicial.
 
 ## [2.10.0] — 2026-10-18
 
