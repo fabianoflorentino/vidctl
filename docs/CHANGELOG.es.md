@@ -14,6 +14,10 @@ solo el sistema operativo de los paquetes.
 
 ## [Unreleased]
 
+Nada aún — en desarrollo.
+
+## [2.11.0] — 2026-10-24
+
 - **Nueva marca**: el icono de la app y la marca del sitio pasaron de una cámara
   de vídeo a una **lente central** con iris de diafragma, en el azul de la
   identidad — en los instaladores, el favicon, la marca del sitio y el estado

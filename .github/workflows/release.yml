@@ -41,7 +41,7 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install Wails CLI
-        run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.16.0
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.17.0
 
       - name: Linux dependencies
         if: runner.os == 'Linux'
@@ -109,7 +109,7 @@ jobs:
             curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
             apt-get install -yqq nodejs
             export PATH="$(go env GOPATH)/bin:$PATH"
-            go install github.com/wailsapp/wails/v2/cmd/wails@v2.16.0
+            go install github.com/wailsapp/wails/v2/cmd/wails@v2.17.0
             wails build -clean -tags webkit2_41 \
               -ldflags "-X github.com/fabianoflorentino/vidctl/internal/version.Version=${VERSION}"
             VER=${VERSION#v}
@@ -159,7 +159,7 @@ jobs:
             tar -C /usr/local -xzf /tmp/go.tgz
             export PATH="/usr/local/go/bin:$PATH"
             export PATH="$(go env GOPATH)/bin:$PATH"
-            go install github.com/wailsapp/wails/v2/cmd/wails@v2.16.0
+            go install github.com/wailsapp/wails/v2/cmd/wails@v2.17.0
             VER=${VERSION#v}
             git config --global --add safe.directory /src
             mkdir -p /tmp/treesrc

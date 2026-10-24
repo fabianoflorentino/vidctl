@@ -14,6 +14,10 @@ system of the packages.
 
 ## [Unreleased]
 
+Nothing yet — in development.
+
+## [2.11.0] — 2026-10-24
+
 - **New brand**: the app icon and the site mark changed from a video camera to a
   **centered lens** with an aperture iris, in the brand blue — in the
   installers, the favicon, the site mark and the app's empty state.

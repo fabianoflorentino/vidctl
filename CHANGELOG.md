@@ -14,6 +14,10 @@ operacional dos pacotes.
 
 ## [Unreleased]
 
+Nada ainda — em desenvolvimento.
+
+## [2.11.0] — 2026-10-24
+
 - **Nova marca**: o ícone do app e a marca do site passaram de uma câmera de
   vídeo para uma **lente central** com íris de abertura, no azul da identidade —
   nos instaladores, no favicon, na marca do site e no estado vazio da tela
