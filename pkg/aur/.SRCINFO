@@ -1,6 +1,6 @@
 pkgbase = vidctl
 	pkgdesc = Compress video to the exact size of each platform with ffmpeg 2-pass
-	pkgver = 2.10.0
+	pkgver = 2.11.0
 	pkgrel = 1
 	url = https://github.com/fabianoflorentino/vidctl
 	arch = x86_64
@@ -11,7 +11,7 @@ pkgbase = vidctl
 	depends = webkit2gtk-4.1
 	depends = ffmpeg
 	optdepends = libnotify: desktop notifications for compression status
-	source = https://github.com/fabianoflorentino/vidctl/archive/refs/tags/v2.10.0.tar.gz
-	sha256sums = 71395b9596298967ac97535281128648b01daa884649c4d70066715849f9e375
+	source = https://github.com/fabianoflorentino/vidctl/archive/refs/tags/v2.11.0.tar.gz
+	sha256sums = 5301ef96268253dd49fb9f1a631b3e5c40c99211e347e17dbeb4734517374f04
 
 pkgname = vidctl

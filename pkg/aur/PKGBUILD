@@ -3,7 +3,7 @@
 # A cada release: pkg/aur/update-aur.sh <versão> (atualiza pkgver + sha256sums).
 
 pkgname=vidctl
-pkgver=2.10.0
+pkgver=2.11.0
 pkgrel=1
 pkgdesc="Compress video to the exact size of each platform with ffmpeg 2-pass"
 arch=('x86_64')
@@ -13,7 +13,7 @@ depends=('gtk3' 'webkit2gtk-4.1' 'ffmpeg')
 makedepends=('go' 'npm')
 optdepends=('libnotify: desktop notifications for compression status')
 source=("https://github.com/fabianoflorentino/vidctl/archive/refs/tags/v${pkgver}.tar.gz")
-sha256sums=('71395b9596298967ac97535281128648b01daa884649c4d70066715849f9e375')
+sha256sums=('5301ef96268253dd49fb9f1a631b3e5c40c99211e347e17dbeb4734517374f04')
 # Nota: o tarball de tag v${pkgver} do GitHub extrai como vidctl-${pkgver} (sem o v).
 
 prepare() {
