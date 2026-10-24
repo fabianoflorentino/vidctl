@@ -433,14 +433,14 @@ O vidctl confere, ao abrir, se há release mais nova na
 
 ## Stack
 
-- **Backend:** Go 1.25+ (Wails v2.16.0, ffmpeg/ffprobe)
+- **Backend:** Go 1.25+ (Wails v2.17.0, ffmpeg/ffprobe)
 - **Frontend:** Svelte 5 + Vite, com fontes bundladas (funciona offline)
 
 ## Pré-requisitos (desenvolvimento)
 
 - Go 1.25+
 - Node.js 22+
-- Wails CLI: `go install github.com/wailsapp/wails/v2/cmd/wails@v2.16.0`
+- Wails CLI: `go install github.com/wailsapp/wails/v2/cmd/wails@v2.17.0`
 - ffmpeg e ffprobe no `PATH`
 - Linux: pacotes de desenvolvimento GTK/WebKit
   - Debian/Ubuntu: `libgtk-3-dev libwebkit2gtk-4.1-dev`

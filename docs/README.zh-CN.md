@@ -289,14 +289,14 @@ vidctl 启动时会检查[发布页面](https://github.com/fabianoflorentino/vid
 
 ## 技术栈
 
-- **后端：** Go 1.25+（Wails v2.16.0，ffmpeg/ffprobe）
+- **后端：** Go 1.25+（Wails v2.17.0，ffmpeg/ffprobe）
 - **前端：** Svelte 5 + Vite，字体已打包（离线可用）
 
 ## 前提条件（开发）
 
 - Go 1.25+
 - Node.js 22+
-- Wails CLI：`go install github.com/wailsapp/wails/v2/cmd/wails@v2.16.0`
+- Wails CLI：`go install github.com/wailsapp/wails/v2/cmd/wails@v2.17.0`
 - `PATH` 中有 ffmpeg 和 ffprobe
 - Linux：GTK/WebKit 开发包
   - Debian/Ubuntu：`libgtk-3-dev libwebkit2gtk-4.1-dev`

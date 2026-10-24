@@ -18,6 +18,8 @@ operacional dos pacotes.
   vídeo para uma **lente central** com íris de abertura, no azul da identidade —
   nos instaladores, no favicon, na marca do site e no estado vazio da tela
   inicial.
+- **Dependências**: `wails` atualizado para a v2.17.0 (com as dependências
+  indiretas) e `svelte-check` para 4.7.7 no frontend.
 
 ## [2.10.0] — 2026-10-18
 

@@ -18,6 +18,8 @@ solo el sistema operativo de los paquetes.
   de vídeo a una **lente central** con iris de diafragma, en el azul de la
   identidad — en los instaladores, el favicon, la marca del sitio y el estado
   vacío de la pantalla inicial.
+- **Dependencias**: `wails` actualizado a la v2.17.0 (con sus dependencias
+  indirectas) y `svelte-check` a 4.7.7 en el frontend.
 
 ## [2.10.0] — 2026-10-18
 

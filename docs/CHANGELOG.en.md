@@ -17,6 +17,8 @@ system of the packages.
 - **New brand**: the app icon and the site mark changed from a video camera to a
   **centered lens** with an aperture iris, in the brand blue — in the
   installers, the favicon, the site mark and the app's empty state.
+- **Dependencies**: `wails` upgraded to v2.17.0 (with its indirect dependencies)
+  and `svelte-check` to 4.7.7 in the frontend.
 
 ## [2.10.0] — 2026-10-18
 
