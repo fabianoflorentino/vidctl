@@ -2478,3 +2478,57 @@ code {
     display: none;
   }
 }
+
+/* ---- back to top ---- */
+.back-to-top {
+  position: fixed;
+  right: clamp(16px, 4vw, 28px);
+  bottom: clamp(16px, 4vw, 28px);
+  z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 50%;
+  background: linear-gradient(180deg, rgba(24, 34, 53, 0.96), rgba(13, 18, 32, 0.96));
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 229, 168, 0.08);
+  backdrop-filter: blur(12px);
+  color: var(--ink);
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(12px);
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease, border-color 0.2s ease,
+    background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.back-to-top.show {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.back-to-top:hover {
+  border-color: transparent;
+  background: var(--family-grad);
+  color: var(--accent-ink);
+  box-shadow: 0 16px 40px rgba(56, 189, 248, 0.32);
+}
+
+.back-to-top:focus-visible {
+  outline: 2px solid var(--accent-3);
+  outline-offset: 3px;
+}
+
+.back-to-top svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}

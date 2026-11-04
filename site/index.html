@@ -434,6 +434,20 @@
       </p>
     </footer>
 
+    <button
+      id="back-to-top"
+      class="back-to-top"
+      type="button"
+      aria-label="Voltar ao topo"
+      data-i18n-attr="aria-label"
+      data-i18n="backToTop"
+      tabindex="-1"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M12 19V5M5 12l7-7 7 7" />
+      </svg>
+    </button>
+
     <script>
       (function () {
         var demo = document.getElementById("demo");
@@ -540,6 +554,7 @@
         var I18N = {
           pt: {
             'nav.features': 'recursos', 'nav.cut': 'corte', 'nav.destinations': 'presets', 'nav.how': 'como funciona', 'nav.github': 'github ↗',
+            'backToTop': 'Voltar ao topo',
             'hero.badge': 'desktop · open-source · 100% offline',
             'hero.kicker': 'ffmpeg 2-pass &middot; H.265 + GPU &middot; corte em partes &middot; extrair áudio &middot; desktop &middot; open-source',
             'hero.h1a': 'Vídeo leve,', 'hero.h1b': 'história completa.',
@@ -601,6 +616,7 @@
           },
           en: {
             'nav.features': 'features', 'nav.cut': 'cut', 'nav.destinations': 'presets', 'nav.how': 'how it works', 'nav.github': 'github ↗',
+            'backToTop': 'Back to top',
             'hero.badge': 'desktop · open-source · 100% offline',
             'hero.kicker': 'ffmpeg 2-pass &middot; H.265 + GPU &middot; cut into parts &middot; extract audio &middot; desktop &middot; open-source',
             'hero.h1a': 'Lite video,', 'hero.h1b': 'full story.',
@@ -662,6 +678,7 @@
           },
           es: {
             'nav.features': 'funciones', 'nav.cut': 'corte', 'nav.destinations': 'presets', 'nav.how': 'cómo funciona', 'nav.github': 'github ↗',
+            'backToTop': 'Volver arriba',
             'hero.badge': 'escritorio · open-source · 100% offline',
             'hero.kicker': 'ffmpeg 2-pass &middot; H.265 + GPU &middot; cortar en partes &middot; extraer audio &middot; escritorio &middot; open-source',
             'hero.h1a': 'Vídeo ligero,', 'hero.h1b': 'historia completa.',
@@ -723,6 +740,7 @@
           },
           zh: {
             'nav.features': '功能', 'nav.cut': '切割', 'nav.destinations': '预设', 'nav.how': '工作原理', 'nav.github': 'github ↗',
+            'backToTop': '返回顶部',
             'hero.badge': '桌面 · 开源 · 100% 离线',
             'hero.kicker': 'ffmpeg 2-pass &middot; H.265 + GPU &middot; 分段切割 &middot; 提取音频 &middot; 桌面 &middot; 开源',
             'hero.h1a': '轻量视频，', 'hero.h1b': '故事完整。',
@@ -821,8 +839,22 @@
       (function () {
         // Sticky nav: denser once the page is scrolled.
         var nav = document.querySelector(".nav");
+        var backToTop = document.getElementById("back-to-top");
+        function updateBackToTop() {
+          if (!backToTop) return;
+          var show = window.scrollY > 640;
+          backToTop.classList.toggle("show", show);
+          backToTop.tabIndex = show ? 0 : -1;
+        }
         function onScroll() {
           if (nav) nav.classList.toggle("scrolled", window.scrollY > 8);
+          updateBackToTop();
+        }
+        if (backToTop) {
+          backToTop.addEventListener("click", function () {
+            var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+            window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
+          });
         }
         onScroll();
         window.addEventListener("scroll", onScroll, { passive: true });
