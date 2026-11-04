@@ -18,6 +18,9 @@ solo el sistema operativo de los paquetes.
   degradado mint/cian/violeta, tarjetas de vidrio, franja de capacidades y
   etiquetas mono), con nuevo favicon y metadatos para compartir; `site/CNAME`
   apunta a `vidctl.fabianoflorentino.dev`.
+- **Paquetes**: el build de AUR/RPM instala Wails en un directorio local del
+  build y lo coloca delante del `PATH`, evitando fallos con shims de asdf/mise;
+  Wails quedó alineado con la v2.17.0.
 
 ## [2.11.0] — 2026-10-24
 

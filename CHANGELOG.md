@@ -18,6 +18,9 @@ operacional dos pacotes.
   gradiente mint/ciano/violeta, cards em vidro, faixa de capacidades e rótulos
   em mono), com novo favicon e metadados de compartilhamento; `site/CNAME`
   aponta para `vidctl.fabianoflorentino.dev`.
+- **Pacotes**: o build do AUR/RPM instala o Wails em um diretório local do
+  build e o coloca à frente do `PATH`, evitando falhas com shims do
+  asdf/mise; o Wails foi alinhado à v2.17.0.
 
 ## [2.11.0] — 2026-10-24
 

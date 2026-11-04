@@ -1,4 +1,4 @@
-WAILS ?= $(shell { command -v wails 2>/dev/null || { gobin="$$(go env GOBIN)"; [ -x "$$gobin/wails" ] && echo "$$gobin/wails" || echo "$$(go env GOPATH)/bin/wails"; }; })
+WAILS ?= $(shell { gobin="$$(go env GOBIN)"; [ -n "$$gobin" ] && [ -x "$$gobin/wails" ] && echo "$$gobin/wails"; } || { gobin="$$(go env GOPATH)/bin/wails"; [ -x "$$gobin" ] && echo "$$gobin"; } || command -v wails 2>/dev/null)
 
 UI_TAG :=
 ifeq ($(shell uname),Linux)

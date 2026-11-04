@@ -15,6 +15,8 @@ changelog：它们之间的差异仅在于包的操作系统。
 - **网站**：视觉识别与其他项目统一（深海军蓝背景、薄荷绿/青色/紫色渐变、
   玻璃质感卡片、能力条与等宽字体标签），并更新 favicon 和分享元数据；
   `site/CNAME` 指向 `vidctl.fabianoflorentino.dev`。
+- **打包**：AUR/RPM 构建将 Wails 安装到本地构建目录并置于 `PATH` 前面，
+  避免 asdf/mise shim 导致的失败；Wails 同步升级到 v2.17.0。
 
 ## [2.11.0] — 2026-10-24
 

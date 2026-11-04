@@ -18,6 +18,9 @@ system of the packages.
   mint/cyan/violet gradient, glassy cards, capability strip and mono labels),
   plus a new favicon and social metadata; `site/CNAME` points to
   `vidctl.fabianoflorentino.dev`.
+- **Packages**: the AUR/RPM build installs Wails into a local build directory
+  and puts it ahead of `PATH`, avoiding failures with asdf/mise shims; Wails is
+  now aligned with v2.17.0.
 
 ## [2.11.0] — 2026-10-24
 
