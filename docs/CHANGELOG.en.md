@@ -14,7 +14,10 @@ system of the packages.
 
 ## [Unreleased]
 
-Nothing yet — in development.
+- **Site**: visual identity aligned with the other projects (navy canvas,
+  mint/cyan/violet gradient, glassy cards, capability strip and mono labels),
+  plus a new favicon and social metadata; `site/CNAME` points to
+  `vidctl.fabianoflorentino.dev`.
 
 ## [2.11.0] — 2026-10-24
 

@@ -3,12 +3,20 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#0a0e17" />
+    <meta name="theme-color" content="#080b14" />
     <title>vidctl — vídeo leve, história completa</title>
     <meta
       name="description"
       content="vidctl comprime vídeos para o tamanho exato de cada plataforma (WhatsApp, Instagram, Shorts, YouTube), com codec H.265 e aceleração de GPU (NVENC/QSV/AMF/VT), ajustes por arquivo, corte em partes por tempo e extração da trilha de áudio (mp3/opus/aac/flac/wav) — tema claro/escuro, métricas ao vivo, desktop, offline, open-source."
     />
+    <link rel="canonical" href="https://vidctl.fabianoflorentino.dev/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="vidctl — vídeo leve, história completa" />
+    <meta property="og:description" content="Comprima vídeos para o tamanho exato de cada plataforma, corte em partes e extraia áudio — H.265, GPU e 100% offline." />
+    <meta property="og:url" content="https://vidctl.fabianoflorentino.dev/" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="vidctl" />
+    <meta name="twitter:description" content="Comprima vídeos para o tamanho exato de cada plataforma, corte em partes e extraia áudio — H.265, GPU e 100% offline." />
     <link rel="icon" type="image/svg+xml" href="img/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -28,7 +36,14 @@
   <body>
     <header class="nav">
       <a class="brand" href="#">
-        <svg class="brand-icon" viewBox="4 4 24 24" aria-hidden="true">
+        <svg class="brand-icon brand-icon-grad" viewBox="4 4 24 24" aria-hidden="true">
+          <defs>
+            <linearGradient id="brand-grad" x1="4" y1="4" x2="28" y2="28" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#00e5a8" />
+              <stop offset="0.5" stop-color="#38bdf8" />
+              <stop offset="1" stop-color="#a78bfa" />
+            </linearGradient>
+          </defs>
           <path fill-rule="evenodd" d="M16 4.000 A12.0 12.0 0 1 0 16 28.000 A12.0 12.0 0 1 0 16 4.000 Z M16.000 10.729 L20.565 13.364 L20.565 18.636 L16.000 21.271 L11.435 18.636 L11.435 13.364 Z M15.657 10.285 L16.343 11.173 L22.702 6.267 L22.017 5.379 Z M20.778 12.846 L20.352 13.883 L27.779 16.937 L28.206 15.900 Z M21.121 18.561 L20.009 18.710 L21.078 26.670 L22.189 26.521 Z M16.343 21.715 L15.657 20.827 L9.298 25.733 L9.983 26.621 Z M11.222 19.154 L11.648 18.117 L4.221 15.063 L3.794 16.100 Z M10.879 13.439 L11.991 13.290 L10.922 5.330 L9.811 5.479 Z" />
         </svg>
         vidctl
@@ -46,12 +61,18 @@
             <option value="zh">中文</option>
           </select>
         </label>
+        <a class="nav-cta" href="https://github.com/fabianoflorentino/vidctl/releases" target="_blank" rel="noopener" data-i18n="hero.download">baixar</a>
         <a class="nav-gh" href="https://github.com/fabianoflorentino/vidctl" target="_blank" rel="noopener" data-i18n="nav.github">github ↗</a>
       </nav>
     </header>
 
     <main>
       <section class="hero">
+        <a class="hero-badge" href="https://github.com/fabianoflorentino/vidctl/releases" target="_blank" rel="noopener">
+          <span class="badge-dot" aria-hidden="true"></span>
+          <span data-i18n="hero.badge">desktop · open-source · 100% offline</span>
+          <span class="badge-arrow" aria-hidden="true">→</span>
+        </a>
         <p class="kicker" data-i18n="hero.kicker">ffmpeg 2-pass &middot; H.265 + GPU &middot; corte em partes &middot; extrair áudio &middot; desktop &middot; open-source</p>
         <h1>
           <span data-i18n="hero.h1a">Vídeo leve,</span><br />
@@ -223,6 +244,13 @@
         </div>
 
         <p class="note" data-i18n="demo.note">30:00 · 1080p · 420 MB → 6 partes de ~5 min somando 59,4 MB (−86%) no preset WhatsApp Status (10 MB por parte), com H.265 + NVENC (preset p4). Depois, o botão <b>extrair áudio</b> (no cartão do vídeo, abaixo do destino) vira MP3 · 192k · <b>33,8 MB</b> e a extração roda como tarefa na fila — e, no fim, a tela inicial aparece em tema claro (botão sol/lua do app)</p>
+      </section>
+
+      <section class="signal-strip" data-i18n-attr="aria-label" data-i18n="signal.aria" aria-label="Core capabilities">
+        <div><span>01</span><strong>2-pass</strong><em data-i18n="signal.1">tamanho exato</em></div>
+        <div><span>02</span><strong>H.265 + GPU</strong><em data-i18n="signal.2">encode acelerado</em></div>
+        <div><span>03</span><strong data-i18n="signal.3t">Corte</strong><em data-i18n="signal.3">partes por tempo</em></div>
+        <div><span>04</span><strong data-i18n="signal.4t">Áudio</strong><em data-i18n="signal.4">mp3 · opus · aac</em></div>
       </section>
 
       <section id="recursos" class="section">
@@ -399,9 +427,10 @@
         <span data-i18n="foot.mit">vidctl — código aberto sob MIT</span>
       </p>
       <p class="dim">
+        <span>© 2026 Fabiano Florentino</span> ·
         <a href="https://github.com/fabianoflorentino/vidctl" target="_blank" rel="noopener">github</a> ·
         <a href="https://github.com/fabianoflorentino" target="_blank" rel="noopener">@fabianoflorentino</a> ·
-        <a href="https://fabianoflorentino.github.io/vidctl/">pages</a>
+        <a href="https://vidctl.fabianoflorentino.dev/">site</a>
       </p>
     </footer>
 
@@ -511,6 +540,7 @@
         var I18N = {
           pt: {
             'nav.features': 'recursos', 'nav.cut': 'corte', 'nav.destinations': 'presets', 'nav.how': 'como funciona', 'nav.github': 'github ↗',
+            'hero.badge': 'desktop · open-source · 100% offline',
             'hero.kicker': 'ffmpeg 2-pass &middot; H.265 + GPU &middot; corte em partes &middot; extrair áudio &middot; desktop &middot; open-source',
             'hero.h1a': 'Vídeo leve,', 'hero.h1b': 'história completa.',
             'hero.lede': 'Tamanho exato por plataforma, corte em partes e extração de áudio — com H.265 e GPU, tudo local e offline.',
@@ -566,10 +596,12 @@
             'step.run': 'Executar', 'step.runDesc': '2-pass com orçamento por parte, barra agregada e métricas de CPU/RAM/GPU ao vivo.',
             'step.send': 'Enviar', 'step.sendDesc': 'Pronto. Toca em “abrir pasta” e manda pra plataforma.',
             'step.audio': 'Extrair áudio (opcional)', 'step.audioDesc': 'Precisa da trilha? Escolha formato (mp3/opus/aac/flac/wav/copiar), qualidade, canais e janela — sai sem reencodar o vídeo, na mesma fila de tarefas.',
+            'signal.aria': 'Principais capacidades', 'signal.1': 'tamanho exato', 'signal.2': 'encode acelerado', 'signal.3t': 'Corte', 'signal.3': 'partes por tempo', 'signal.4t': 'Áudio', 'signal.4': 'mp3 · opus · aac',
             'tech': 'construído com', 'foot.mit': 'vidctl — código aberto sob MIT'
           },
           en: {
             'nav.features': 'features', 'nav.cut': 'cut', 'nav.destinations': 'presets', 'nav.how': 'how it works', 'nav.github': 'github ↗',
+            'hero.badge': 'desktop · open-source · 100% offline',
             'hero.kicker': 'ffmpeg 2-pass &middot; H.265 + GPU &middot; cut into parts &middot; extract audio &middot; desktop &middot; open-source',
             'hero.h1a': 'Lite video,', 'hero.h1b': 'full story.',
             'hero.lede': 'Exact size per platform, split into parts and audio extraction — with H.265 and GPU, all local and offline.',
@@ -625,10 +657,12 @@
             'step.run': 'Run', 'step.runDesc': '2-pass with per-part budget, aggregated bar and live CPU/RAM/GPU metrics.',
             'step.send': 'Send', 'step.sendDesc': 'Done. Tap “open folder” and ship it to the platform.',
             'step.audio': 'Extract audio (optional)', 'step.audioDesc': 'Need the track? Pick format (mp3/opus/aac/flac/wav/copy), quality, channels and window — it comes out without re-encoding the video, in the same task queue.',
+            'signal.aria': 'Core capabilities', 'signal.1': 'exact size', 'signal.2': 'accelerated encode', 'signal.3t': 'Split', 'signal.3': 'parts by time', 'signal.4t': 'Audio', 'signal.4': 'mp3 · opus · aac',
             'tech': 'built with', 'foot.mit': 'vidctl — open source under MIT'
           },
           es: {
             'nav.features': 'funciones', 'nav.cut': 'corte', 'nav.destinations': 'presets', 'nav.how': 'cómo funciona', 'nav.github': 'github ↗',
+            'hero.badge': 'escritorio · open-source · 100% offline',
             'hero.kicker': 'ffmpeg 2-pass &middot; H.265 + GPU &middot; cortar en partes &middot; extraer audio &middot; escritorio &middot; open-source',
             'hero.h1a': 'Vídeo ligero,', 'hero.h1b': 'historia completa.',
             'hero.lede': 'Tamaño exacto por plataforma, corte en partes y extracción de audio — con H.265 y GPU, todo local y offline.',
@@ -684,10 +718,12 @@
             'step.run': 'Ejecutar', 'step.runDesc': '2-pass con presupuesto por parte, barra agregada y métricas de CPU/RAM/GPU en vivo.',
             'step.send': 'Enviar', 'step.sendDesc': 'Listo. Toca “abrir carpeta” y mándalo a la plataforma.',
             'step.audio': 'Extraer audio (opcional)', 'step.audioDesc': '¿Necesitas la pista? Elige formato (mp3/opus/aac/flac/wav/copiar), calidad, canales y ventana — sale sin recodificar el vídeo, en la misma cola de tareas.',
+            'signal.aria': 'Capacidades principales', 'signal.1': 'tamaño exacto', 'signal.2': 'codificación acelerada', 'signal.3t': 'Cortar', 'signal.3': 'partes por tiempo', 'signal.4t': 'Audio', 'signal.4': 'mp3 · opus · aac',
             'tech': 'construido con', 'foot.mit': 'vidctl — open source bajo MIT'
           },
           zh: {
             'nav.features': '功能', 'nav.cut': '切割', 'nav.destinations': '预设', 'nav.how': '工作原理', 'nav.github': 'github ↗',
+            'hero.badge': '桌面 · 开源 · 100% 离线',
             'hero.kicker': 'ffmpeg 2-pass &middot; H.265 + GPU &middot; 分段切割 &middot; 提取音频 &middot; 桌面 &middot; 开源',
             'hero.h1a': '轻量视频，', 'hero.h1b': '故事完整。',
             'hero.lede': '按平台精确大小、分段切割与音频提取 — 支持 H.265 与 GPU，全部本地离线完成。',
@@ -743,6 +779,7 @@
             'step.run': '执行', 'step.runDesc': '2-pass 按段预算、汇总进度条和实时 CPU/RAM/GPU 指标。',
             'step.send': '发送', 'step.sendDesc': '完成。点击“打开文件夹”并上传到平台。',
             'step.audio': '提取音频（可选）', 'step.audioDesc': '需要音轨？选择格式（mp3/opus/aac/flac/wav/复制）、质量、声道和窗口 — 无需重新编码即可提取，并进入同一个任务队列。',
+            'signal.aria': '核心能力', 'signal.1': '精确大小', 'signal.2': '硬件加速编码', 'signal.3t': '切割', 'signal.3': '按时间分段', 'signal.4t': '音频', 'signal.4': 'mp3 · opus · aac',
             'tech': '使用以下技术构建', 'foot.mit': 'vidctl — MIT 许可的开源项目'
           }
         };

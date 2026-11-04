@@ -14,7 +14,10 @@ operacional dos pacotes.
 
 ## [Unreleased]
 
-Nada ainda — em desenvolvimento.
+- **Site**: identidade visual alinhada aos demais projetos (fundo navy,
+  gradiente mint/ciano/violeta, cards em vidro, faixa de capacidades e rótulos
+  em mono), com novo favicon e metadados de compartilhamento; `site/CNAME`
+  aponta para `vidctl.fabianoflorentino.dev`.
 
 ## [2.11.0] — 2026-10-24
 

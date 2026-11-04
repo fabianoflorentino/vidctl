@@ -14,7 +14,10 @@ solo el sistema operativo de los paquetes.
 
 ## [Unreleased]
 
-Nada aún — en desarrollo.
+- **Sitio**: identidad visual alineada con los demás proyectos (fondo navy,
+  degradado mint/cian/violeta, tarjetas de vidrio, franja de capacidades y
+  etiquetas mono), con nuevo favicon y metadatos para compartir; `site/CNAME`
+  apunta a `vidctl.fabianoflorentino.dev`.
 
 ## [2.11.0] — 2026-10-24
 
